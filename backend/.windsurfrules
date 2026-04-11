@@ -1,0 +1,115 @@
+# Backend Rules - NestJS + Prisma 7 + PostgreSQL
+
+## NestJS Architecture
+- **Module-first** - each feature has its own module
+- **Dependency injection** - use constructor injection
+- **Repository pattern** with Prisma - thin controllers, fat services
+- **DTOs for everything** - no plain objects in/out
+- **Pipes for validation** - class-validator + class-transformer
+- **Guards for auth** - reusable, composable
+- **Interceptors for cross-cutting** - logging, transformation, caching
+- **Custom decorators** for repeated logic
+- **Global exception filter** - consistent error responses
+
+## File Structure
+```
+src/
+  ├── common/           # Reusable pipes, guards, interceptors, filters
+  │   ├── decorators/
+  │   ├── filters/
+  │   ├── guards/
+  │   ├── interceptors/
+  │   └── pipes/
+  ├── config/           # Configuration files
+  ├── health/           # Health check module
+  ├── prisma/           # Prisma service + module
+  │   └── prisma.service.ts
+  ├── {feature}/        # Feature modules
+  │   ├── dto/
+  │   │   ├── create-{entity}.dto.ts
+  │   │   ├── update-{entity}.dto.ts
+  │   │   └── query-{entity}.dto.ts
+  │   ├── entities/
+  │   ├── {feature}.controller.ts
+  │   ├── {feature}.service.ts
+  │   ├── {feature}.module.ts
+  │   └── {feature}.service.spec.ts
+  ├── app.module.ts
+  └── main.ts
+```
+
+## Prisma 7 Best Practices
+- **Driver adapter required** - use @prisma/adapter-pg with pg Pool
+- **Never use url in schema** - datasource block has provider only
+- **Prisma config file** - url goes in prisma.config.ts
+- **PrismaService** - singleton managing connection lifecycle
+- **Transaction boundaries** - wrap related operations
+- **Select specific fields** - avoid `select: true`
+- **Pagination always** - cursor or offset with max limits
+- **Soft delete pattern** - deletedAt field, filter in queries
+- **Migrations versioned** - never edit migration after apply
+- **Seed data** - idempotent seed script
+
+## API Design
+- **RESTful principles** - nouns as resources, verbs as HTTP methods
+- **Versioning** - /api/v1/ prefix
+- **Consistent response format**:
+  ```typescript
+  { data: T, meta?: PaginationMeta, message?: string }
+  ```
+- **HTTP status codes** correctly:
+  - 200: OK, 201: Created, 204: No Content
+  - 400: Bad Request, 401: Unauthorized, 403: Forbidden, 404: Not Found
+  - 409: Conflict, 422: Unprocessable Entity, 500: Server Error
+- **Query params** for filtering, sorting, pagination
+- **Route params** for resource identification only
+- **Swagger decorators** on all DTOs and controllers
+
+## Database Access
+- **PrismaService** via DI - never instantiate PrismaClient directly
+- **Repository abstraction** - service layer uses Prisma, not controller
+- **Transaction scope** - wrap related writes
+- **N+1 prevention** - use include/select wisely
+- **Indexing strategy** - index foreign keys, query fields
+- **Raw queries** only when necessary - prefer Prisma Client
+
+## Validation & DTOs
+- **class-validator decorators** on all DTO properties
+- **Validation pipes** at controller level
+- **Type coercion** via class-transformer
+- **Custom validators** for business rules
+- **Swagger integration** - @ApiProperty with examples
+- **Read-only DTOs** - use `readonly` keyword
+- **Partial types** - use mapped types for updates
+
+## Testing Strategy
+- **Unit tests** for services (mock Prisma)
+- **Integration tests** for controllers (supertest)
+- **E2E tests** for critical flows
+- **Prisma mocking** - mock PrismaService, not PrismaClient directly
+- **Factory pattern** for test data - use @faker-js/faker
+- **Arrange-Act-Assert** structure
+- **One describe per method**, one it per scenario
+
+## Error Handling
+- **Domain exceptions** - extend HttpException
+- **Global exception filter** - logs + consistent response format
+- **Prisma error mapping** - P2002 = 409 Conflict, P2025 = 404
+- **Never leak stack traces** in production
+- **Structured logging** - use NestJS Logger
+
+## Async Patterns
+- **async/await** exclusively - no raw promises
+- **Promise.all** for independent operations
+- **Sequential** for dependent operations
+- **Never floating promises** - always await or handle
+- **Timeout handling** for external calls
+
+## Security Backend
+- **Helmet** for security headers
+- **CORS** configured for specific origins only
+- **Rate limiting** - per user/IP
+- **JWT strategy** - Passport.js
+- **Password hashing** - bcrypt, never store plain
+- **Input sanitization** - class-validator
+- **SQL injection** - impossible with Prisma, but validate for raw queries

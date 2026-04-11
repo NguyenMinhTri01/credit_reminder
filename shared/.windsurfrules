@@ -1,0 +1,51 @@
+# Shared Package Rules
+# Pure TypeScript - No Framework Dependencies
+
+## Purpose
+- **Types, interfaces, enums** only - no runtime dependencies
+- **Constants** - pure values, no side effects
+- **Utility functions** - pure functions, no external deps
+- **Shared between backend and frontend** - isomorphic code
+
+## Constraints
+- **No importing from backend or frontend**
+- **No Node.js APIs** (fs, path, etc) - must work in browser
+- **No React/NestJS imports** - framework agnostic
+- **No database imports** - Prisma types only as type imports
+- **No external dependencies** except TypeScript built-ins
+
+## Code Style
+- **Type-only imports** - `import type { ... }` for all cross-file imports
+- **Interface over Type** - prefer `interface` for object shapes
+- **Const enums** - for enums that should be inlined at compile time
+- **Readonly arrays/objects** - use `readonly` keyword
+- **Pure functions** - no side effects, deterministic output
+
+## File Organization
+```
+src/
+  ├── constants/     # Constant values
+  │   ├── index.ts   # Export all constants
+  │   └── pagination.ts
+  ├── enums/         # Shared enums
+  │   ├── index.ts
+  │   └── status.ts
+  ├── types/         # TypeScript interfaces/types
+  │   ├── index.ts
+  │   ├── user.ts
+  │   └── api.ts
+  ├── utils/         # Pure utility functions
+  │   ├── index.ts
+  │   └── formatting.ts
+  └── index.ts       # Main export
+```
+
+## Testing
+- **Unit tests only** - pure functions, no mocking needed
+- **100% coverage goal** - small, testable functions
+- **Property-based testing** - for complex utilities
+
+## Build Output
+- **CommonJS + ESM** dual output for maximum compatibility
+- **Declaration files** (.d.ts) for TypeScript consumers
+- **Source maps** for debugging

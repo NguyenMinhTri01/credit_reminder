@@ -1,0 +1,181 @@
+# Frontend Rules - Next.js 15 + React 19 + TypeScript
+
+## Next.js 15 App Router
+- **App Router exclusively** - no pages router
+- **Server Components by default** - mark 'use client' only when needed
+- **Client boundaries** - colocate client logic, minimize 'use client' files
+- **Route groups** for organization - (auth), (dashboard)
+- **Loading states** - loading.tsx for suspense boundaries
+- **Error boundaries** - error.tsx for route errors
+- **Parallel routes** for complex layouts
+- **Intercepting routes** for modals
+- **Route handlers** - app/api for backend-for-frontend
+- **Metadata API** - export metadata objects
+
+## File Structure
+```
+src/
+  ├── app/                    # Next.js App Router
+  │   ├── layout.tsx          # Root layout
+  │   ├── page.tsx             # Home page
+  │   ├── loading.tsx          # Global loading
+  │   ├── error.tsx            # Global error
+  │   ├── not-found.tsx        # 404 page
+  │   ├── api/                 # Route handlers
+  │   ├── [locale]/            # i18n routing
+  │   │   ├── layout.tsx
+  │   │   ├── page.tsx
+  │   │   └── ...
+  │   └── ...
+  ├── components/
+  │   ├── ui/                  # shadcn/ui components
+  │   ├── forms/                 # Form-specific components
+  │   ├── layout/                # Layout components
+  │   └── features/              # Feature components
+  │       └── {feature}/
+  ├── hooks/                     # Custom React hooks
+  ├── lib/                       # Utilities, configurations
+  │   ├── api.ts                 # API client setup
+  │   ├── i18n/                  # i18n config
+  │   └── utils.ts               # Utility functions
+  ├── stores/                    # Zustand stores
+  ├── types/                     # Frontend-specific types
+  └── styles/                    # Global styles (minimal)
+```
+
+## React 19 Patterns
+- **Server Components first** - no 'use client' without reason
+- **'use client' triggers**:
+  - useState, useEffect, useReducer
+  - Browser APIs (window, document, localStorage)
+  - Event handlers (onClick, onSubmit)
+  - Context consumers
+- **Composition over props drilling** - use composition patterns
+- **Custom hooks** for shared logic - prefix with 'use'
+- **React Server Components** - fetch data in Server Components
+- **Suspense boundaries** - wrap async components
+- **Error boundaries** - handle errors gracefully
+- **Cleanup in useEffect** - return cleanup function
+- **Dependency arrays** - exhaustive and correct
+
+## Component Patterns
+- **Single responsibility** - one component, one purpose
+- **Props interface** - always define, no inline types
+- **Default props** - use default parameters, not defaultProps
+- **Destructured props** - in function parameters
+- **Forward refs** when needed - use React.forwardRef
+- **Compound components** for complex UIs
+- **Render props** pattern for flexibility
+- **Polymorphic components** with as prop
+- **No class components** - functional only
+
+## Styling (Tailwind + shadcn/ui)
+- **Tailwind classes** - use tailwind-merge + clsx (cn utility)
+- **shadcn/ui base** - extend, don't recreate
+- **Design tokens** - use CSS variables from globals.css
+- **Responsive** - mobile-first (sm:, md:, lg:)
+- **Dark mode** - use class strategy
+- **Component variants** - use class-variance-authority
+- **No arbitrary values** - extend tailwind.config.ts
+- **Group/peer** modifiers for complex layouts
+- **Container queries** for component-based responsive
+
+## State Management
+- **Server state** - TanStack Query (React Query)
+  - Stale time, cache time configuration
+  - Error handling, retries
+  - Optimistic updates
+  - Infinite queries for pagination
+- **Client state** - Zustand
+  - Small, focused stores
+  - Actions in store, not components
+  - Persist only what's needed
+  - No Redux-style reducers
+- **Form state** - React Hook Form + Zod
+  - Validation schemas with zodResolver
+  - Controlled components default
+  - Error messages from i18n
+- **URL state** - useSearchParams for shareable state
+
+## Data Fetching
+- **Server Components** - fetch directly, no useEffect
+- **TanStack Query** - for client-side data
+- **API layer abstraction** - centralized in lib/api.ts
+- **Error boundaries** - handle fetch errors
+- **Loading states** - skeletons, not spinners
+- **SWR pattern** - stale-while-revalidate
+- **Prefetching** - Link prefetch, router.prefetch
+- **Mutation handling** - optimistic updates, rollback
+
+## i18n (next-intl)
+- **Server-side translations** - in Server Components
+- **Client-side translations** - useTranslations hook
+- **Message keys** - hierarchical, descriptive
+- **Interpolation** - {variable} syntax
+- **Pluralization** - ICU message syntax
+- **Date/number formatting** - use formatters
+- **Locale detection** - middleware-based
+- **Route localization** - [locale] segment
+
+## Form Handling
+- **React Hook Form** - performance, validation
+- **Zod schemas** - shared with backend when possible
+- **Controlled inputs** - register pattern
+- **Error display** - inline, accessible
+- **Submit handling** - async, loading state
+- **Reset capability** - form.reset()
+- **File uploads** - separate handling
+
+## Accessibility
+- **Semantic HTML** - proper heading hierarchy
+- **ARIA labels** - when semantic not enough
+- **Keyboard navigation** - tabIndex, focus management
+- **Color contrast** - WCAG 2.1 AA minimum
+- **Screen reader testing** - VoiceOver/NVDA
+- **Focus indicators** - visible focus rings
+- **Reduced motion** - respect prefers-reduced-motion
+- **Alt text** - descriptive for images
+
+## Performance Frontend
+- **Code splitting** - dynamic imports for heavy components
+- **Image optimization** - Next.js Image component
+- **Font optimization** - next/font
+- **Script loading** - strategy props
+- **Preload/prefetch** - critical resources
+- **Intersection Observer** - lazy load below fold
+- **Virtualization** - react-window for long lists
+- **Memoization** - React.memo, useMemo, useCallback
+  - Only when measured performance issue
+  - Dependencies must be stable
+
+## Testing Frontend
+- **Jest + React Testing Library**
+- **Test behaviors** not implementation
+- **User-centric queries** - getByRole, getByLabelText
+- **Mock Service Worker** for API mocking
+- **Component stories** - Storybook for complex UIs
+- **E2E critical flows** - Playwright
+- **Visual regression** - Chromatic/Storybook
+
+## TypeScript Frontend
+- **Strict mode** - no implicit any
+- **Component props** - explicit interfaces
+- **Generic components** - when type-safe flexibility needed
+- **Type guards** - for runtime type checking
+- **Module augmentation** - for third-party types
+- **No type assertions** (as) - use type guards
+
+## Bundle Optimization
+- **Tree shaking** - ES modules, sideEffect: false
+- **Dependency analysis** - @next/bundle-analyzer
+- **Dynamic imports** - React.lazy for routes
+- **Vendor chunk** - split large deps
+- **CSS optimization** - PurgeCSS built-in
+
+## SEO
+- **Metadata API** - generateMetadata function
+- **Open Graph** - og:title, og:description, og:image
+- **Twitter cards** - twitter:card, twitter:image
+- **Structured data** - JSON-LD scripts
+- **Sitemap** - dynamic sitemap generation
+- **Robots.txt** - allow/disallow rules
