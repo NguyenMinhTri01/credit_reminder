@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "Credit Reminder",
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "create": "Tạo mới",
+    "search": "Tìm kiếm",
+    "noData": "Không có dữ liệu",
+    "confirm": "Xác nhận",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước",
+    "actions": "Thao tác"
+  },
+  "home": {
+    "title": "Trang chủ",
+    "welcome": "Chào mừng đến với Credit Reminder",
+    "description": "Quản lý nhắc nhở thanh toán tín dụng của bạn"
+  },
+  "reminders": {
+    "title": "Nhắc nhở",
+    "createNew": "Tạo nhắc nhở mới",
+    "amount": "Số tiền",
+    "dueDate": "Ngày đến hạn",
+    "status": "Trạng thái",
+    "active": "Đang hoạt động",
+    "completed": "Đã hoàn thành",
+    "overdue": "Quá hạn",
+    "cancelled": "Đã hủy"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "name": "Họ và tên"
+  },
+  "language": {
+    "vi": "Tiếng Việt",
+    "en": "English"
+  }
+}

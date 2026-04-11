@@ -1,0 +1,14 @@
+packages:
+  - 'backend'
+  - 'frontend'
+  - 'shared'
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@prisma/client': false
+  '@prisma/engines': false
+  '@scarf/scarf': false
+  '@swc/core': false
+  prisma: false
+  sharp: false
+  unrs-resolver: false

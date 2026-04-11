@@ -1,0 +1,26 @@
+{
+  "name": "credit-reminder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Credit Reminder - Full-stack monorepo application",
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev": "pnpm run dev:backend & pnpm run dev:frontend",
+    "build:shared": "pnpm --filter shared build",
+    "build:backend": "pnpm --filter backend build",
+    "build:frontend": "pnpm --filter frontend build",
+    "build": "pnpm build:shared && pnpm build:backend && pnpm build:frontend",
+    "test:backend": "pnpm --filter backend test",
+    "test:frontend": "pnpm --filter frontend test",
+    "test": "pnpm test:backend && pnpm test:frontend",
+    "lint": "pnpm --filter backend lint && pnpm --filter frontend lint",
+    "db:generate": "pnpm --filter backend db:generate",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "db:studio": "pnpm --filter backend db:studio"
+  },
+  "engines": {
+    "node": "24.12.0",
+    "pnpm": "10.33.0"
+  }
+}

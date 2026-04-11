@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "Credit Reminder",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "noData": "No data",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "actions": "Actions"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome to Credit Reminder",
+    "description": "Manage your credit payment reminders"
+  },
+  "reminders": {
+    "title": "Reminders",
+    "createNew": "Create new reminder",
+    "amount": "Amount",
+    "dueDate": "Due date",
+    "status": "Status",
+    "active": "Active",
+    "completed": "Completed",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name"
+  },
+  "language": {
+    "vi": "Tiếng Việt",
+    "en": "English"
+  }
+}
