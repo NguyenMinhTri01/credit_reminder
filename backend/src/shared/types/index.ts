@@ -1,4 +1,4 @@
-import { UserRole, ReminderStatus, PaymentStatus, SortOrder } from '../enums';
+import { UserRole, ReminderStatus, SortOrder } from '../enums';
 
 // ─── Base Types ──────────────────────────────────────────────
 export interface BaseEntity {

@@ -1,8 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, IsEnum, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SortOrder, DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } from '@credit-reminder/shared';
-import { ReminderStatus } from '@prisma/client';
+import { SortOrder, DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } from '@/shared';
+import { ReminderFrequency } from '@prisma/client';
 
 export class QueryReminderDto {
   @ApiPropertyOptional({ default: DEFAULT_PAGE })
@@ -25,10 +25,15 @@ export class QueryReminderDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ enum: ReminderStatus })
+  @ApiPropertyOptional({ enum: ReminderFrequency })
   @IsOptional()
-  @IsEnum(ReminderStatus)
-  status?: ReminderStatus;
+  @IsEnum(ReminderFrequency)
+  frequency?: ReminderFrequency;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 
   @ApiPropertyOptional({ default: 'createdAt' })
   @IsOptional()

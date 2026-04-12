@@ -7,7 +7,7 @@ import {
   TITLE_MIN_LENGTH,
   TITLE_MAX_LENGTH,
   DESCRIPTION_MAX_LENGTH,
-} from '@credit-reminder/shared';
+} from '@/shared';
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),

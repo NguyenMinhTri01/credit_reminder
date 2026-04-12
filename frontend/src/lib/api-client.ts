@@ -1,4 +1,4 @@
-import type { IApiResponse, IPaginatedResponse } from '@credit-reminder/shared';
+import type { IApiResponse, IPaginatedResponse } from '@/shared';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 

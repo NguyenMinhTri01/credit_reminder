@@ -38,7 +38,7 @@ describe('RemindersService', () => {
       const dto = {
         title: 'Test Reminder',
         amount: 100000,
-        dueDate: '2025-12-31T00:00:00.000Z',
+        nextTriggerDate: '2025-12-31T00:00:00.000Z',
       };
       const expected = { id: '1', ...dto, userId: 'user-1' };
       mockPrismaService.reminder.create.mockResolvedValue(expected);

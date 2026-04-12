@@ -22,7 +22,6 @@
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {
-    "@credit-reminder/shared": "workspace:*",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
@@ -81,9 +80,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/$1",
-      "^@credit-reminder/shared$": "<rootDir>/../../shared/src/index.ts",
-      "^@credit-reminder/shared/(.*)$": "<rootDir>/../../shared/src/$1/index.ts"
+      "^@/(.*)$": "<rootDir>/$1"
     }
   }
 }

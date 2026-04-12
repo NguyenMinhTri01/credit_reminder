@@ -4,7 +4,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
 import { QueryReminderDto } from './dto/query-reminder.dto';
-import { normalizePagination, buildPaginationMeta } from '@credit-reminder/shared';
+import { normalizePagination, buildPaginationMeta } from '@/shared';
 
 @Injectable()
 export class RemindersService {
@@ -14,7 +14,6 @@ export class RemindersService {
     return this.prisma.reminder.create({
       data: {
         ...createReminderDto,
-        dueDate: new Date(createReminderDto.dueDate),
         userId,
       },
     });
@@ -26,14 +25,15 @@ export class RemindersService {
     const where: Prisma.ReminderWhereInput = {};
 
     if (query.search) {
-      where.OR = [
-        { title: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-      ];
+      where.title = { contains: query.search, mode: 'insensitive' };
     }
 
-    if (query.status) {
-      where.status = query.status;
+    if (query.frequency) {
+      where.frequency = query.frequency;
+    }
+
+    if (query.isActive !== undefined) {
+      where.isActive = query.isActive;
     }
 
     const [items, total] = await Promise.all([
@@ -64,8 +64,8 @@ export class RemindersService {
     await this.findOne(id);
 
     const data: Prisma.ReminderUpdateInput = { ...updateReminderDto };
-    if (updateReminderDto.dueDate) {
-      data.dueDate = new Date(updateReminderDto.dueDate);
+    if (updateReminderDto.nextTriggerDate) {
+      data.nextTriggerDate = new Date(updateReminderDto.nextTriggerDate);
     }
 
     return this.prisma.reminder.update({

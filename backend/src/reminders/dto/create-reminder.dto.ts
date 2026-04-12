@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsNumber, MinLength, MaxLength, Min } from 'class-validator';
-import { TITLE_MIN_LENGTH, TITLE_MAX_LENGTH, DESCRIPTION_MAX_LENGTH } from '@credit-reminder/shared';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, MinLength, MaxLength, Min, IsEnum, IsBoolean } from 'class-validator';
+import { TITLE_MIN_LENGTH, TITLE_MAX_LENGTH } from '@/shared';
+import { ReminderFrequency } from '@prisma/client';
 
 export class CreateReminderDto {
   @ApiProperty({ description: 'Reminder title', example: 'Monthly credit payment' })
@@ -10,19 +11,24 @@ export class CreateReminderDto {
   @MaxLength(TITLE_MAX_LENGTH)
   title: string;
 
-  @ApiPropertyOptional({ description: 'Reminder description', example: 'Pay credit card bill' })
-  @IsString()
-  @IsOptional()
-  @MaxLength(DESCRIPTION_MAX_LENGTH)
-  description?: string;
-
-  @ApiProperty({ description: 'Amount', example: 1000000 })
+  @ApiPropertyOptional({ description: 'Amount', example: 1000000 })
   @IsNumber()
+  @IsOptional()
   @Min(0)
-  amount: number;
+  amount?: number;
 
-  @ApiProperty({ description: 'Due date in ISO format', example: '2025-12-31T00:00:00.000Z' })
+  @ApiPropertyOptional({ description: 'Frequency', enum: ReminderFrequency, example: 'MONTHLY' })
+  @IsEnum(ReminderFrequency)
+  @IsOptional()
+  frequency?: ReminderFrequency;
+
+  @ApiProperty({ description: 'Next trigger date in ISO format', example: '2025-12-31T00:00:00.000Z' })
   @IsString()
   @IsNotEmpty()
-  dueDate: string;
+  nextTriggerDate: string;
+
+  @ApiPropertyOptional({ description: 'Zalo message template', example: 'Nhắc nhở thanh toán' })
+  @IsString()
+  @IsOptional()
+  zaloMessageTemplate?: string;
 }

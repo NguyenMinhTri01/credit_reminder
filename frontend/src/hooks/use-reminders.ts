@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import type { IReminder, IPaginatedResponse } from '@credit-reminder/shared';
+import type { IReminder, IPaginatedResponse } from '@/shared';
 import type { CreateReminderFormData, UpdateReminderFormData } from '@/lib/validations';
 
 const REMINDERS_KEY = ['reminders'] as const;
