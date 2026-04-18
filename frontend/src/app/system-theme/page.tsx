@@ -1,4 +1,38 @@
+'use client'
+
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+} from '@/components/ui/button-group'
 import {
   Card,
   CardContent,
@@ -8,6 +42,17 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Separator } from '@/components/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const COLOR_TOKENS = [
   { name: 'background', var: '--background', textClass: 'text-foreground' },
@@ -270,8 +315,131 @@ export default function SystemThemePage() {
           </div>
         </Section>
 
+        {/* Alert */}
+        <Section title="Alert">
+          <div className="space-y-3">
+            <Alert>
+              <AlertTitle>Default alert</AlertTitle>
+              <AlertDescription>
+                This is a default informational alert message for the system.
+              </AlertDescription>
+            </Alert>
+            <Alert variant="destructive">
+              <AlertTitle>Destructive alert</AlertTitle>
+              <AlertDescription>
+                Payment is overdue. Please settle your credit reminder immediately.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </Section>
+
+        {/* Alert Dialog */}
+        <Section title="Alert Dialog">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">Open Alert Dialog</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the reminder and
+                  remove the data from the server.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Section>
+
+        {/* Avatar */}
+        <Section title="Avatar">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-col items-center gap-2">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" alt="shadcn" />
+                <AvatarFallback>SC</AvatarFallback>
+              </Avatar>
+              <span className="text-muted-foreground text-xs">With image</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Avatar>
+                <AvatarFallback>NM</AvatarFallback>
+              </Avatar>
+              <span className="text-muted-foreground text-xs">Fallback only</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs">XS</AvatarFallback>
+              </Avatar>
+              <span className="text-muted-foreground text-xs">h-6 w-6</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-14 w-14">
+                <AvatarFallback>LG</AvatarFallback>
+              </Avatar>
+              <span className="text-muted-foreground text-xs">h-14 w-14</span>
+            </div>
+          </div>
+        </Section>
+
+        {/* Badge */}
+        <Section title="Badge">
+          <div className="flex flex-wrap gap-3">
+            <Badge>default</Badge>
+            <Badge variant="secondary">secondary</Badge>
+            <Badge variant="destructive">destructive</Badge>
+            <Badge variant="outline">outline</Badge>
+          </div>
+        </Section>
+
+        {/* Breadcrumb */}
+        <Section title="Breadcrumb">
+          <div className="space-y-4">
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">Basic</p>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="#">Reminders</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Credit Card</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">With ellipsis</p>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbEllipsis />
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Detail</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </div>
+        </Section>
+
         {/* Buttons */}
-        <Section title="Buttons — Variants">
+        <Section title="Button — Variants">
           <div className="flex flex-wrap gap-3">
             {BUTTON_VARIANTS.map((v) => (
               <Button key={v} variant={v}>
@@ -288,7 +456,7 @@ export default function SystemThemePage() {
           </div>
         </Section>
 
-        <Section title="Buttons — Sizes">
+        <Section title="Button — Sizes">
           <div className="flex flex-wrap items-center gap-3">
             {BUTTON_SIZES.map((s) => (
               <Button key={s} size={s}>
@@ -309,8 +477,45 @@ export default function SystemThemePage() {
           </div>
         </Section>
 
+        {/* Button Group */}
+        <Section title="Button Group">
+          <div className="space-y-4">
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">Horizontal (default)</p>
+              <ButtonGroup>
+                <Button variant="outline">Previous</Button>
+                <Button variant="outline">Page 1</Button>
+                <Button variant="outline">Next</Button>
+              </ButtonGroup>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">With text label</p>
+              <ButtonGroup>
+                <ButtonGroupText>https://</ButtonGroupText>
+                <Button variant="outline">example.com</Button>
+              </ButtonGroup>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">With separator</p>
+              <ButtonGroup>
+                <Button variant="outline">Save</Button>
+                <ButtonGroupSeparator />
+                <Button variant="outline">Save & Exit</Button>
+              </ButtonGroup>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">Vertical</p>
+              <ButtonGroup orientation="vertical">
+                <Button variant="outline">Top</Button>
+                <Button variant="outline">Middle</Button>
+                <Button variant="outline">Bottom</Button>
+              </ButtonGroup>
+            </div>
+          </div>
+        </Section>
+
         {/* Cards */}
-        <Section title="Cards">
+        <Section title="Card">
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
               <CardHeader>
@@ -368,58 +573,136 @@ export default function SystemThemePage() {
           </div>
         </Section>
 
-        {/* Form Elements */}
-        <Section title="Form Elements">
-          <div className="max-w-md space-y-6">
+        {/* Checkbox */}
+        <Section title="Checkbox">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Checkbox id="chk1" defaultChecked />
+              <label htmlFor="chk1" className="cursor-pointer text-sm">
+                Paid (checked)
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="chk2" />
+              <label htmlFor="chk2" className="cursor-pointer text-sm">
+                Unpaid (unchecked)
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="chk3" defaultChecked disabled />
+              <label htmlFor="chk3" className="text-muted-foreground cursor-not-allowed text-sm">
+                Checked + disabled
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="chk4" disabled />
+              <label htmlFor="chk4" className="text-muted-foreground cursor-not-allowed text-sm">
+                Disabled
+              </label>
+            </div>
+          </div>
+        </Section>
+
+        {/* Separator */}
+        <Section title="Separator">
+          <div className="space-y-4">
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">Horizontal</p>
+              <div className="space-y-2">
+                <p className="text-sm">Above separator</p>
+                <Separator />
+                <p className="text-sm">Below separator</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-xs">Vertical</p>
+              <div className="flex h-6 items-center gap-3">
+                <span className="text-sm">Left</span>
+                <Separator orientation="vertical" />
+                <span className="text-sm">Middle</span>
+                <Separator orientation="vertical" />
+                <span className="text-sm">Right</span>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Table */}
+        <Section title="Table">
+          <Table>
+            <TableCaption>A list of recent credit reminders.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Credit Card A</TableCell>
+                <TableCell>2024-02-01</TableCell>
+                <TableCell>$500.00</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">Pending</Badge>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Credit Card B</TableCell>
+                <TableCell>2024-01-15</TableCell>
+                <TableCell>$1,200.00</TableCell>
+                <TableCell>
+                  <Badge variant="destructive">Overdue</Badge>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Loan Payment</TableCell>
+                <TableCell>2024-02-28</TableCell>
+                <TableCell>$300.00</TableCell>
+                <TableCell>
+                  <Badge>Paid</Badge>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={2}>Total</TableCell>
+                <TableCell>$2,000.00</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </Section>
+
+        {/* Form Elements — Input */}
+        <Section title="Input">
+          <div className="max-w-md space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Input — default</label>
+              <label className="text-sm font-medium">Default</label>
               <input
                 type="text"
                 placeholder="Enter content..."
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
               />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium">Input — disabled</label>
+              <label className="text-sm font-medium">Disabled</label>
               <input
                 type="text"
                 placeholder="Cannot type here..."
                 disabled
-                className="border-input bg-background placeholder:text-muted-foreground flex h-10 w-full rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background placeholder:text-muted-foreground flex h-9 w-full rounded-md border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium">Input — error state</label>
+              <label className="text-sm font-medium">Error state</label>
               <input
                 type="text"
                 defaultValue="Invalid value"
-                className="border-destructive bg-background ring-offset-background focus-visible:ring-destructive flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="border-destructive bg-background focus-visible:ring-destructive flex h-9 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
               />
               <p className="text-destructive text-xs">This field is invalid.</p>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-sm font-medium">Checkbox</label>
-              <div className="flex items-center gap-2">
-                <Checkbox id="chk1" defaultChecked />
-                <label htmlFor="chk1" className="cursor-pointer text-sm">
-                  Paid
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="chk2" />
-                <label htmlFor="chk2" className="cursor-pointer text-sm">
-                  Unpaid
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="chk3" disabled />
-                <label htmlFor="chk3" className="text-muted-foreground cursor-not-allowed text-sm">
-                  Disabled
-                </label>
-              </div>
             </div>
           </div>
         </Section>
