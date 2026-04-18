@@ -40,8 +40,8 @@ credit_reminder/
 
 ## Prerequisites
 
-- **Node.js** >= 20
-- **pnpm** >= 9
+- **Node.js** = 24.12.0
+- **pnpm** = 10.33.0
 - **PostgreSQL** local or Docker
 
 ## Quick Start
@@ -50,19 +50,16 @@ credit_reminder/
 # 1. Install dependencies
 pnpm install
 
-# 2. Build shared package
-pnpm build:shared
-
-# 3. Setup backend
+# 2. Setup backend
 cp backend/.env.example backend/.env
 # Edit backend/.env with your database credentials
 pnpm db:generate
 pnpm db:migrate
 
-# 4. Setup frontend
+# 3. Setup frontend
 cp frontend/.env.example frontend/.env.local
 
-# 5. Start both servers
+# 4. Start both servers
 pnpm dev
 ```
 

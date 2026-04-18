@@ -5,7 +5,7 @@ export default function Home() {
     <Card className="max-w-sm">
       <CardHeader>
         <CardTitle>Project Overview</CardTitle>
-        <CardDescription>Track progress and recent activity for your Next.js app.</CardDescription>
+        <CardDescription>kiểm tra hiển thị tiếng việt</CardDescription>
       </CardHeader>
       <CardContent>Your design system is ready. Start building your next component.</CardContent>
     </Card>

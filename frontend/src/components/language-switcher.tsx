@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { useTranslations } from 'next-intl';
-import { Languages } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl'
+import { Languages } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function LanguageSwitcher() {
-  const t = useTranslations('language');
+  const t = useTranslations('language')
 
   const switchLocale = async (locale: string) => {
-    document.cookie = `locale=${locale};path=/;max-age=31536000`;
-    window.location.reload();
-  };
+    document.cookie = `locale=${locale};path=/;max-age=31536000`
+    window.location.reload()
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -22,5 +22,5 @@ export function LanguageSwitcher() {
         {t('en')}
       </Button>
     </div>
-  );
+  )
 }

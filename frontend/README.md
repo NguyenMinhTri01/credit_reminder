@@ -5,7 +5,7 @@ Next.js frontend, modern UI stack.
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
-- **UI**: Tailwind CSS + shadcn/ui
+- **UI**: Tailwind CSS v4 + shadcn/ui
 - **Icons**: Lucide React
 - **Server State**: TanStack Query v5
 - **Client State**: Zustand v5
