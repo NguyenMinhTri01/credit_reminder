@@ -1,6 +1,6 @@
 # Credit Reminder
 
-Full-stack monorepo application for managing credit payment reminders.
+Full-stack monorepo. Manage credit payment reminders.
 
 ## Architecture
 
@@ -20,29 +20,29 @@ credit_reminder/
 - **NestJS 11** — Framework
 - **PostgreSQL** — Database
 - **Prisma 7** — ORM
-- **Swagger** — API documentation (`/api/docs`)
+- **Swagger** — API docs (`/api/docs`)
 - **Jest** — Unit testing
 - **class-validator** — Request validation
 
 ### Frontend
 - **Next.js 15** — App Router
 - **Tailwind CSS + shadcn/ui** — Styling & components
-- **TanStack Query v5** — Server state management
-- **Zustand v5** — UI state management
+- **TanStack Query v5** — Server state
+- **Zustand v5** — UI state
 - **Zod** — Form validation
-- **next-intl** — i18n (Vietnamese + English)
+- **next-intl** — i18n (vi/en)
 - **Lucide React** — Icons
 - **Jest + React Testing Library** — Testing
 
 ### Shared
-- Types, interfaces, enums, constants, and utility functions used by both backend and frontend
+- Types, interfaces, enums, constants, utils for both backend + frontend
 - Published as `@credit-reminder/shared` workspace package
 
 ## Prerequisites
 
 - **Node.js** >= 20
 - **pnpm** >= 9
-- **PostgreSQL** running locally or via Docker
+- **PostgreSQL** local or Docker
 
 ## Quick Start
 
@@ -90,5 +90,5 @@ pnpm dev
 
 ## Project Details
 
-- See [backend/README.md](./backend/README.md) for backend details
-- See [frontend/README.md](./frontend/README.md) for frontend details
+- Backend: [backend/README.md](./backend/README.md)
+- Frontend: [frontend/README.md](./frontend/README.md)

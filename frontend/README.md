@@ -1,16 +1,16 @@
 # Frontend - Credit Reminder
 
-Next.js frontend application with modern UI stack.
+Next.js frontend, modern UI stack.
 
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
 - **UI**: Tailwind CSS + shadcn/ui
 - **Icons**: Lucide React
-- **Server State**: TanStack Query (React Query) v5
+- **Server State**: TanStack Query v5
 - **Client State**: Zustand v5
 - **Validation**: Zod
-- **i18n**: next-intl (Vietnamese + English)
+- **i18n**: next-intl (vi/en)
 - **Testing**: Jest + React Testing Library
 - **Package Manager**: pnpm
 
@@ -88,16 +88,16 @@ pnpm dev
 ## Key Patterns
 
 ### API Calls (TanStack Query)
-All API calls use custom hooks in `src/hooks/` that wrap TanStack Query with the fetch-based `apiClient`.
+API calls use custom hooks in `src/hooks/` wrapping TanStack Query with fetch-based `apiClient`.
 
 ### State Management (Zustand)
-UI state (sidebar, loading, etc.) is managed via Zustand stores in `src/stores/`.
+UI state (sidebar, loading, etc.) via Zustand stores in `src/stores/`.
 
 ### Validation (Zod)
-Form validation schemas live in `src/lib/validations.ts`, sharing constants from `@credit-reminder/shared`.
+Form schemas in `src/lib/validations.ts`, sharing constants from `@credit-reminder/shared`.
 
 ### i18n
-Translations are in `src/messages/{locale}.json`. Language switching is cookie-based via `LanguageSwitcher` component.
+Translations in `src/messages/{locale}.json`. Language switching cookie-based via `LanguageSwitcher`.
 
 ## Environment Variables
 

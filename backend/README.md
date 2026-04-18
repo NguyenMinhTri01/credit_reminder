@@ -1,6 +1,6 @@
 # Backend - Credit Reminder API
 
-NestJS backend API with PostgreSQL database and Prisma ORM.
+NestJS backend API, PostgreSQL + Prisma ORM.
 
 ## Tech Stack
 
@@ -8,7 +8,7 @@ NestJS backend API with PostgreSQL database and Prisma ORM.
 - **Framework**: NestJS 11
 - **Database**: PostgreSQL
 - **ORM**: Prisma 7
-- **API Docs**: Swagger (available at `/api/docs`)
+- **API Docs**: Swagger (`/api/docs`)
 - **Validation**: class-validator + class-transformer
 - **Testing**: Jest
 - **Package Manager**: pnpm
@@ -18,30 +18,48 @@ NestJS backend API with PostgreSQL database and Prisma ORM.
 ```
 backend/
 ├── prisma/
-│   └── schema.prisma          # Database schema
+│   ├── schema.prisma           # Database schema
+│   └── migrations/             # Database migrations
 ├── prisma.config.ts            # Prisma 7 configuration
+├── database.sql                # Raw SQL reference
 ├── src/
 │   ├── main.ts                 # Application entry point
 │   ├── app.module.ts           # Root module
+│   ├── shared/                 # Shared code (types, enums, constants, utils)
+│   │   ├── index.ts
+│   │   ├── constants/
+│   │   │   ├── index.ts        # All constant exports
+│   │   │   └── messages.ts     # AUTH_MESSAGES, VALIDATION_MESSAGES, SWAGGER_DESCRIPTIONS
+│   │   ├── enums/
+│   │   │   └── index.ts
+│   │   ├── types/
+│   │   │   └── index.ts
+│   │   └── utils/
+│   │       └── index.ts
 │   ├── prisma/
 │   │   ├── prisma.module.ts    # Prisma module (Global)
-│   │   └── prisma.service.ts   # Prisma service
+│   │   └── prisma.service.ts   # Prisma service with adapter-pg
 │   ├── health/
 │   │   ├── health.module.ts    # Health check module
 │   │   └── health.controller.ts
-│   └── reminders/
-│       ├── reminders.module.ts
-│       ├── reminders.controller.ts
-│       ├── reminders.controller.spec.ts
-│       ├── reminders.service.ts
-│       ├── reminders.service.spec.ts
+│   └── auth/
+│       ├── auth.module.ts
+│       ├── auth.controller.ts
+│       ├── auth.controller.spec.ts
+│       ├── auth.service.ts
+│       ├── auth.service.spec.ts
+│       ├── strategies/
+│       │   └── jwt.strategy.ts # JWT Passport strategy
 │       └── dto/
-│           ├── create-reminder.dto.ts
-│           ├── update-reminder.dto.ts
-│           └── query-reminder.dto.ts
+│           ├── register.dto.ts
+│           ├── login.dto.ts
+│           ├── google-auth.dto.ts
+│           ├── forgot-password.dto.ts
+│           └── reset-password.dto.ts
 ├── test/
 │   └── jest-e2e.json           # E2E test config
 ├── .env.example                # Environment variables template
+├── .windsurfrules              # Backend-specific AI rules
 ├── .gitignore
 ├── nest-cli.json
 ├── tsconfig.json
@@ -88,21 +106,28 @@ pnpm dev
 
 ## API Endpoints
 
+### Health
 - `GET /api/v1/health` — Health check
-- `GET /api/v1/reminders` — List reminders (paginated)
-- `POST /api/v1/reminders` — Create reminder
-- `GET /api/v1/reminders/:id` — Get reminder by ID
-- `PATCH /api/v1/reminders/:id` — Update reminder
-- `DELETE /api/v1/reminders/:id` — Delete reminder
+
+### Auth
+- `POST /api/v1/auth/register` — Register user
+- `POST /api/v1/auth/login` — Login with email + password
+- `POST /api/v1/auth/google` — Login/register via Google
+- `POST /api/v1/auth/forgot-password` — Request password reset
+- `POST /api/v1/auth/reset-password` — Reset password with token
 
 Swagger docs: `http://localhost:3001/api/docs`
 
 ## Environment Variables
 
-| Variable          | Default                              | Description          |
-| ----------------- | ------------------------------------ | -------------------- |
-| `DATABASE_URL`    | `postgresql://...`                   | PostgreSQL URL       |
-| `PORT`            | `3001`                               | Server port          |
-| `NODE_ENV`        | `development`                        | Environment          |
-| `JWT_SECRET`      | —                                    | JWT signing key      |
-| `CORS_ORIGIN`     | `http://localhost:3000`              | Allowed CORS origin  |
+| Variable              | Default                              | Description              |
+| --------------------- | ------------------------------------ | ------------------------ |
+| `DATABASE_URL`        | `postgresql://...`                   | PostgreSQL connection    |
+| `PORT`                | `3001`                               | Server port              |
+| `NODE_ENV`            | `development`                        | Environment              |
+| `JWT_SECRET`          | —                                    | JWT signing key          |
+| `JWT_ACCESS_EXPIRY`   | `15m`                                | Access token expiry      |
+| `JWT_REFRESH_EXPIRY`  | `7d`                                 | Refresh token expiry     |
+| `GOOGLE_CLIENT_ID`    | —                                    | Google OAuth client ID   |
+| `GOOGLE_CLIENT_SECRET`| —                                    | Google OAuth secret      |
+| `CORS_ORIGIN`         | `http://localhost:3000`              | Allowed CORS origin      |

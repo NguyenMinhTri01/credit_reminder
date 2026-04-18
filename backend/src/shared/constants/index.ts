@@ -1,3 +1,5 @@
+export * from './messages';
+
 // ─── Pagination ──────────────────────────────────────────────
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
@@ -6,8 +8,11 @@ export const MAX_LIMIT = 100;
 // ─── Auth ────────────────────────────────────────────────────
 export const ACCESS_TOKEN_EXPIRY = '15m';
 export const REFRESH_TOKEN_EXPIRY = '7d';
+export const RESET_TOKEN_EXPIRY_HOURS = 1;
+export const BCRYPT_SALT_ROUNDS = 12;
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
+export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/;
 
 // ─── Validation ──────────────────────────────────────────────
 export const NAME_MIN_LENGTH = 2;

@@ -105,6 +105,15 @@ src/
 - **Never floating promises** - always await or handle
 - **Timeout handling** for external calls
 
+## String Constants (No Hardcoded Strings)
+- **Never hardcode user-facing strings** in controllers, services, or DTOs
+- **All messages** (error, success, validation) go in `src/shared/constants/messages.ts`
+- **Group by domain** - AUTH_MESSAGES, VALIDATION_MESSAGES, SWAGGER_DESCRIPTIONS, etc.
+- **Use `as const`** for string constant objects to get literal types
+- **Swagger descriptions** - use SWAGGER_DESCRIPTIONS constants
+- **Import from `@/shared`** - centralized access to all constants
+- **Exception messages** - always reference constants, never inline strings
+
 ## Security Backend
 - **Helmet** for security headers
 - **CORS** configured for specific origins only

@@ -29,7 +29,7 @@
 - Use **named exports** over default exports
 - **No barrel exports** (index.ts re-exports) - import directly from source
 - **Absolute imports** with @/ alias for local code
-- **Workspace imports** for @credit-reminder/shared
+- **Local shared** imports via `@/shared` for each project
 
 ## Error Handling
 - **Never swallow errors** - always handle or re-throw
@@ -64,6 +64,13 @@
 - **CORS** properly configured
 - **JWT best practices** - short expiry, secure storage
 
+## String Constants (No Hardcoded Strings)
+- **Never hardcode user-facing strings** in business logic code
+- **All messages** (error, success, validation, swagger) go in dedicated constants files
+- **Group by domain** - AUTH_MESSAGES, VALIDATION_MESSAGES, SWAGGER_DESCRIPTIONS, etc.
+- **Use `as const`** for string constant objects to get literal types
+- **Import from `@/shared`** - centralized access to all constants
+
 ## Documentation
 - **README updates** when changing setup/structure
 - **API docs** via Swagger decorators
@@ -72,6 +79,6 @@
 
 ## Monorepo Specific
 - **No circular dependencies** between packages
-- **Shared package** for types, constants, utils only
+- **Local shared folder** (`src/shared/`) in each project for types, constants, utils
 - **Backend/frontend specific code** stays in respective folders
 - **Version synchronization** - update all packages together
