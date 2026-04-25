@@ -8,6 +8,8 @@ export const ACCESS_TOKEN_EXPIRY = '15m'
 export const REFRESH_TOKEN_EXPIRY = '7d'
 export const PASSWORD_MIN_LENGTH = 8
 export const PASSWORD_MAX_LENGTH = 128
+// At least 1 lowercase, 1 uppercase, 1 digit, 1 special character. Mirrors backend.
+export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,128}$/
 
 // ─── Validation ──────────────────────────────────────────────
 export const NAME_MIN_LENGTH = 2

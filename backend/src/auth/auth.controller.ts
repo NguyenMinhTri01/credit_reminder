@@ -1,12 +1,19 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleAuthDto } from './dto/google-auth.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { AUTH_MESSAGES, SWAGGER_DESCRIPTIONS } from '@/shared';
+import { AUTH_MESSAGES, IAuthenticatedUser, SWAGGER_DESCRIPTIONS } from '@/shared';
+
+// Express request augmented with the user attached by JwtStrategy.validate().
+interface AuthenticatedRequest extends Request {
+  user: IAuthenticatedUser;
+}
 
 @ApiTags(SWAGGER_DESCRIPTIONS.AUTH_TAG)
 @Controller('auth')
@@ -54,5 +61,16 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: AUTH_MESSAGES.INVALID_RESET_TOKEN })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: SWAGGER_DESCRIPTIONS.GET_ME })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGES.GET_ME_SUCCESS })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: AUTH_MESSAGES.UNAUTHORIZED })
+  async getMe(@Req() req: AuthenticatedRequest) {
+    // JwtStrategy.validate() already returned the sanitized user attached as req.user
+    return req.user;
   }
 }

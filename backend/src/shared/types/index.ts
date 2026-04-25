@@ -28,6 +28,17 @@ export interface IUpdateUserDto {
 }
 
 // ─── Auth Types ──────────────────────────────────────────────
+
+/**
+ * Shape of the user object attached to the Express request by JwtStrategy.validate().
+ * Consumed by @Req() in any controller that uses AuthGuard('jwt').
+ */
+export interface IAuthenticatedUser {
+  id: string;
+  email: string;
+  fullName: string | null;
+}
+
 export interface ILoginDto {
   email: string;
   password: string;

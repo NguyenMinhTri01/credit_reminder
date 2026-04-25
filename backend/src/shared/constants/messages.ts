@@ -13,6 +13,7 @@ export const AUTH_MESSAGES = {
   GOOGLE_INVALID_TOKEN: 'Invalid Google token',
   UNAUTHORIZED: 'Unauthorized access',
   TOKEN_EXPIRED: 'Token has expired',
+  GET_ME_SUCCESS: 'Current user retrieved successfully',
 } as const;
 
 // ─── Validation Messages ────────────────────────────────────
@@ -39,6 +40,7 @@ export const SWAGGER_DESCRIPTIONS = {
   GOOGLE_LOGIN: 'Login or register with Google',
   FORGOT_PASSWORD: 'Request a password reset link',
   RESET_PASSWORD: 'Reset password using a valid reset token',
+  GET_ME: 'Get current authenticated user',
   EMAIL_EXAMPLE: 'user@example.com',
   PASSWORD_EXAMPLE: 'StrongP@ss1',
   FULL_NAME_EXAMPLE: 'Nguyen Van A',
