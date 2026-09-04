@@ -6,7 +6,8 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "test": "jest",
@@ -61,7 +62,7 @@
     "typescript": "^6.0.3"
   },
   "engines": {
-    "node": "24.12.0",
-    "pnpm": "10.33.0"
+    "node": ">=24.12.0",
+    "pnpm": ">=10.33.0"
   }
 }

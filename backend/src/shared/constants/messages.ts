@@ -23,7 +23,8 @@ export const VALIDATION_MESSAGES = {
   PASSWORD_REQUIRED: 'Password is required',
   PASSWORD_MIN_LENGTH: 'Password must be at least 8 characters',
   PASSWORD_MAX_LENGTH: 'Password must be at most 128 characters',
-  PASSWORD_WEAK: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  PASSWORD_WEAK:
+    'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
   FULL_NAME_REQUIRED: 'Full name is required',
   FULL_NAME_MIN_LENGTH: 'Full name must be at least 2 characters',
   FULL_NAME_MAX_LENGTH: 'Full name must be at most 100 characters',

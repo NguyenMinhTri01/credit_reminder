@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_LENGTH,
@@ -11,12 +19,18 @@ import {
 } from '@/shared';
 
 export class RegisterDto {
-  @ApiProperty({ description: VALIDATION_MESSAGES.EMAIL_REQUIRED, example: SWAGGER_DESCRIPTIONS.EMAIL_EXAMPLE })
+  @ApiProperty({
+    description: VALIDATION_MESSAGES.EMAIL_REQUIRED,
+    example: SWAGGER_DESCRIPTIONS.EMAIL_EXAMPLE,
+  })
   @IsEmail({}, { message: VALIDATION_MESSAGES.EMAIL_INVALID })
   @IsNotEmpty({ message: VALIDATION_MESSAGES.EMAIL_REQUIRED })
   readonly email: string;
 
-  @ApiProperty({ description: VALIDATION_MESSAGES.PASSWORD_REQUIRED, example: SWAGGER_DESCRIPTIONS.PASSWORD_EXAMPLE })
+  @ApiProperty({
+    description: VALIDATION_MESSAGES.PASSWORD_REQUIRED,
+    example: SWAGGER_DESCRIPTIONS.PASSWORD_EXAMPLE,
+  })
   @IsString()
   @IsNotEmpty({ message: VALIDATION_MESSAGES.PASSWORD_REQUIRED })
   @MinLength(PASSWORD_MIN_LENGTH, { message: VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH })
@@ -24,7 +38,10 @@ export class RegisterDto {
   @Matches(PASSWORD_REGEX, { message: VALIDATION_MESSAGES.PASSWORD_WEAK })
   readonly password: string;
 
-  @ApiProperty({ description: VALIDATION_MESSAGES.FULL_NAME_REQUIRED, example: SWAGGER_DESCRIPTIONS.FULL_NAME_EXAMPLE })
+  @ApiProperty({
+    description: VALIDATION_MESSAGES.FULL_NAME_REQUIRED,
+    example: SWAGGER_DESCRIPTIONS.FULL_NAME_EXAMPLE,
+  })
   @IsString()
   @IsNotEmpty({ message: VALIDATION_MESSAGES.FULL_NAME_REQUIRED })
   @MinLength(NAME_MIN_LENGTH, { message: VALIDATION_MESSAGES.FULL_NAME_MIN_LENGTH })
