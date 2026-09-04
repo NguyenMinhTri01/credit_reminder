@@ -148,4 +148,87 @@ describe('AuthService', () => {
       expect(result.message).toBe(AUTH_MESSAGES.RESET_PASSWORD_SUCCESS);
     });
   });
+
+  describe('googleAuth', () => {
+    const googleUser = { sub: 'g-1', email: 'g@example.com', name: 'Google User' };
+
+    beforeEach(() => {
+      // verifyGoogleToken is private; mock the underlying google client.
+      const googleClient = (service as unknown as { googleClient: { verifyIdToken: jest.Mock } })
+        .googleClient;
+      googleClient.verifyIdToken = jest.fn().mockResolvedValue({
+        getPayload: () => ({ sub: googleUser.sub, email: googleUser.email, name: googleUser.name }),
+      });
+    });
+
+    it('should create a new user when none exists', async () => {
+      mockPrismaService.user.findUnique
+        .mockResolvedValueOnce(null) // by googleId
+        .mockResolvedValueOnce(null); // by email
+      mockPrismaService.user.create.mockResolvedValue({
+        id: '1',
+        email: googleUser.email,
+        fullName: googleUser.name,
+        googleId: googleUser.sub,
+      });
+
+      const result = await service.googleAuth({ idToken: 'valid-token' });
+
+      expect(result.user).toBeDefined();
+      expect(result.tokens).toBeDefined();
+      expect(mockPrismaService.user.create).toHaveBeenCalled();
+    });
+
+    it('should link googleId to existing user found by email', async () => {
+      const existing = { id: '2', email: googleUser.email, fullName: 'Old Name' };
+      mockPrismaService.user.findUnique
+        .mockResolvedValueOnce(null) // by googleId
+        .mockResolvedValueOnce(existing); // by email
+      mockPrismaService.user.update.mockResolvedValue({
+        ...existing,
+        googleId: googleUser.sub,
+      });
+
+      const result = await service.googleAuth({ idToken: 'valid-token' });
+
+      expect(result.user).toBeDefined();
+      expect(mockPrismaService.user.update).toHaveBeenCalled();
+    });
+
+    it('should return existing user found by googleId', async () => {
+      const existing = {
+        id: '3',
+        email: googleUser.email,
+        fullName: googleUser.name,
+        googleId: googleUser.sub,
+      };
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(existing);
+
+      const result = await service.googleAuth({ idToken: 'valid-token' });
+
+      expect(result.user).toBeDefined();
+      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException when google token verification fails', async () => {
+      const googleClient = (service as unknown as { googleClient: { verifyIdToken: jest.Mock } })
+        .googleClient;
+      googleClient.verifyIdToken = jest.fn().mockRejectedValue(new Error('invalid'));
+
+      await expect(service.googleAuth({ idToken: 'bad-token' })).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw UnauthorizedException when payload is missing email', async () => {
+      const googleClient = (service as unknown as { googleClient: { verifyIdToken: jest.Mock } })
+        .googleClient;
+      googleClient.verifyIdToken = jest.fn().mockResolvedValue({
+        getPayload: () => ({ sub: 'g-1' }),
+      });
+
+      await expect(service.googleAuth({ idToken: 'token' })).rejects.toThrow(UnauthorizedException);
+    });
+  });
 });
