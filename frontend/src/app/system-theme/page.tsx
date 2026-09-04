@@ -1,6 +1,10 @@
 'use client'
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +28,11 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@/components/ui/button-group'
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+} from '@/components/ui/button-group'
 import {
   Card,
   CardContent,
@@ -335,8 +343,8 @@ export default function SystemThemePage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the reminder and remove
-                  the data from the server.
+                  This action cannot be undone. This will permanently delete the reminder and
+                  remove the data from the server.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

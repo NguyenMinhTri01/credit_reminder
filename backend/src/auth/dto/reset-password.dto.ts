@@ -9,18 +9,12 @@ import {
 } from '@/shared';
 
 export class ResetPasswordDto {
-  @ApiProperty({
-    description: VALIDATION_MESSAGES.RESET_TOKEN_REQUIRED,
-    example: SWAGGER_DESCRIPTIONS.RESET_TOKEN_EXAMPLE,
-  })
+  @ApiProperty({ description: VALIDATION_MESSAGES.RESET_TOKEN_REQUIRED, example: SWAGGER_DESCRIPTIONS.RESET_TOKEN_EXAMPLE })
   @IsString()
   @IsNotEmpty({ message: VALIDATION_MESSAGES.RESET_TOKEN_REQUIRED })
   readonly token: string;
 
-  @ApiProperty({
-    description: VALIDATION_MESSAGES.NEW_PASSWORD_REQUIRED,
-    example: SWAGGER_DESCRIPTIONS.PASSWORD_EXAMPLE,
-  })
+  @ApiProperty({ description: VALIDATION_MESSAGES.NEW_PASSWORD_REQUIRED, example: SWAGGER_DESCRIPTIONS.PASSWORD_EXAMPLE })
   @IsString()
   @IsNotEmpty({ message: VALIDATION_MESSAGES.NEW_PASSWORD_REQUIRED })
   @MinLength(PASSWORD_MIN_LENGTH, { message: VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH })

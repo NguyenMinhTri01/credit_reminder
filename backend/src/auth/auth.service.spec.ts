@@ -58,11 +58,7 @@ describe('AuthService', () => {
     it('should register a new user', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.user.create.mockResolvedValue({
-        id: '1',
-        email: dto.email,
-        fullName: dto.fullName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        id: '1', email: dto.email, fullName: dto.fullName, createdAt: new Date(), updatedAt: new Date(),
       });
 
       const result = await service.register(dto);
@@ -82,10 +78,7 @@ describe('AuthService', () => {
 
     it('should login with valid credentials', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
-        id: '1',
-        email: dto.email,
-        passwordHash: 'hashed',
-        fullName: 'Test',
+        id: '1', email: dto.email, passwordHash: 'hashed', fullName: 'Test',
       });
       (compare as jest.Mock).mockResolvedValue(true);
 
@@ -102,10 +95,7 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException with wrong password', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
-        id: '1',
-        email: dto.email,
-        passwordHash: 'hashed',
-        fullName: 'Test',
+        id: '1', email: dto.email, passwordHash: 'hashed', fullName: 'Test',
       });
       (compare as jest.Mock).mockResolvedValue(false);
 
