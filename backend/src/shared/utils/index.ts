@@ -15,11 +15,7 @@ export function normalizePagination(page?: number, limit?: number) {
 /**
  * Build pagination metadata from query result.
  */
-export function buildPaginationMeta(
-  total: number,
-  page: number,
-  limit: number,
-): IPaginationMeta {
+export function buildPaginationMeta(total: number, page: number, limit: number): IPaginationMeta {
   return {
     page,
     limit,

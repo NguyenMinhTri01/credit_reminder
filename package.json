@@ -14,12 +14,23 @@
     "test:frontend": "pnpm --filter frontend test",
     "test": "pnpm test:backend && pnpm test:frontend",
     "lint": "pnpm --filter backend lint && pnpm --filter frontend lint",
+    "typecheck:backend": "pnpm --filter backend typecheck",
+    "typecheck:frontend": "pnpm --filter frontend typecheck",
+    "typecheck": "pnpm typecheck:backend && pnpm typecheck:frontend",
+    "test:cov:backend": "pnpm --filter backend test:cov",
+    "test:cov:frontend": "pnpm --filter frontend test:cov",
+    "test:cov": "pnpm test:cov:backend && pnpm test:cov:frontend",
+    "prepare": "husky",
+    "pre-commit": "bash scripts/pre-commit-check.sh",
     "db:generate": "pnpm --filter backend db:generate",
     "db:migrate": "pnpm --filter backend db:migrate",
     "db:studio": "pnpm --filter backend db:studio"
   },
   "engines": {
-    "node": "24.12.0",
-    "pnpm": "10.33.0"
+    "node": ">=24.12.0",
+    "pnpm": ">=10.33.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

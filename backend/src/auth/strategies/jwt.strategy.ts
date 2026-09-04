@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '@/prisma/prisma.service';
-import { AUTH_MESSAGES } from '@/shared';
+import { AUTH_MESSAGES, IAuthenticatedUser } from '@/shared';
 
-interface JwtPayload {
+// Shape of the JWT token payload (sub = user id).
+interface JwtTokenPayload {
   sub: string;
   email: string;
 }
@@ -23,7 +24,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
+  // Return value is attached to req.user by Passport; typed as IAuthenticatedUser.
+  async validate(payload: JwtTokenPayload): Promise<IAuthenticatedUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
