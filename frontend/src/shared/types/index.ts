@@ -105,3 +105,41 @@ export interface IPaginationParams {
 export interface ISearchParams extends IPaginationParams {
   search?: string
 }
+
+// ─── Dashboard Types ────────────────────────────────────────
+export interface IDashboardSummary {
+  cardCount: number
+  totalCreditLimit: string
+  totalCurrentBalance: string
+  availableCredit: string
+  utilizationPercent: number | null
+  hasUnknownLimits: boolean
+}
+
+export interface IDashboardCard {
+  id: string
+  bankName: string
+  cardName: string
+  cardNumberMasked: string | null
+  creditLimit: string | null
+  currentBalance: string
+  availableCredit: string | null
+  utilizationPercent: number | null
+  nextDueDate: string | null
+  daysUntilDue: number | null
+}
+
+export interface IDashboardReminder {
+  id: string
+  title: string
+  amount: string | null
+  frequency: 'MONTHLY' | 'QUARTERLY' | 'ONE_TIME' | null
+  nextTriggerDate: string
+}
+
+export interface IDashboardSnapshot {
+  generatedAt: string
+  summary: IDashboardSummary
+  cards: IDashboardCard[]
+  upcomingReminders: IDashboardReminder[]
+}

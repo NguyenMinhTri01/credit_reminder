@@ -8,6 +8,7 @@ type RequestOptions = {
   headers?: Record<string, string>
   /** Optional bearer token; on the server resolved automatically from next-auth session. */
   accessToken?: string
+  cache?: RequestCache
 }
 
 /**
@@ -25,7 +26,7 @@ async function resolveAccessToken(explicit?: string): Promise<string | undefined
 }
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, headers = {}, accessToken } = options
+  const { method = 'GET', body, headers = {}, accessToken, cache } = options
 
   const token = await resolveAccessToken(accessToken)
 
@@ -36,6 +37,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
+    cache,
   }
 
   if (body) {

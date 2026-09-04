@@ -1,5 +1,23 @@
 schema: spec-driven
 
+# Artifact language policy: committed OpenSpec artifacts are written in English;
+# interactive communication with the user remains Vietnamese.
+context: |
+  Communication with the user is in Vietnamese unless the user requests another language.
+  All OpenSpec artifacts intended for version control must be written entirely in English.
+
+rules:
+  proposal:
+    - Write the artifact entirely in English.
+  specs:
+    - Write the specification entirely in English, including Purpose, requirements, scenarios, examples, and notes.
+  design:
+    - Write the artifact entirely in English.
+  tasks:
+    - Write the artifact entirely in English.
+  verification:
+    - Write the artifact entirely in English.
+
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
