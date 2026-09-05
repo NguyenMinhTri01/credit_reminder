@@ -30,7 +30,7 @@ Evaluates third-party code review findings with independent critical thinking, s
 2. **Objective 5-Tier Decision Matrix**:
    Classify every review comment into one of five definitive statuses:
    - `ACCEPTED_FIX`: Genuine bug, logic error, security vulnerability, performance degradation, or spec deviation.  
-     **Action:** Implement minimal surgical fix and add/update tests.
+     **Action:** When fix authorization is requested by the user (e.g., "fix nếu hợp lý", "implement fixes"), implement minimal surgical fix and add/update tests. If the user only requested evaluation/review without authorization to edit files, document the accepted finding and proposed diff in the report without modifying source or test files.
    - `REJECTED_FALSE_POSITIVE`: Reviewer's claim is technically incorrect, factually wrong, or based on false assumptions about data types/runtime behavior.  
      **Action:** Do NOT change code; provide clear, factual technical proof explaining why the code is already correct.
    - `REJECTED_OVER_ENGINEERING`: Reviewer suggests unnecessary abstraction (e.g., extracting a 3-line wrapper component for an already clean inline component), speculative architecture, or subjective bikeshedding violating KISS/YAGNI.  

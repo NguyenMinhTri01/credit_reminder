@@ -42,6 +42,10 @@ describe('AccountMenu', () => {
     const { rerender } = render(<AccountMenu />)
     expect(screen.getByText('tri@example.com')).toBeInTheDocument()
 
+    mockUser = { name: '   ', email: 'tri@example.com' }
+    rerender(<AccountMenu />)
+    expect(screen.getByText('tri@example.com')).toBeInTheDocument()
+
     mockUser = undefined
     rerender(<AccountMenu />)
     expect(screen.getAllByText('account').length).toBeGreaterThan(0)

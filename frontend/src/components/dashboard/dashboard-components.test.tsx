@@ -27,7 +27,7 @@ const fullCard: IDashboardCard = {
 
 describe('dashboard presentation', () => {
   it('renders summary values, unknown-limit notice, and clamps visual progress', () => {
-    render(
+    const { rerender } = render(
       <SummaryGrid
         summary={{
           cardCount: 2,
@@ -45,6 +45,20 @@ describe('dashboard presentation', () => {
       'aria-valuenow',
       '100',
     )
+
+    rerender(
+      <SummaryGrid
+        summary={{
+          cardCount: 0,
+          totalCreditLimit: '0.00',
+          totalCurrentBalance: '0.00',
+          availableCredit: '0.00',
+          utilizationPercent: null,
+          hasUnknownLimits: false,
+        }}
+      />,
+    )
+    expect(screen.queryByRole('progressbar', { name: 'utilization' })).not.toBeInTheDocument()
   })
 
   it('renders complete, missing, and over-limit card states with one tile component', () => {
@@ -69,6 +83,9 @@ describe('dashboard presentation', () => {
 
     rerender(<CreditCardTile card={{ ...fullCard, daysUntilDue: 0 }} />)
     expect(screen.getByText('dueToday')).toBeInTheDocument()
+
+    rerender(<CreditCardTile card={{ ...fullCard, utilizationPercent: null }} />)
+    expect(screen.queryByRole('progressbar', { name: 'utilization' })).not.toBeInTheDocument()
   })
 
   it('uses the shadcn empty state and keeps add-card actions disabled', () => {

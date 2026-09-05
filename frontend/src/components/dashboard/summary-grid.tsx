@@ -20,7 +20,7 @@ export function SummaryGrid({ summary }: { summary: IDashboardSummary }) {
       <SummaryCard
         title={dashboard('currentDebt')}
         value={formatVnd(summary.totalCurrentBalance, locale)}
-        description={dashboard('availableCredit')}
+        description={`${dashboard('availableCredit')}: ${formatVnd(summary.availableCredit, locale)}`}
         icon={CreditCard}
       />
       <SummaryCard
@@ -28,7 +28,11 @@ export function SummaryGrid({ summary }: { summary: IDashboardSummary }) {
         value={formatPercentage(summary.utilizationPercent, locale)}
         description={`${dashboard('availableCredit')}: ${formatVnd(summary.availableCredit, locale)}`}
         icon={Landmark}
-        progress={clampProgress(summary.utilizationPercent)}
+        progress={
+          summary.utilizationPercent === null
+            ? undefined
+            : clampProgress(summary.utilizationPercent)
+        }
         progressLabel={dashboard('utilization')}
       />
     </section>

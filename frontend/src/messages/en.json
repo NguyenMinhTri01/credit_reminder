@@ -52,7 +52,7 @@
     "dueInDays": "{count, plural, one {# day left} other {# days left}}",
     "overLimit": "Over limit",
     "upcomingReminders": "Upcoming reminders",
-    "remindersDescription": "Your next 5 payments at most.",
+    "remindersDescription": "Up to 5 upcoming payments.",
     "createReminder": "Create reminder",
     "noCardsTitle": "No credit cards yet",
     "noCardsDescription": "Your cards will appear here when adding cards becomes available.",

@@ -10,11 +10,11 @@ Provide every signed-in user with a secure, readable overview of credit limits, 
 The system SHALL provide dashboard data and UI only to users with a valid signed-in session, and every returned record MUST belong to that user.
 
 #### Scenario: Signed-in user opens the dashboard
-- **WHEN** a user with a valid session visits `/home`
+- **WHEN** a user with a valid session visits `/`
 - **THEN** the system displays that user's personalized dashboard
 
 #### Scenario: Anonymous user opens the dashboard
-- **WHEN** a user without a valid session visits `/home`
+- **WHEN** a user without a valid session visits `/`
 - **THEN** the system redirects the user to sign-in and preserves the return URL
 
 #### Scenario: Dashboard API has no valid token

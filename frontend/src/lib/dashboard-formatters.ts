@@ -6,8 +6,9 @@ export function formatVnd(
   fallback = DEFAULT_FALLBACK,
 ): string {
   if (value === null || !/^-?\d+(\.\d+)?$/.test(value)) return fallback
-  const numericValue = Number(value)
+  let numericValue = Number(value)
   if (!Number.isFinite(numericValue)) return fallback
+  if (Math.abs(numericValue) < 0.5) numericValue = 0
 
   return new Intl.NumberFormat(locale, {
     style: 'currency',

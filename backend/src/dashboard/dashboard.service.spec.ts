@@ -48,7 +48,11 @@ describe('DashboardService', () => {
     );
     expect(prisma.reminder.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ userId: 'user-1', isActive: true }),
+        where: expect.objectContaining({
+          userId: 'user-1',
+          isActive: true,
+          nextTriggerDate: { gte: expect.any(Date) },
+        }),
         take: 5,
       }),
     );

@@ -13,6 +13,8 @@ describe('dashboard formatters', () => {
     expect(formatVnd(null)).toBe('—')
     expect(formatVnd('not-money')).toBe('—')
     expect(formatVnd('9'.repeat(400))).toBe('—')
+    expect(formatVnd('-0.25', 'vi-VN')).not.toContain('-')
+    expect(formatVnd('-0.25', 'vi-VN')).toContain('0')
   })
 
   it('formats percentages without NaN or Infinity', () => {

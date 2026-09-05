@@ -18,13 +18,13 @@ import { getUserInitials } from '@/lib/dashboard-formatters'
 export function AccountMenu() {
   const dashboard = useTranslations('dashboard')
   const { user, signOut } = useAuth()
-  const displayName = user?.name || user?.email || dashboard('account')
+  const displayName = user?.name?.trim() || user?.email || dashboard('account')
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label={dashboard('account')}>
-          <Avatar>
+          <Avatar className="size-8">
             <AvatarFallback>{getUserInitials(user?.name, user?.email)}</AvatarFallback>
           </Avatar>
         </Button>

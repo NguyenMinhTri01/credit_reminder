@@ -98,7 +98,7 @@ graph LR
 4. **Automated Verification**:
    - Run typechecking (`pnpm typecheck`).
    - Run unit & integration tests (`pnpm test`).
-   - Run linter (`pnpm lint`).
+   - Run linter (`pnpm lint`). Note: If a package script includes `--fix` by default, ensure non-autofixing verification is used during read-only evaluations to keep rejected/deferred locations untouched.
 5. **Output Report in Vietnamese**:
    - Compile and deliver the final report using the structured Vietnamese Markdown template.
 

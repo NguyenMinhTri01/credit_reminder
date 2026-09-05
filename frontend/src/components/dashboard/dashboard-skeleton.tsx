@@ -22,6 +22,7 @@ function SkeletonCard() {
 export function DashboardSkeleton({ label }: { label: string }) {
   return (
     <div
+      role="status"
       className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col gap-8 p-4 md:p-6 lg:p-8"
       aria-busy="true"
       aria-label={label}

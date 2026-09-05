@@ -44,20 +44,23 @@ Collect **all** of the following before writing a single line of the report. Mis
 | # | Input | How to obtain | Required |
 | --- | --- | --- | --- |
 | 1 | Change metadata & artifact paths | `openspec status --change "<name>" --json` | Yes |
-| 2 | `proposal.md` (Why / What Changes / Capabilities / Impact) | path from `contextFiles` | Yes |
-| 3 | Delta specs (`specs/<capability>/spec.md`) | path from `contextFiles` | Yes |
-| 4 | `design.md` (target architecture, decisions, trade-offs) | path from `contextFiles` | If present |
-| 5 | `tasks.md` (checkbox state) | path from `contextFiles` | Yes |
-| 6 | Current main specs (pre-change baseline) | `openspec/specs/<capability>/spec.md` | For `MODIFIED` / `REMOVED` deltas |
-| 7 | Git diff of the implementation | see snippet below | If a base ref exists |
-| 8 | Actual source code at HEAD | read the touched files in full, not only the diff hunks | Yes |
-| 9 | Coding standards | `CODING_STANDARDS.md`; if absent, fall back to `.windsurfrules`, then `AGENTS.md`, then `README.md` | Yes (best available) |
-| 10 | Project context / per-artifact rules | `openspec/config.yaml` (`context`, `rules`) | Yes |
+| 2 | Schema-defined change artifacts (`proposal.md`, delta specs, `design.md`, `tasks.md`, etc.) | Branch on `schemaName`: if `spec-driven`, read `proposal.md`, delta specs (`specs/<capability>/spec.md`), `design.md`, and `tasks.md` from `contextFiles`. For custom/other schemas, drive artifact list from `contextFiles` and schema instructions. | Yes |
+| 3 | Current main specs (pre-change baseline) | Resolve from `<planningHome.root>/specs/<full-capability-path>/spec.md` (taking into account selected store root) | For `MODIFIED` / `REMOVED` deltas |
+| 4 | Git diff of the implementation | see snippet below | If a base ref or PR diff exists |
+| 5 | Actual source code at HEAD | read the touched files in full, not only the diff hunks | Yes |
+| 6 | Coding standards | Load nearest applicable standards file for each touched path (e.g. package-specific rules), then apply repository-wide guidance (`AGENTS.md`, `CODING_STANDARDS.md`, or `README.md`) | Yes (best available) |
+| 7 | Project context / per-artifact rules | `openspec/config.yaml` (`context`, `rules`) | Yes |
 
 ```bash
-openspec status   --change "<name>" --json [--store "<id>"]
-openspec show     "<name>" --json --deltas-only [--store "<id>"]
-openspec validate "<name>" --strict [--store "<id>"]
+# Standard review commands
+openspec status   --change "<name>" --json
+openspec show     "<name>" --json --deltas-only
+openspec validate "<name>" --strict
+
+# When working with an external store, append --store "<id>":
+# openspec status   --change "<name>" --store "<id>" --json
+# openspec show     "<name>" --store "<id>" --json --deltas-only
+# openspec validate "<name>" --store "<id>" --strict
 
 # Diff scope: prefer the merge-base against the integration branch
 BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main 2>/dev/null || true)
@@ -65,15 +68,18 @@ if [ -n "$BASE" ]; then
   git diff --stat "$BASE"...HEAD
   git diff        "$BASE"...HEAD
 else
-  echo "No diff base found; reviewing working tree"
+  # Handle shallow clone or missing remote base ref
+  echo "No diff base found with origin/main or main."
+  echo "If this is a shallow PR clone, fetch the base branch (e.g. git fetch origin main --depth=50) or supply the PR base ref/diff."
   git diff --stat HEAD
   git diff        HEAD
   git status --short
 fi
 ```
 
-> If no usable base ref exists, state that explicitly in the report header and
-> review against the working tree only. Never invent a diff.
+> If no usable base ref exists and HEAD contains committed changes without a base ref,
+> request the base branch or PR diff from the user rather than reviewing an empty or partial diff.
+> Never invent a diff.
 
 ---
 

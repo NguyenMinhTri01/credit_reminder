@@ -64,7 +64,7 @@ export function CreditCardTile({ card, tone }: CreditCardTileProps) {
           <div className="flex flex-col gap-1">
             <p className="text-muted-foreground text-sm">{dashboard('cardLimitAndUsed')}</p>
             <p className="font-semibold tabular-nums">
-              {formatVnd(card.currentBalance, locale)} / {formatVnd(card.creditLimit, locale)}
+              {formatVnd(card.creditLimit, locale)} / {formatVnd(card.currentBalance, locale)}
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -76,11 +76,13 @@ export function CreditCardTile({ card, tone }: CreditCardTileProps) {
                 {formatPercentage(card.utilizationPercent, locale)}
               </span>
             </div>
-            <Progress
-              value={clampProgress(card.utilizationPercent)}
-              aria-valuenow={clampProgress(card.utilizationPercent)}
-              aria-label={dashboard('utilization')}
-            />
+            {card.utilizationPercent !== null ? (
+              <Progress
+                value={clampProgress(card.utilizationPercent)}
+                aria-valuenow={clampProgress(card.utilizationPercent)}
+                aria-label={dashboard('utilization')}
+              />
+            ) : null}
             {isOverLimit ? <Badge variant="destructive">{dashboard('overLimit')}</Badge> : null}
           </div>
         </div>
