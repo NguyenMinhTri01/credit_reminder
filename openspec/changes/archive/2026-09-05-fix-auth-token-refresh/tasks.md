@@ -23,5 +23,5 @@ All tasks are complete — implementation was delivered as a direct hot-fix.
 ### Verification
 
 - [x] `pnpm typecheck` — 0 errors
-- [x] `pnpm test` — 276 frontend + 71 backend tests pass
+- [x] `pnpm test` — 281 frontend + 74 backend tests pass
 - [x] `pnpm lint` — 0 errors

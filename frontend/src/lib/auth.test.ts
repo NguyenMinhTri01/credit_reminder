@@ -170,7 +170,7 @@ describe('lib/auth', () => {
         expect(result).toMatchObject({ accessToken: token.accessToken })
       })
 
-      it('should call /auth/refresh when token is expired and return new tokens', async () => {
+      it('should call /auth/refresh when token is expired and return new tokens, clearing error', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ accessToken: 'new-access', refreshToken: 'new-refresh' }),
@@ -180,6 +180,7 @@ describe('lib/auth', () => {
           accessToken: 'old-access',
           refreshToken: 'old-refresh',
           accessTokenExpiresAt: Date.now() - 1000, // already expired
+          error: 'RefreshAccessTokenError',
         }
 
         const result = await jwt()({ token, user: undefined, account: null })
@@ -187,6 +188,52 @@ describe('lib/auth', () => {
         const [url, init] = mockFetch.mock.calls[0]
         expect(url).toContain('/auth/refresh')
         expect(init?.body).toBe(JSON.stringify({ refreshToken: 'old-refresh' }))
+        expect(result).toMatchObject({
+          accessToken: 'new-access',
+          refreshToken: 'new-refresh',
+        })
+        expect((result as Record<string, unknown>).error).toBeUndefined()
+      })
+
+      it('should proactively refresh when access token is within 1-minute buffer window', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ accessToken: 'new-access', refreshToken: 'new-refresh' }),
+        } as Response)
+
+        const token = {
+          accessToken: 'old-access',
+          refreshToken: 'old-refresh',
+          accessTokenExpiresAt: Date.now() + 30 * 1000, // 30s left, within 60s buffer
+        }
+
+        const result = await jwt()({ token, user: undefined, account: null })
+
+        const [url, init] = mockFetch.mock.calls[0]
+        expect(url).toContain('/auth/refresh')
+        expect(init?.body).toBe(JSON.stringify({ refreshToken: 'old-refresh' }))
+        expect(result).toMatchObject({
+          accessToken: 'new-access',
+          refreshToken: 'new-refresh',
+        })
+      })
+
+      it('should derive expiry from accessToken and refresh legacy session', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ accessToken: 'new-access', refreshToken: 'new-refresh' }),
+        } as Response)
+
+        const pastExp = Math.floor(Date.now() / 1000) - 100 // expired 100s ago
+        const token = {
+          accessToken: makeJwt(pastExp),
+          refreshToken: 'legacy-refresh',
+          // accessTokenExpiresAt omitted
+        }
+
+        const result = await jwt()({ token, user: undefined, account: null })
+
+        expect(mockFetch).toHaveBeenCalledTimes(1)
         expect(result).toMatchObject({
           accessToken: 'new-access',
           refreshToken: 'new-refresh',

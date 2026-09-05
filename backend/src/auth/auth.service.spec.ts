@@ -151,10 +151,12 @@ describe('AuthService', () => {
 
   describe('refreshToken', () => {
     it('should return new tokens when refresh token is valid', async () => {
-      mockJwtService.signAsync.mockResolvedValue('new-token');
+      mockJwtService.signAsync
+        .mockResolvedValueOnce('new-access-token')
+        .mockResolvedValueOnce('new-refresh-token');
       (mockJwtService as Record<string, jest.Mock>)['verifyAsync'] = jest
         .fn()
-        .mockResolvedValue({ sub: '1', email: 'test@example.com' });
+        .mockResolvedValue({ sub: '1', email: 'test@example.com', type: 'refresh' });
 
       const result = await service.refreshToken('valid-refresh-token');
 
@@ -162,8 +164,9 @@ describe('AuthService', () => {
         'valid-refresh-token',
         expect.objectContaining({ secret: 'test-value' }),
       );
-      expect(result.accessToken).toBe('new-token');
-      expect(result.refreshToken).toBe('new-token');
+      expect(result.accessToken).toBe('new-access-token');
+      expect(result.refreshToken).toBe('new-refresh-token');
+      expect(result.accessToken).not.toBe(result.refreshToken);
     });
 
     it('should throw UnauthorizedException when refresh token is invalid', async () => {
@@ -172,6 +175,16 @@ describe('AuthService', () => {
         .mockRejectedValue(new Error('invalid token'));
 
       await expect(service.refreshToken('bad-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException when token type is not refresh', async () => {
+      (mockJwtService as Record<string, jest.Mock>)['verifyAsync'] = jest
+        .fn()
+        .mockResolvedValue({ sub: '1', email: 'test@example.com', type: 'access' });
+
+      await expect(service.refreshToken('access-token-as-refresh')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

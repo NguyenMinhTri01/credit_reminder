@@ -16,7 +16,8 @@ throws `UnauthorizedException(AUTH_MESSAGES.REFRESH_TOKEN_INVALID)`.
 **File**: `backend/src/auth/auth.controller.ts`
 
 `POST /auth/refresh` — accepts `RefreshTokenDto { refreshToken: string }`, delegates to
-`AuthService.refreshToken`, returns the new token pair. HTTP 200 on success, 401 on failure.
+`AuthService.refreshToken`, returns the new token pair. HTTP 200 on success, 401 for invalid or
+expired tokens, and 400 for DTO validation failures.
 
 **File**: `backend/src/auth/dto/refresh-token.dto.ts`
 
@@ -43,7 +44,8 @@ returns `exp * 1000` (ms). Returns `0` on any parse error.
 `Session` augmented with `error?: string`.
 
 ## Non-Goals
-
+ 
 - No schema migrations (read-only fix).
-- No UI changes for `RefreshAccessTokenError` state (out of scope — existing `error.tsx`
-  boundaries already handle this by prompting re-login).
+- Automatic re-login handling: `SessionErrorHandler` inside `SessionProvider` detects
+  `session.error === 'RefreshAccessTokenError'` and automatically signs out, redirecting
+  to `/login`.

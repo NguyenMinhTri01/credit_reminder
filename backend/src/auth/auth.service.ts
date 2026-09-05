@@ -19,6 +19,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 interface JwtPayload {
   sub: string;
   email: string;
+  type?: 'access' | 'refresh';
 }
 
 export interface AuthTokens {
@@ -182,6 +183,9 @@ export class AuthService {
     const secret = this.configService.get<string>('JWT_SECRET');
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, { secret });
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException(AUTH_MESSAGES.REFRESH_TOKEN_INVALID);
+      }
       return this.generateTokens({ sub: payload.sub, email: payload.email });
     } catch {
       throw new UnauthorizedException(AUTH_MESSAGES.REFRESH_TOKEN_INVALID);
@@ -190,16 +194,17 @@ export class AuthService {
 
   private async generateTokens(payload: JwtPayload): Promise<AuthTokens> {
     const secret = this.configService.get<string>('JWT_SECRET');
+    const tokenBase = { sub: payload.sub, email: payload.email };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { ...payload },
+        { ...tokenBase, type: 'access' },
         {
           secret,
           expiresIn: this.configService.get('JWT_ACCESS_EXPIRY', '15m'),
         },
       ),
       this.jwtService.signAsync(
-        { ...payload },
+        { ...tokenBase, type: 'refresh' },
         {
           secret,
           expiresIn: this.configService.get('JWT_REFRESH_EXPIRY', '7d'),

@@ -129,8 +129,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       // Subsequent calls: check if access token needs refreshing.
-      // Only refresh when we have an expiry timestamp (i.e. session was
-      // created after this feature was introduced).
+      // If accessTokenExpiresAt is missing (legacy session cookie), derive it from accessToken.
+      if (token.accessTokenExpiresAt === undefined && token.accessToken) {
+        token.accessTokenExpiresAt = getTokenExpiry(token.accessToken as string)
+      }
+
       const expiresAt = token.accessTokenExpiresAt
       const shouldRefresh =
         expiresAt !== undefined && expiresAt > 0 && Date.now() >= expiresAt - ACCESS_TOKEN_BUFFER_MS

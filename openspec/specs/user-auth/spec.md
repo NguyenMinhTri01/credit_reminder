@@ -2,10 +2,10 @@
 
 ## Purpose
 
-Covers the full authentication lifecycle: credential-based login, Google OAuth login,
-and JWT token refresh. The backend issues short-lived access tokens (15 min) and
-long-lived refresh tokens (7 days); the frontend transparently refreshes access tokens
-before they expire so users remain authenticated across sessions.
+Covers JWT token lifecycle management and refresh mechanisms across backend and frontend.
+The backend issues short-lived access tokens (15 min) and long-lived refresh tokens (7 days);
+the frontend transparently refreshes access tokens before they expire so users remain
+authenticated across sessions.
 
 ## Requirements
 

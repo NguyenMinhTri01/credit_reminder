@@ -54,4 +54,27 @@ describe('JwtStrategy', () => {
       new UnauthorizedException(AUTH_MESSAGES.UNAUTHORIZED),
     );
   });
+
+  it('should throw UnauthorizedException when token type is refresh', async () => {
+    await expect(
+      strategy.validate({ sub: '1', email: 'test@example.com', type: 'refresh' }),
+    ).rejects.toThrow(new UnauthorizedException(AUTH_MESSAGES.UNAUTHORIZED));
+    expect(mockPrismaService.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('should return sanitized user when token type is access', async () => {
+    mockPrismaService.user.findUnique.mockResolvedValue({
+      id: '1',
+      email: 'test@example.com',
+      fullName: 'Test User',
+    });
+
+    const result = await strategy.validate({
+      sub: '1',
+      email: 'test@example.com',
+      type: 'access',
+    });
+
+    expect(result).toEqual({ id: '1', email: 'test@example.com', fullName: 'Test User' });
+  });
 });
