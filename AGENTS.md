@@ -1,7 +1,26 @@
-# Credit Reminder - Global Rules
-# Tech Stack: Node.js 24.12.0, pnpm 10.33.0, TypeScript 5.7, pnpm workspaces
+# Credit Reminder — Agent Rules
+
+> Universal rules for all AI agents (Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Devin, …).
+> Tech Stack: Node.js 24.12.0, pnpm 10.33.0, TypeScript (backend ^5.7.0, frontend ^6.0.3), pnpm workspaces
+
+## Project Commands
+
+```bash
+pnpm dev            # Start both backend & frontend
+pnpm dev:backend    # Backend only  (NestJS, port 3001)
+pnpm dev:frontend   # Frontend only (Next.js, port 3000)
+pnpm build          # Build all packages
+pnpm test           # Run all tests
+pnpm lint           # Lint all packages
+pnpm db:generate    # Generate Prisma client
+pnpm db:migrate     # Run database migrations
+pnpm db:studio      # Open Prisma Studio
+```
+
+URLs: frontend `http://localhost:3000` · backend `http://localhost:3001/api/v1` · swagger `http://localhost:3001/api/docs`
 
 ## Core Principles
+
 - **DRY**: Don't Repeat Yourself - use shared package for common code
 - **KISS**: Keep It Simple and Stupid - prefer simple solutions
 - **YAGNI**: You Ain't Gonna Need It - don't over-engineer
@@ -9,6 +28,7 @@
 - **Clean Architecture**: Separate concerns, dependency inversion
 
 ## Code Style
+
 - Use **TypeScript strict mode** everywhere
 - **Explicit types** over implicit - always define return types for functions
 - **Interface over Type** for object shapes (extensible)
@@ -24,6 +44,7 @@
 - **JSDoc comments** for public APIs
 
 ## Imports & Exports
+
 - Order: Built-in → External → Internal (shared) → Local
 - Group imports with blank lines between groups
 - Use **named exports** over default exports
@@ -32,6 +53,7 @@
 - **Local shared** imports via `@/shared` for each project
 
 ## Error Handling
+
 - **Never swallow errors** - always handle or re-throw
 - **Custom error classes** for domain errors
 - **Early returns** over nested if statements
@@ -39,6 +61,7 @@
 - **Never use `any`** - use `unknown` with type guards
 
 ## Testing
+
 - **Test file naming**: `*.spec.ts` (backend), `*.test.ts` (frontend)
 - **AAA pattern**: Arrange, Act, Assert
 - **One assertion per test** ideally, max 3
@@ -46,18 +69,21 @@
 - **100% coverage for critical paths** (auth, payment, core business)
 
 ## Git & Commits
+
 - **Conventional commits**: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
 - **Atomic commits** - one logical change per commit
 - **No commit message**: "fix", "update", "WIP"
 - **Scope tags**: `feat(api):`, `fix(ui):`, `refactor(db):`
 
 ## Performance
+
 - **Lazy loading** for routes/components when possible
 - **Memoization** for expensive calculations
 - **Avoid premature optimization** - measure first
 - **Bundle size awareness** - check deps size before adding
 
 ## Security
+
 - **Never hardcode secrets** - use env variables
 - **Validate all inputs** with Zod or class-validator
 - **Sanitize user data** before display
@@ -65,6 +91,7 @@
 - **JWT best practices** - short expiry, secure storage
 
 ## String Constants (No Hardcoded Strings)
+
 - **Never hardcode user-facing strings** in business logic code
 - **All messages** (error, success, validation, swagger) go in dedicated constants files
 - **Group by domain** - AUTH_MESSAGES, VALIDATION_MESSAGES, SWAGGER_DESCRIPTIONS, etc.
@@ -72,12 +99,14 @@
 - **Import from `@/shared`** - centralized access to all constants
 
 ## Documentation
+
 - **README updates** when changing setup/structure
 - **API docs** via Swagger decorators
 - **Complex logic** needs inline comments explaining WHY
 - **Self-documenting code** over comments explaining WHAT
 
 ## Monorepo Specific
+
 - **No circular dependencies** between packages
 - **Local shared folder** (`src/shared/`) in each project for types, constants, utils
 - **Backend/frontend specific code** stays in respective folders

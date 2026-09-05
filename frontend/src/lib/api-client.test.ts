@@ -91,4 +91,11 @@ describe('lib/api-client', () => {
     const [, init] = mockFetch.mock.calls[0]
     expect(init?.headers).not.toHaveProperty('Authorization')
   })
+
+  it('forwards the no-store cache policy for server snapshots', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true }))
+    await apiClient.get('/dashboard', { cache: 'no-store', accessToken: 'tok' })
+    const [, init] = mockFetch.mock.calls[0]
+    expect(init?.cache).toBe('no-store')
+  })
 })

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
  * Triggers next-auth's Google OAuth flow; on success, the JWT callback in
  * `lib/auth.ts` exchanges the Google id_token for our backend JWT.
  */
-export function GoogleButton({ callbackUrl = '/home' }: { callbackUrl?: string }) {
+export function GoogleButton({ callbackUrl = '/' }: { callbackUrl?: string }) {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 

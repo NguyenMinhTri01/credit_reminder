@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
  *
  * - Public auth pages (`/login`, `/forgot-password`, `/reset-password`) are
  *   always accessible. If the user already has a session, they get bounced
- *   to `/home` so they don't see the login form again.
+ *   to `/` so they don't see the login form again.
  * - Every other matched route requires a session; otherwise we redirect to
  *   `/login` with the original `?callbackUrl=` so we can return after sign-in.
  */
@@ -21,7 +21,7 @@ export default auth((req) => {
 
   if (isPublicAuthPath) {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL('/home', nextUrl))
+      return NextResponse.redirect(new URL('/', nextUrl))
     }
     return NextResponse.next()
   }

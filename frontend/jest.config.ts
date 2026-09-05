@@ -15,6 +15,8 @@ const config = {
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
+    // Registry-owned shadcn primitives are integration-tested through app components.
+    '!src/components/ui/{dropdown-menu,empty,input-group,progress,sheet,sidebar,skeleton,textarea,tooltip}.tsx',
   ],
   coverageThreshold: {
     global: {
