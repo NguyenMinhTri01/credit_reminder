@@ -55,14 +55,19 @@ Collect **all** of the following before writing a single line of the report. Mis
 | 10 | Project context / per-artifact rules | `openspec/config.yaml` (`context`, `rules`) | Yes |
 
 ```bash
-openspec status --change "<name>" --json
-openspec show   "<name>" --json --deltas-only
-openspec validate "<name>" --strict
+openspec status   --change "<name>" --json [--store "<id>"]
+openspec show     "<name>" --json --deltas-only [--store "<id>"]
+openspec validate "<name>" --strict [--store "<id>"]
 
 # Diff scope: prefer the merge-base against the integration branch
-BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main)
-git diff --stat "$BASE"...HEAD
-git diff        "$BASE"...HEAD
+BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main 2>/dev/null || true)
+if [ -n "$BASE" ]; then
+  git diff --stat "$BASE"...HEAD
+  git diff        "$BASE"...HEAD
+else
+  echo "No diff base found; reviewing working tree"
+  git diff
+fi
 ```
 
 > If no usable base ref exists, state that explicitly in the report header and
@@ -74,7 +79,7 @@ git diff        "$BASE"...HEAD
 
 ### Step 1 — Read the spec and the target architecture
 
-1. Run `openspec status` and `openspec instructions apply --change "<name>" --json`; read **every** path under `contextFiles`.
+1. Run `openspec status` and `openspec instructions apply --change "<name>" --json` (passing `--store "<id>"` if a store is selected); read **every** path under `contextFiles`.
 2. Read `proposal.md` and extract two lists verbatim:
    - **In scope** — each bullet under `## What Changes` and each capability under `## Capabilities`.
    - **Out of scope** — anything under `Non-goals`, plus every deferral phrased as "not in this change", "no behavior yet", "no CRUD", etc.
@@ -100,7 +105,7 @@ For each scenario ask, in this order:
 1. **Exists?** Is there code that implements it at all?
 2. **Faithful?** Does it implement the *specified* semantics, not an approximation?
 3. **Reachable?** Is it wired into a route/handler/component actually used by the product?
-4. **Proven?** Is there a test that asserts this scenario (`*.spec.ts` backend, `*.test.ts` frontend)?
+4. **Proven?** Is there a test that asserts this scenario (using runner-configured test patterns, e.g. `*.spec.ts` / `*.e2e-spec.ts` backend, `*.test.ts` / `*.test.tsx` frontend)?
 
 Then run the scope pass in the opposite direction — from the diff back to the proposal:
 
@@ -144,7 +149,7 @@ Produce the report exactly in the format of section 5. Rules:
 - Every `MUST FIX` finding names a concrete remediation.
 - Do not invent findings to appear thorough; an empty `MUST FIX` section is a valid and good outcome.
 - The `Praise` section is mandatory and must cite something specific — it calibrates the rest of the review.
-- End with a single explicit verdict.
+- Present a single explicit verdict at the top of the report.
 
 ---
 
@@ -218,7 +223,8 @@ Produce the report exactly in the format of section 5. Rules:
 
 ### 2.1 `[OS-PERF]` Reminder query is unbounded
 - **File:** <ref_file>backend/src/dashboard/dashboard.service.ts:88</ref_file>
-- Add a `take` limit; the spec only requires *upcoming* reminders.
+- **Spec:** `specs/dashboard-overview/spec.md` → *Scenario: Upcoming reminders are listed*
+- **Advice:** Add a `take` limit; the spec only requires *upcoming* reminders.
 
 ## 3. PRAISE
 

@@ -91,9 +91,9 @@ For each finding, independently verify:
 4. Is an abstraction really warranted, or does inline usage reduce complexity?
 
 ### Step 3: Surgical Fixes (For `ACCEPTED_FIX` Only)
-- Edit ONLY the files required to resolve `ACCEPTED_FIX` items.
+- Apply edit restrictions per finding rather than per file. Locations associated with `REJECTED_*` or `DEFERRED_*` findings remain unchanged, while accepted findings in the same file may be fixed.
+- Make targeted, minimal edits addressing precisely the defect.
 - Write or update unit/integration tests to verify the resolution.
-- Never edit code for `REJECTED_*` or `DEFERRED_*` items.
 
 ### Step 4: Run Automated Verification
 Execute:
@@ -164,9 +164,9 @@ Format the final report in Markdown using Vietnamese as specified in Section 3.
 
 ## 4. Kết quả kiểm thử & xác minh (Verification Results)
 
-- **Kiểm tra kiểu dữ liệu (Typecheck):** ✅ Passed (`pnpm typecheck`)
-- **Kiểm thử tự động (Unit & Integration Tests):** ✅ Passed (X/X tests)
-- **Kiểm tra chuẩn mã nguồn (Linter):** ✅ Passed (`pnpm lint`)
+- **Kiểm tra kiểu dữ liệu (Typecheck):** <✅ Passed (<evidence>) | ❌ Failed (<failure reason>) | ⚠️ Not run>
+- **Kiểm thử tự động (Unit & Integration Tests):** <✅ Passed (<evidence>) | ❌ Failed (<failure reason>) | ⚠️ Not run>
+- **Kiểm tra chuẩn mã nguồn (Linter):** <✅ Passed (<evidence>) | ❌ Failed (<failure reason>) | ⚠️ Not run>
 
 ---
 

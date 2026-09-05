@@ -42,8 +42,16 @@ export function formatCalendarDate(
   fallback = DEFAULT_FALLBACK,
 ): string {
   if (value === null || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return fallback
+  const [year, month, day] = value.split('-').map(Number)
   const date = new Date(`${value}T00:00:00.000Z`)
-  if (Number.isNaN(date.getTime())) return fallback
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() + 1 !== month ||
+    date.getUTCDate() !== day
+  ) {
+    return fallback
+  }
 
   return new Intl.DateTimeFormat(locale, {
     day: '2-digit',

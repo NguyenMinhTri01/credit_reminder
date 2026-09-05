@@ -1,52 +1,52 @@
 ## Context
 
-Xem `proposal.md` để biết động lực. Project là monorepo pnpm gồm Next.js 16 App Router và NestJS 11/Prisma 7. `/home` hiện là placeholder nhưng đã được middleware bảo vệ và là đích redirect sau đăng nhập. Prisma đã có `CreditCard` và `Reminder`, tuy nhiên backend mới chỉ đăng ký `AuthModule`; chưa có API dashboard, cards hoặc reminders.
+Refer to `proposal.md` for motivation. The project is a pnpm monorepo consisting of Next.js 16 App Router and NestJS 11 / Prisma 7. `/home` is currently a placeholder protected by middleware and serves as the redirect destination after authentication. Prisma already includes `CreditCard` and `Reminder` models, but the backend only registers `AuthModule`; there are no APIs for dashboard, cards, or reminders yet.
 
-Frontend đã dùng React Server Components, Auth.js, next-intl, Tailwind CSS v4 và shadcn/ui style `new-york`, base `radix`. Component registry hiện có `Card`, `Button`, `Alert`, `Avatar`, `Badge`, `Separator` và một số primitive khác; chưa có `Sidebar`, `Progress`, `Empty`, `Skeleton`, `DropdownMenu` và `InputGroup`. Theme dùng Geist cùng các semantic tokens nâu/kem/trung tính trong `globals.css`, bao gồm tokens cho light/dark mode.
+The frontend uses React Server Components, Auth.js, next-intl, Tailwind CSS v4, and shadcn/ui style `new-york`, base `radix`. The component registry currently includes `Card`, `Button`, `Alert`, `Avatar`, `Badge`, `Separator`, and several other primitives; it lacks `Sidebar`, `Progress`, `Empty`, `Skeleton`, `DropdownMenu`, and `InputGroup`. The theme uses Geist typography and semantic brown/cream/neutral tokens in `globals.css`, including tokens for light and dark modes.
 
-Ảnh tham chiếu là nguồn định hướng thứ bậc và mật độ bố cục, không phải yêu cầu sao chép màu gradient hoặc pixel-perfect. Các hành vi kiểm thử được định nghĩa trong `specs/dashboard-overview/spec.md`.
+Reference mockups guide layout hierarchy and visual density, rather than requiring pixel-perfect copying of vibrant gradient colors. Automated test behaviors are specified in `specs/dashboard-overview/spec.md`.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Một request đọc cung cấp đủ dữ liệu cho toàn bộ dashboard, không tạo waterfall giữa KPI, thẻ và nhắc nhở.
-- Giữ JWT và lọc `userId` ở mọi truy vấn backend; không nhận user id từ query/body.
-- Tách shell, sections, domain cards, formatting và state views thành các abstraction có thể tái sử dụng khi các page Cards/Reminders được phát triển sau này.
-- Server-render phần dữ liệu chính để tận dụng RSC, giữ client boundary nhỏ cho sidebar mobile và account menu.
-- Dùng shadcn/ui chính thức trước, chỉ custom component bằng composition và variant khi primitive không biểu đạt được domain.
-- Giữ bố cục hiện đại nhưng tiết chế theo Geist và semantic tokens hiện hữu, hoạt động ở light/dark theme và đáp ứng accessibility cơ bản.
+- A single read request provides complete data for the entire dashboard without waterfalls across KPIs, cards, and reminders.
+- Enforce JWT authentication and scope `userId` in all backend queries; do not accept user IDs from query params or request bodies.
+- Decompose the shell, sections, domain cards, formatting, and state views into reusable abstractions ready for future Cards/Reminders feature pages.
+- Server-render primary data via RSC, keeping client boundaries small for mobile sidebar drawers and account menus.
+- Use official shadcn/ui components first, creating custom components only through composition and variants when primitives cannot express domain concepts.
+- Maintain a clean, modern layout aligned with Geist and existing semantic tokens, functional in both light/dark themes, with basic accessibility compliance.
 
 **Non-Goals:**
 
-- Không thêm/sửa/xóa thẻ hoặc nhắc nhở; không form và không mutation endpoint.
-- Không triển khai tìm kiếm, page Cards, Reminders, History, Settings hoặc hành vi của các nav item tương ứng.
-- Không triển khai chart lịch sử, đồng bộ giao dịch, Gmail/Zalo, theme switcher hay real-time refresh.
-- Không thay đổi Prisma schema, seed production hoặc logic nghiệp vụ thanh toán.
-- Không sao chép nguyên màu sắc rực, gradient hoặc floating action buttons của ảnh tham chiếu nếu chúng xung đột với design tokens của project.
+- No card or reminder creation, updates, or deletions; no forms and no mutation endpoints.
+- No implementation of search functionality, or Cards, Reminders, History, or Settings pages and their navigation handlers.
+- No historical charts, transaction sync, Gmail/Zalo integrations, theme switchers, or real-time polling.
+- No Prisma schema alterations, production seed data, or payment processing logic.
+- No direct copying of bright gradients or floating action buttons from reference images if they conflict with project design tokens.
 
 ## Decisions
 
-### 1. Giữ dashboard tại `/home` và tạo protected application layout
+### 1. Retain dashboard at `/home` and introduce protected application layout
 
-`/home` tiếp tục là route dashboard vì Auth.js và proxy đã redirect người dùng đã đăng nhập đến đây. Tạo route group/layout dành cho vùng authenticated để `AppShell` có thể dùng lại cho các page tương lai mà không lặp header/sidebar.
+`/home` remains the dashboard route because Auth.js and the proxy already redirect authenticated users here. Introduce a route group/layout for authenticated areas so that `AppShell` can be reused by future pages without duplicating headers and sidebars.
 
-Shell gồm:
+The shell includes:
 
-- `AppSidebar`: Dashboard active; Cards, Reminders, History và Settings hiển thị disabled/“coming soon”.
-- `AppHeader`: brand, ô tìm kiếm disabled có nhãn sắp ra mắt, avatar và account menu dùng dữ liệu session hiện có.
-- `SidebarProvider`/`SidebarInset` của shadcn để cùng một cấu trúc điều hướng chuyển sang mobile sheet mà không dựng hai menu riêng.
+- `AppSidebar`: Dashboard active; Cards, Reminders, History, and Settings displayed disabled with "coming soon" indicators.
+- `AppHeader`: brand, disabled search input with "coming soon" label, avatar, and account menu utilizing existing session data.
+- shadcn `SidebarProvider` / `SidebarInset` to provide a single navigation structure transitioning to mobile sheets without duplicate menus.
 
-Phương án đổi route thành `/dashboard` bị loại vì làm thay đổi redirect và tạo hai URL cho cùng một capability mà không mang lại giá trị trong scope hiện tại.
+Renaming the route to `/dashboard` was rejected because it would disrupt existing redirect paths and create two URLs for the same capability without added value in this scope.
 
-### 2. Một endpoint tổng hợp `GET /api/v1/dashboard`
+### 2. Single aggregate endpoint `GET /api/v1/dashboard`
 
-Tạo `DashboardModule`, `DashboardController` và `DashboardService`. Controller dùng `AuthGuard('jwt')`, lấy `req.user.id` từ strategy hiện có và không chấp nhận user id từ client. Service thực hiện hai truy vấn chọn trường tối thiểu:
+Introduce `DashboardModule`, `DashboardController`, and `DashboardService`. The controller applies `AuthGuard('jwt')`, extracting `req.user.id` from the existing strategy and refusing client-supplied user IDs. The service executes two parallel queries selecting minimal fields:
 
-1. Tất cả thẻ thuộc user, sắp xếp ổn định theo `createdAt`, để vừa tạo danh sách vừa tính summary từ đúng cùng dữ liệu.
-2. Tối đa năm reminder thuộc user với `isActive = true` và `nextTriggerDate >= today`, sắp xếp `nextTriggerDate ASC`, sau đó `createdAt ASC` để phá hòa.
+1. All cards belonging to the user, ordered stably by `createdAt`, to produce both the card list and summary totals from the exact same dataset.
+2. Up to five reminders belonging to the user where `isActive = true` and `nextTriggerDate >= today`, ordered by `nextTriggerDate ASC`, then `createdAt ASC` as a tiebreaker.
 
-Hai truy vấn độc lập được chạy song song. Không dùng các endpoint cards/reminders riêng vì dashboard sẽ tạo waterfall và có nguy cơ các tổng số không khớp với danh sách đang render.
+The two independent queries run in parallel. Separate endpoints for cards and reminders were rejected to prevent waterfalls and discrepancies between summary totals and rendered lists.
 
 Response contract:
 
@@ -83,40 +83,40 @@ interface DashboardSnapshot {
 }
 ```
 
-Tiền tệ được serialize thành chuỗi thập phân hai chữ số để tránh mất chính xác từ Prisma `Decimal` qua JSON. Frontend chỉ parse để định dạng hiển thị, không dùng số đã parse cho nghiệp vụ ghi.
+Monetary values are serialized to two-decimal numeric strings to avoid precision loss across Prisma `Decimal` and JSON serialization. The frontend only parses these values for display formatting, never for write logic.
 
-Phương án tạo ba endpoint summary/cards/reminders bị loại do tăng request và lặp điều kiện bảo mật. Phương án dùng endpoint GraphQL bị loại vì project hiện dùng REST và dashboard không cần query linh hoạt.
+Separate endpoints for summary, cards, and reminders were rejected due to request overhead and redundant auth checks. A GraphQL endpoint was rejected because the project uses REST and the dashboard requires no dynamic client queries.
 
-### 3. Quy tắc tổng hợp xử lý hạn mức chưa biết
+### 3. Aggregation rules for undeclared credit limits
 
-- `totalCreditLimit`: tổng các `creditLimit` khác null.
-- `totalCurrentBalance`: tổng `currentBalance` của tất cả thẻ.
-- `availableCredit`: tổng `(creditLimit - currentBalance)` chỉ của các thẻ có hạn mức.
-- `utilizationPercent`: `sum(currentBalance của thẻ có hạn mức) / totalCreditLimit * 100`; trả `null` khi tổng hạn mức bằng 0.
-- `hasUnknownLimits`: true khi có ít nhất một thẻ thiếu hạn mức để UI có thể giải thích rằng KPI hạn mức không bao phủ toàn bộ thẻ.
-- Giá trị tiền và phần trăm thực không bị clamp. Chỉ giá trị truyền vào visual progress bar được clamp về `[0, 100]`; label vẫn phản ánh số thực và trạng thái vượt hạn mức dùng semantic destructive variant.
+- `totalCreditLimit`: sum of non-null `creditLimit` values.
+- `totalCurrentBalance`: sum of `currentBalance` across all cards.
+- `availableCredit`: sum of `(creditLimit - currentBalance)` exclusively for cards with declared limits.
+- `utilizationPercent`: `sum(currentBalance for cards with limits) / totalCreditLimit * 100`; returns `null` when total credit limit is zero.
+- `hasUnknownLimits`: true when at least one card has a null limit, allowing the UI to explain that the limit KPI does not cover all cards.
+- Real monetary and percentage values are not clamped. Only values passed to visual progress bars are clamped to `[0, 100]`; text labels reflect exact figures, and over-limit states use semantic destructive variants.
 
-Phương án coi hạn mức null là 0 bị loại vì sẽ tạo phần trăm sử dụng gây hiểu nhầm. Phương án bỏ dư nợ của thẻ thiếu hạn mức khỏi tổng dư nợ bị loại vì che giấu nghĩa vụ thanh toán thực.
+Treating null limits as zero was rejected because it produces misleading utilization rates. Dropping balances of cards lacking limits was rejected because it conceals actual payment obligations.
 
-### 4. Tính kỳ hạn kế tiếp tập trung ở backend
+### 4. Centralized next due date calculation on the backend
 
-Một date utility thuần nhận `dueDay`, ngày hiện tại và application timezone. Múi giờ lấy từ `APP_TIME_ZONE`, mặc định `Asia/Ho_Chi_Minh`. Utility chọn tháng hiện tại nếu due day chưa qua, ngược lại chọn tháng kế; nếu due day vượt số ngày tháng thì dùng ngày cuối tháng. Nó trả ngày ISO `YYYY-MM-DD` và chênh lệch theo ngày lịch, không theo số giờ.
+A pure date utility accepts `dueDay`, current date, and application timezone. The timezone is derived from `APP_TIME_ZONE`, defaulting to `Asia/Ho_Chi_Minh`. The utility selects the current month if the due day has not passed, or rolls over to the next month; if the due day exceeds the days in that month, it clamps to the last day of the month. It returns an ISO date string `YYYY-MM-DD` and day difference in calendar days, not hours.
 
-Tính tại backend giúp tất cả client có cùng kết quả và dễ unit test các biên cuối tháng/năm. Phương án tính ở browser bị loại vì múi giờ thiết bị có thể làm sai số ngày hiển thị.
+Backend calculation ensures consistent dates across all clients and simplifies unit testing for month/year boundaries. Browser-side calculation was rejected due to device timezone discrepancies.
 
-### 5. Server-first data loading với state files của App Router
+### 5. Server-first data loading with App Router state files
 
-`/home/page.tsx` là async Server Component, gọi `apiClient` server-side để Auth.js tự lấy access token và fetch snapshot với `cache: 'no-store'`. `loading.tsx` render `DashboardSkeleton`; `error.tsx` là client error boundary render `Alert` và nút retry. Cách này không đẩy orchestration của dashboard vào một client component lớn và không cần thêm Zustand/TanStack Query state cho request chỉ-đọc theo lượt điều hướng.
+`/home/page.tsx` is an async Server Component that calls `apiClient` server-side so Auth.js automatically attaches the access token and fetches the snapshot with `cache: 'no-store'`. `loading.tsx` renders `DashboardSkeleton`; `error.tsx` is a client error boundary rendering an `Alert` and retry action. This avoids managing dashboard orchestration inside a giant client component without requiring Zustand or TanStack Query state for navigation-bound read requests.
 
-Các client island duy nhất là component shadcn Sidebar cần state responsive và account menu/logout. Dữ liệu snapshot được truyền xuống presentational components bằng typed props.
+The only client islands are the shadcn Sidebar component needing responsive state and the account menu/logout. Snapshot data cascades down to presentational components via typed props.
 
-Phương án dùng `useAuth` rồi truyền token vào TanStack Query bị loại cho change này vì tạo loading flash sau hydration và mở rộng phần cây client. Nếu dashboard cần background refresh hoặc mutations về sau, có thể hydrate snapshot vào Query cache mà không đổi API contract.
+Using `useAuth` and passing tokens to TanStack Query was rejected for this change because it introduces post-hydration loading flashes and expands the client component tree. If background refresh or mutations are required later, snapshots can be hydrated into Query cache without altering API contracts.
 
-### 6. Component map ưu tiên shadcn và composition
+### 6. Component map prioritizing shadcn and composition
 
-Các primitive còn thiếu được thêm bằng `pnpm dlx shadcn@latest add` sau khi kiểm tra `--dry-run`/`--diff`: `sidebar`, `progress`, `empty`, `skeleton`, `dropdown-menu`, `input-group` và các dependency registry tự kéo theo. Primitive hiện có được tái sử dụng, không re-add hoặc copy source.
+Missing primitives are installed via `pnpm dlx shadcn@latest add` after verification with `--dry-run` and `--diff`: `sidebar`, `progress`, `empty`, `skeleton`, `dropdown-menu`, `input-group`, and associated registry dependencies. Existing primitives are reused without re-adding or copying source code.
 
-Domain/component structure dự kiến:
+Expected domain and component structure:
 
 ```text
 components/
@@ -136,56 +136,56 @@ components/
     └── dashboard-skeleton.tsx
 ```
 
-- `SummaryCard` nhận label/value/supporting text/icon/status; ba KPI dùng chung một component.
-- `CreditCardTile` nhận một view model và variant semantic; toàn bộ thẻ dùng cùng markup.
-- `UpcomingReminders` chịu trách nhiệm cả list và `Empty`, không tạo hai section khác nhau.
-- Mảng navigation và formatter tiền/ngày/phần trăm là module dùng chung, tránh lặp literal và logic.
-- Dùng đầy đủ composition `CardHeader/CardTitle/CardDescription/CardContent/CardFooter`, `AvatarFallback`, `DropdownMenuGroup`, `Empty`, `Skeleton`, `Progress`, `Badge`, `Separator` và `Button`.
-- `className` chỉ điều khiển layout/responsive; trạng thái màu/typography đi qua variant hoặc semantic token. Không hard-code màu ảnh tham chiếu, không `space-x/y`, không tự dựng progress/empty/badge bằng `div`/`span`.
+- `SummaryCard` accepts label, value, supporting text, icon, and status; all three KPIs share one component.
+- `CreditCardTile` accepts a view model and semantic variant; all cards share uniform markup.
+- `UpcomingReminders` manages both the list and the `Empty` state without splitting into separate sections.
+- Navigation definitions and currency/date/percentage formatters reside in shared modules to avoid duplicate literals and logic.
+- Full use of composition: `CardHeader/CardTitle/CardDescription/CardContent/CardFooter`, `AvatarFallback`, `DropdownMenuGroup`, `Empty`, `Skeleton`, `Progress`, `Badge`, `Separator`, and `Button`.
+- `className` only dictates layout and responsive properties; colors and typography utilize variants or semantic tokens. No hardcoded colors from reference mockups, no `space-x/y`, and no custom progress/empty/badge implementations using raw `div`/`span`.
 
-Phương án làm một component dashboard nguyên khối bị loại vì khó test và lặp lại khi thêm page cards/reminders. Phương án tạo custom primitive thay shadcn bị loại vì làm phân mảnh design system.
+A monolithic dashboard component was rejected to preserve testability and modularity when adding future cards/reminders pages. Creating custom primitives instead of shadcn components was rejected to prevent design system fragmentation.
 
-### 7. Visual hierarchy bám bố cục tham chiếu nhưng dùng theme hiện tại
+### 7. Visual hierarchy guided by reference layout with existing theme
 
-- Desktop: header toàn chiều rộng, sidebar bên trái, main content giới hạn chiều rộng hợp lý; summary grid ba cột, card grid tối đa ba cột, reminders toàn chiều rộng.
-- Tablet: summary và card grid hai cột; sidebar dùng chế độ thu gọn theo shadcn.
-- Mobile: một cột, mobile sidebar sheet, CTA nằm trong section header thay vì floating để không che nội dung.
-- Palette: `background`, `card`, `primary`, `secondary`, `muted`, `destructive`, `border`, `chart-*` và sidebar tokens hiện có. Credit card variants dùng các semantic surface/tone đã định nghĩa tập trung, không phát tán hex/rgb trong component.
-- Typography: giữ `Geist`; số tiền dùng tabular numerals để các KPI ổn định, kích thước chữ theo hierarchy của project.
-- Animation chỉ dùng transition ngắn đã có và tôn trọng reduced motion; không thêm decorative animation.
+- Desktop: full-width header, left sidebar, main content with max-width boundaries; three-column summary grid, up to three-column card grid, full-width reminders.
+- Tablet: two-column summary and card grids; collapsed rail sidebar mode.
+- Mobile: single column, mobile sidebar sheet, CTAs placed in section headers rather than floating to avoid covering content.
+- Palette: `background`, `card`, `primary`, `secondary`, `muted`, `destructive`, `border`, `chart-*`, and sidebar tokens. Credit card variants use centralized semantic surface/tone styles without raw hex/rgb values in components.
+- Typography: retain `Geist`; tabular numerals for monetary figures to keep KPIs visually stable.
+- Animation: standard short transitions honoring `prefers-reduced-motion`; no decorative animations.
 
-### 8. Control ngoài scope được thể hiện rõ là chưa khả dụng
+### 8. Out-of-scope controls clearly marked as unavailable
 
-Hai CTA “Thêm thẻ” và “Tạo nhắc nhở” là shadcn `Button` ở trạng thái disabled với mô tả “Sắp ra mắt” có thể đọc được. Search input và nav item chưa có route cũng disabled/aria-disabled, không gắn handler rỗng và không tạo link đến trang 404. Dashboard item là nav item duy nhất active.
+The two CTAs "Add card" and "Create reminder" are shadcn `Button` elements in a disabled state with accessible "Coming soon" screen reader labels. Search input and unimplemented navigation items are disabled/aria-disabled without empty handlers or broken 404 links. The Dashboard nav item is the sole active link.
 
-Cách disabled này được chọn thay vì toast “coming soon” vì toast đòi hỏi một hành vi click dù user đã xác nhận chưa cần handle chi tiết.
+Disabled state indicators were chosen over "coming soon" toast alerts because toasts demand click interactions for actions already acknowledged as non-functional.
 
-### 9. Testing theo contract và ranh giới component
+### 9. Contract testing and component boundaries
 
-- Backend service tests mock Prisma và bao phủ tổng hợp Decimal, limit null/zero, over-limit, filter/sort/limit reminder và các biên due date.
-- Controller tests xác nhận JWT guard metadata, user id lấy từ request và service response được chuyển nguyên vẹn.
-- Backend e2e bao phủ 401 và cô lập user khi test database fixture khả dụng.
-- Frontend formatter/view-model tests bao phủ VND, null, percent và clamp.
-- Component/page tests dùng Testing Library cho happy, loading, empty, error/retry, disabled actions, i18n và accessible names.
-- Responsive structure được xác minh bằng semantic roles/classes ở test tự động và checklist thủ công tại mobile/tablet/desktop; không dựa vào snapshot HTML lớn.
-- Giữ ngưỡng coverage 90% hiện có và chạy lint, typecheck, unit tests, build cho cả hai workspace.
+- Backend service tests mock Prisma and cover Decimal aggregations, null/zero limits, over-limit balances, reminder filtering/sorting/limits, and due date boundaries.
+- Controller tests verify JWT guard metadata, user ID extraction from requests, and passthrough of service payloads.
+- Backend e2e tests cover 401 responses and per-user isolation with test database fixtures.
+- Frontend formatter/view-model tests cover VND formatting, null handling, percentages, and progress clamping.
+- Component and page tests use Testing Library for happy path, loading, empty states, error/retry, disabled actions, i18n parity, and accessible names.
+- Responsive structures are verified via semantic roles and classes in automated tests alongside manual mobile/tablet/desktop checklists, avoiding fragile large HTML snapshots.
+- Maintain global 90% test coverage thresholds while running lint, typecheck, unit tests, and builds across both workspaces.
 
 ## Risks / Trade-offs
 
-- [Mô hình chỉ có `dueDay`, không có timezone theo user] → dùng `APP_TIME_ZONE=Asia/Ho_Chi_Minh` tập trung và thiết kế utility để có thể nhận timezone người dùng sau này.
-- [Tổng hạn mức không bao phủ thẻ thiếu limit] → trả `hasUnknownLimits` và giữ các giá trị per-card ở trạng thái null, không ngầm coi là 0.
-- [Một response có thể lớn nếu user có quá nhiều thẻ] → chỉ select trường cần thiết; dashboard card list chưa phân trang vì số thẻ cá nhân thường nhỏ, bổ sung pagination khi có dữ liệu thực chứng minh cần thiết.
-- [shadcn registry hiện tại và component local có thể khác phiên bản] → kiểm tra `info`, `--dry-run` và `--diff`; chỉ add component thiếu, không overwrite component đã custom.
-- [UI tiết chế có thể khác màu sắc ảnh tham chiếu] → ưu tiên requirement về màu/font của project; dùng ảnh cho layout, spacing và hierarchy.
-- [RSC request lỗi làm toàn page vào error boundary] → shell nằm ở authenticated layout, chỉ content dashboard thay bằng error state và có retry.
-- [CTA disabled có thể khiến người dùng hiểu nhầm] → kèm text/tooltip “Sắp ra mắt” và không đặt chúng làm hành động chính duy nhất của empty state.
+- [Database schema has `dueDay` without user timezone] → Use centralized `APP_TIME_ZONE=Asia/Ho_Chi_Minh` and design date utilities to accept per-user timezones in the future.
+- [Total credit limit does not reflect cards with null limits] → Return `hasUnknownLimits` flag and keep per-card limit fields null rather than coercing to 0.
+- [Payload size risk if a user has many cards] → Select only necessary fields; pagination is omitted on the dashboard as personal card counts are typically small, with pagination planned once justified by real usage.
+- [shadcn registry version drifts with local components] → Verify with `info`, `--dry-run`, and `--diff`; add only missing primitives without overwriting custom components.
+- [Subdued UI may differ from colorful reference mockups] → Prioritize project color/font tokens; use mockups strictly for layout, spacing, and hierarchy.
+- [RSC request errors could crash entire page into error boundary] → Shell resides in the authenticated layout, replacing only the dashboard content with an error alert and retry button.
+- [Disabled CTAs might confuse users] → Provide clear "Coming soon" labels and tooltips, avoiding them as the sole focal point of empty states.
 
 ## Migration Plan
 
-1. Thêm backend endpoint và tests trước; endpoint mới không ảnh hưởng consumer hiện có.
-2. Thêm shared frontend contract/formatters và các shadcn primitive thiếu sau khi xem diff.
-3. Thêm authenticated shell cùng dashboard components, rồi thay placeholder `/home`.
-4. Bổ sung bản dịch và state boundaries; chạy kiểm thử accessibility/responsive thủ công.
-5. Chạy toàn bộ lint, typecheck, test coverage và build trước khi merge.
+1. Add backend endpoints and tests first; new endpoints do not disrupt existing consumers.
+2. Add shared frontend contracts/formatters and missing shadcn primitives after diff verification.
+3. Add authenticated shell and dashboard presentation components, then replace `/home` placeholder.
+4. Add localization keys and state boundaries; execute manual accessibility and responsive audits.
+5. Execute full lint, typecheck, test coverage, and build suites before merging.
 
-Rollback chỉ cần revert route/layout frontend và gỡ đăng ký `DashboardModule`; không có migration hoặc dữ liệu cần khôi phục. Endpoint mới có thể tạm thời tồn tại mà không ảnh hưởng client cũ nếu frontend được rollback trước.
+Rollback involves reverting the frontend route/layout and unregistering `DashboardModule`; no database migrations or data rollbacks are required. The new backend endpoint can safely remain during rollback without affecting legacy clients.

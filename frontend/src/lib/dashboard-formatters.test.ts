@@ -34,6 +34,7 @@ describe('dashboard formatters', () => {
     expect(formatCalendarDate('2026-09-15', 'vi-VN')).toBe('15/09/2026')
     expect(formatCalendarDate(null)).toBe('—')
     expect(formatCalendarDate('not-a-date')).toBe('—')
+    expect(formatCalendarDate('2026-02-30')).toBe('—')
   })
 
   it('derives a compact avatar fallback', () => {

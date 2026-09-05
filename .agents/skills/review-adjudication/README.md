@@ -93,8 +93,8 @@ graph LR
    - Inspect database schemas (`schema.prisma`), TypeScript interfaces, and framework configurations.
    - Check existing test assertions and runtime behavior.
 3. **Surgical Fixes**:
-   - Edit ONLY files associated with `ACCEPTED_FIX`.
-   - Leave `REJECTED_*` and `DEFERRED_*` files untouched.
+   - Apply edit restrictions per finding rather than per file.
+   - Leave code locations associated with `REJECTED_*` and `DEFERRED_*` untouched, while fixing accepted findings within the same file.
 4. **Automated Verification**:
    - Run typechecking (`pnpm typecheck`).
    - Run unit & integration tests (`pnpm test`).
