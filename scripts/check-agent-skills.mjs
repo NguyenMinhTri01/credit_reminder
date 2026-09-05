@@ -51,11 +51,11 @@ function hasUnmatchedDelimiters(value) {
     if (char === '[' || char === '{') {
       stack.push(char)
     } else if (char === ']') {
-      if (stack.pop() !== '[') {
+      if (stack.length > 0 && stack.pop() !== '[') {
         return true
       }
     } else if (char === '}') {
-      if (stack.pop() !== '{') {
+      if (stack.length > 0 && stack.pop() !== '{') {
         return true
       }
     }
@@ -95,9 +95,18 @@ function readTopLevelValue(lines, key) {
     const value = match[1].trim()
 
     if (/^[>|][+-]?$/.test(value)) {
+      const blockValue = readBlockScalar(lines, index)
+
+      if (hasUnmatchedDelimiters(blockValue)) {
+        return {
+          error: `frontmatter field "${key}" has unmatched brackets or braces`,
+          value: ''
+        }
+      }
+
       return {
         error: null,
-        value: readBlockScalar(lines, index)
+        value: blockValue
       }
     }
 

@@ -259,6 +259,51 @@ test('accepts quoted or balanced flow-style values in frontmatter', async (t) =>
   assert.deepEqual(report.errors, [])
 })
 
+test('accepts unquoted descriptions with a single-sided closing delimiter', () => {
+  const closingBrace = parseSkillFrontmatter(
+    '---\nname: test-skill\ndescription: Remove trailing } from output\n---\n',
+    'test/SKILL.md'
+  )
+  assert.equal(closingBrace.error, null)
+  assert.equal(closingBrace.values.description, 'Remove trailing } from output')
+
+  const closingBracket = parseSkillFrontmatter(
+    '---\nname: test-skill\ndescription: Remove trailing ] from output\n---\n',
+    'test/SKILL.md'
+  )
+  assert.equal(closingBracket.error, null)
+  assert.equal(closingBracket.values.description, 'Remove trailing ] from output')
+})
+
+test('rejects unquoted descriptions with a mismatched closing delimiter', () => {
+  const mismatched = parseSkillFrontmatter(
+    '---\nname: test-skill\ndescription: [opened but} closed wrong\n---\n',
+    'test/SKILL.md'
+  )
+  assert.equal(
+    mismatched.error,
+    'test/SKILL.md: frontmatter field "description" has unmatched brackets or braces'
+  )
+})
+
+test('applies the same delimiter validation to block-scalar descriptions', () => {
+  const validBlockScalar = parseSkillFrontmatter(
+    '---\nname: test-skill\ndescription: >\n  Remove trailing } from output\n---\n',
+    'test/SKILL.md'
+  )
+  assert.equal(validBlockScalar.error, null)
+  assert.equal(validBlockScalar.values.description, 'Remove trailing } from output')
+
+  const invalidBlockScalar = parseSkillFrontmatter(
+    '---\nname: test-skill\ndescription: >\n  [unterminated\n---\n',
+    'test/SKILL.md'
+  )
+  assert.equal(
+    invalidBlockScalar.error,
+    'test/SKILL.md: frontmatter field "description" has unmatched brackets or braces'
+  )
+})
+
 test('parseSkillFrontmatter validates brackets, braces, and quotes', () => {
   const malformedBracket = parseSkillFrontmatter(
     '---\nname: test-skill\ndescription: [unterminated\n---\n',
