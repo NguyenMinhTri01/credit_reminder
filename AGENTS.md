@@ -1,7 +1,7 @@
 # Credit Reminder — Agent Rules
 
 > Universal rules for all AI agents (Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf, Devin, …).
-> Tech Stack: Node.js 24.12.0, pnpm 10.33.0, TypeScript 5.7, pnpm workspaces
+> Tech Stack: Node.js 24.12.0, pnpm 10.33.0, TypeScript (backend ^5.7.0, frontend ^6.0.3), pnpm workspaces
 
 ## Project Commands
 

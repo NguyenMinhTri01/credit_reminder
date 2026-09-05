@@ -56,7 +56,8 @@ describe('proxy middleware', () => {
     it('should redirect logged-in user from /login to /', () => {
       const res = proxy(makeReq('/login', { accessToken: 'tok' })) as unknown as { status: number; headers: Map<string, string> }
       expect(res.status).toBe(307)
-      expect(res.headers.get('location')).toContain('/')
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/')
     })
 
     it('should allow anonymous user to access /login', () => {
@@ -77,7 +78,8 @@ describe('proxy middleware', () => {
     it('should redirect logged-in user from /forgot-password to /', () => {
       const res = proxy(makeReq('/forgot-password', { accessToken: 'tok' })) as unknown as { status: number; headers: Map<string, string> }
       expect(res.status).toBe(307)
-      expect(res.headers.get('location')).toContain('/')
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/')
     })
   })
 

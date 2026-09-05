@@ -66,7 +66,9 @@ if [ -n "$BASE" ]; then
   git diff        "$BASE"...HEAD
 else
   echo "No diff base found; reviewing working tree"
-  git diff
+  git diff --stat HEAD
+  git diff        HEAD
+  git status --short
 fi
 ```
 
@@ -79,7 +81,7 @@ fi
 
 ### Step 1 — Read the spec and the target architecture
 
-1. Run `openspec status` and `openspec instructions apply --change "<name>" --json` (passing `--store "<id>"` if a store is selected); read **every** path under `contextFiles`.
+1. Run `openspec status --change "<name>" --json` and `openspec instructions apply --change "<name>" --json` (passing `--store "<id>"` if a store is selected); read **every** path under `contextFiles`.
 2. Read `proposal.md` and extract two lists verbatim:
    - **In scope** — each bullet under `## What Changes` and each capability under `## Capabilities`.
    - **Out of scope** — anything under `Non-goals`, plus every deferral phrased as "not in this change", "no behavior yet", "no CRUD", etc.
