@@ -20,6 +20,22 @@ interface BackendAuthResponse {
 }
 
 /**
+ * Buffer (in ms) before the actual expiry to proactively refresh the token.
+ * With a 15 min access token, we refresh at 14 min to avoid race conditions.
+ */
+const ACCESS_TOKEN_BUFFER_MS = 60 * 1000 // 1 minute
+
+/** Decode a JWT and return its `exp` field as a Unix timestamp (ms). */
+function getTokenExpiry(jwt: string): number {
+  try {
+    const payload = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString())
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : 0
+  } catch {
+    return 0
+  }
+}
+
+/**
  * Auth.js v5 configuration.
  *
  * Two providers:
@@ -29,6 +45,9 @@ interface BackendAuthResponse {
  *
  * The backend JWT (access & refresh) is persisted inside the next-auth
  * encrypted session cookie (httpOnly, signed) so the browser never sees it.
+ *
+ * Token refresh: when the access token is within 1 minute of expiry, the jwt
+ * callback automatically calls POST /auth/refresh to get a fresh pair.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
@@ -74,6 +93,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * Persist backend JWT inside the next-auth session token.
      * - For Credentials: tokens come from the `authorize()` return value.
      * - For Google: exchange Google's id_token with the backend.
+     * - Subsequent calls: refresh the access token when it's about to expire.
      */
     async jwt({ token, user, account }) {
       // First sign-in via Credentials: user object contains backend tokens.
@@ -81,6 +101,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.accessToken = user.accessToken as string
         token.refreshToken = user.refreshToken as string
         token.userId = user.id as string
+        token.accessTokenExpiresAt = getTokenExpiry(user.accessToken as string)
+        return token
       }
 
       // First sign-in via Google: exchange id_token for backend JWT.
@@ -98,10 +120,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.userId = data.user.id
             token.email = data.user.email
             token.name = data.user.fullName
+            token.accessTokenExpiresAt = getTokenExpiry(data.tokens.accessToken)
           }
         } catch {
           // Swallow: invalid token will simply mean session has no accessToken.
         }
+        return token
+      }
+
+      // Subsequent calls: check if access token needs refreshing.
+      // If accessTokenExpiresAt is missing (legacy session cookie), derive it from accessToken.
+      if (token.accessTokenExpiresAt === undefined && token.accessToken) {
+        token.accessTokenExpiresAt = getTokenExpiry(token.accessToken as string)
+      }
+
+      const expiresAt = token.accessTokenExpiresAt
+      const shouldRefresh =
+        expiresAt !== undefined && expiresAt > 0 && Date.now() >= expiresAt - ACCESS_TOKEN_BUFFER_MS
+
+      if (!shouldRefresh) return token
+
+      // Access token is expired (or about to expire) — use refresh token.
+      if (!token.refreshToken) {
+        token.error = 'RefreshAccessTokenError'
+        return token
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: token.refreshToken }),
+        })
+
+        if (!response.ok) {
+          token.error = 'RefreshAccessTokenError'
+          return token
+        }
+
+        const tokens = (await response.json()) as BackendAuthResponse['tokens']
+        token.accessToken = tokens.accessToken
+        token.refreshToken = tokens.refreshToken
+        token.accessTokenExpiresAt = getTokenExpiry(tokens.accessToken)
+        token.error = undefined
+      } catch {
+        token.error = 'RefreshAccessTokenError'
       }
 
       return token
@@ -111,6 +174,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      */
     async session({ session, token }) {
       session.accessToken = token.accessToken as string | undefined
+      session.error = token.error as string | undefined
       if (session.user) {
         session.user.id = token.userId as string
       }

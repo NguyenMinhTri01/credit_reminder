@@ -105,6 +105,17 @@ URLs: frontend `http://localhost:3000` · backend `http://localhost:3001/api/v1`
 - **Complex logic** needs inline comments explaining WHY
 - **Self-documenting code** over comments explaining WHAT
 
+## Shared Agent Skills
+
+- `.agents/skills` is the canonical location for all manually maintained project skills
+- Keep the complete skill directory together, including `SKILL.md` and supporting resources
+- Never create or copy project-authored skills into `.devin/skills`, `.gemini/skills`, or
+  `.opencode/skills`
+- Tool-native skill directories are reserved for OpenSpec-generated adapters with generation
+  metadata; keep commands and workflows in their native directories
+- Run `pnpm skills:check` after editing a shared skill
+- Run `pnpm skills:sync` after upgrading OpenSpec or changing configured AI integrations
+
 ## Monorepo Specific
 
 - **No circular dependencies** between packages

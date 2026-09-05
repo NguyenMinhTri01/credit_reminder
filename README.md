@@ -73,9 +73,53 @@ pnpm dev
 | `pnpm build`        | Build all packages                    |
 | `pnpm test`         | Run all tests                         |
 | `pnpm lint`         | Lint all packages                     |
+| `pnpm skills:check` | Validate the shared agent skill layout |
+| `pnpm skills:sync`  | Refresh OpenSpec adapters and validate skills |
 | `pnpm db:generate`  | Generate Prisma client                |
 | `pnpm db:migrate`   | Run database migrations               |
 | `pnpm db:studio`    | Open Prisma Studio                    |
+
+## Shared AI Agent Skills
+
+`.agents/skills` is the canonical, repository-local source for every manually maintained skill.
+Keep each complete skill directory there, including its `SKILL.md` and any referenced scripts,
+assets, rules, or reference files. Do not copy custom skills into tool-native skill directories.
+
+The supported agents discover the canonical inventory as follows:
+
+| Agent      | Discovery path   | List, reload, or invoke |
+| ---------- | ---------------- | ----------------------- |
+| Codex      | `.agents/skills` | Invoke `$skill-name` or name the skill in the request |
+| Devin      | `.agents/skills` | Invoke `@skills:skill-name`; ask Devin to reload after changes |
+| Gemini CLI | `.agents/skills` | Use `/skills list` and `/skills reload` |
+| OpenCode   | `.agents/skills` | Invoke by skill ID; restart if discovery is stale |
+
+Tool-native commands and workflows remain separate because their formats differ:
+
+- Devin workflows: `.devin/workflows`
+- Gemini CLI commands: `.gemini/commands`
+- OpenCode commands: `.opencode/commands`
+
+OpenSpec may also generate target-specific `openspec-*` skills under `.devin/skills`,
+`.gemini/skills`, and `.opencode/skills`. These generated adapters are allowed to shadow the
+canonical OpenSpec skill because they contain tool-specific invocation syntax. Their frontmatter
+must retain `metadata.author: openspec` and `metadata.generatedBy`; no project-authored skill may
+use the native directories.
+
+After editing only a canonical project skill, run:
+
+```bash
+pnpm skills:check
+```
+
+After upgrading OpenSpec or changing its configured integrations, refresh and validate all managed
+adapters:
+
+```bash
+pnpm skills:sync
+```
+
+Review generated adapter changes separately from edits to canonical project skills.
 
 ## URLs
 

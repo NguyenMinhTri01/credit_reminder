@@ -9,6 +9,7 @@ import { AUTH_MESSAGES, IAuthenticatedUser } from '@/shared';
 interface JwtTokenPayload {
   sub: string;
   email: string;
+  type?: string;
 }
 
 @Injectable()
@@ -26,6 +27,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // Return value is attached to req.user by Passport; typed as IAuthenticatedUser.
   async validate(payload: JwtTokenPayload): Promise<IAuthenticatedUser> {
+    if (payload.type && payload.type !== 'access') {
+      throw new UnauthorizedException(AUTH_MESSAGES.UNAUTHORIZED);
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
