@@ -10,13 +10,58 @@ const NATIVE_SKILLS_DIRECTORIES = [
   '.opencode/skills'
 ]
 
+function hasMatchingQuotes(value) {
+  const trimmedValue = value.trim()
+
+  return (
+    trimmedValue.length >= 2 &&
+    ((trimmedValue.startsWith("'") && trimmedValue.endsWith("'")) ||
+      (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')))
+  )
+}
+
 function stripQuotes(value) {
   const trimmedValue = value.trim()
-  const hasMatchingQuotes =
-    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'")) ||
-    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"'))
 
-  return hasMatchingQuotes ? trimmedValue.slice(1, -1) : trimmedValue
+  return hasMatchingQuotes(trimmedValue) ? trimmedValue.slice(1, -1) : trimmedValue
+}
+
+function hasUnmatchedDelimiters(value) {
+  const stack = []
+  let activeQuote = null
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index]
+
+    if (activeQuote) {
+      if (char === activeQuote && value[index - 1] !== '\\') {
+        activeQuote = null
+      }
+      continue
+    }
+
+    if (
+      (char === "'" || char === '"') &&
+      (index === 0 || /[\s,\[{:}]/.test(value[index - 1]))
+    ) {
+      activeQuote = char
+      continue
+    }
+
+    if (char === '[' || char === '{') {
+      stack.push(char)
+    } else if (char === ']') {
+      if (stack.pop() !== '[') {
+        return true
+      }
+    } else if (char === '}') {
+      if (stack.pop() !== '{') {
+        return true
+      }
+    }
+  }
+
+  return stack.length > 0
 }
 
 function readBlockScalar(lines, startIndex) {
@@ -50,13 +95,29 @@ function readTopLevelValue(lines, key) {
     const value = match[1].trim()
 
     if (/^[>|][+-]?$/.test(value)) {
-      return readBlockScalar(lines, index)
+      return {
+        error: null,
+        value: readBlockScalar(lines, index)
+      }
     }
 
-    return stripQuotes(value)
+    if (!hasMatchingQuotes(value) && hasUnmatchedDelimiters(value)) {
+      return {
+        error: `frontmatter field "${key}" has unmatched brackets or braces`,
+        value: ''
+      }
+    }
+
+    return {
+      error: null,
+      value: stripQuotes(value)
+    }
   }
 
-  return ''
+  return {
+    error: null,
+    value: ''
+  }
 }
 
 function readMetadataValue(lines, key) {
@@ -88,14 +149,14 @@ function readMetadataValue(lines, key) {
 export function parseSkillFrontmatter(content, skillFilePath) {
   const lines = content.split(/\r?\n/)
 
-  if (lines[0]?.trim() !== '---') {
+  if (lines[0]?.trimEnd() !== '---') {
     return {
       error: `${skillFilePath}: SKILL.md must start with YAML frontmatter`,
       values: null
     }
   }
 
-  const closingIndex = lines.findIndex((line, index) => index > 0 && line.trim() === '---')
+  const closingIndex = lines.findIndex((line, index) => index > 0 && line.trimEnd() === '---')
 
   if (closingIndex === -1) {
     return {
@@ -105,12 +166,29 @@ export function parseSkillFrontmatter(content, skillFilePath) {
   }
 
   const frontmatterLines = lines.slice(1, closingIndex)
+  const nameResult = readTopLevelValue(frontmatterLines, 'name')
+
+  if (nameResult.error) {
+    return {
+      error: `${skillFilePath}: ${nameResult.error}`,
+      values: null
+    }
+  }
+
+  const descriptionResult = readTopLevelValue(frontmatterLines, 'description')
+
+  if (descriptionResult.error) {
+    return {
+      error: `${skillFilePath}: ${descriptionResult.error}`,
+      values: null
+    }
+  }
 
   return {
     error: null,
     values: {
-      name: readTopLevelValue(frontmatterLines, 'name'),
-      description: readTopLevelValue(frontmatterLines, 'description'),
+      name: nameResult.value,
+      description: descriptionResult.value,
       author: readMetadataValue(frontmatterLines, 'author'),
       generatedBy: readMetadataValue(frontmatterLines, 'generatedBy')
     }
@@ -124,7 +202,7 @@ async function listSkillDirectories(projectRoot, directory) {
     const entries = await readdir(absoluteDirectory, { withFileTypes: true })
 
     return entries
-      .filter((entry) => entry.isDirectory())
+      .filter((entry) => entry.isDirectory() || entry.isSymbolicLink())
       .map((entry) => ({
         absolutePath: join(absoluteDirectory, entry.name),
         directory,
@@ -194,8 +272,23 @@ function validateCanonicalSkill(skill, projectRoot) {
   return errors
 }
 
-function isGeneratedOpenSpecSkill(skill) {
-  return skill.values?.author === 'openspec' && Boolean(skill.values.generatedBy)
+function isGeneratedOpenSpecSkill(skill, canonicalIds) {
+  const hasMetadata =
+    skill.values?.author === 'openspec' && Boolean(skill.values.generatedBy)
+
+  if (!hasMetadata) {
+    return false
+  }
+
+  if (!skill.id.startsWith('openspec-')) {
+    return false
+  }
+
+  if (canonicalIds && !canonicalIds.has(skill.id)) {
+    return false
+  }
+
+  return true
 }
 
 function validateNativeSkill(skill, canonicalIds, projectRoot) {
@@ -205,7 +298,7 @@ function validateNativeSkill(skill, canonicalIds, projectRoot) {
     return [skill.error]
   }
 
-  if (isGeneratedOpenSpecSkill(skill)) {
+  if (isGeneratedOpenSpecSkill(skill, canonicalIds)) {
     return []
   }
 
@@ -252,7 +345,9 @@ export async function inspectAgentSkills(projectRoot) {
     canonicalCount: canonicalSkills.length,
     canonicalSkills,
     errors,
-    generatedAdapterCount: nativeSkills.filter(isGeneratedOpenSpecSkill).length,
+    generatedAdapterCount: nativeSkills.filter((skill) =>
+      isGeneratedOpenSpecSkill(skill, canonicalIds)
+    ).length,
     nativeSkills,
     projectRoot: resolvedRoot
   }
