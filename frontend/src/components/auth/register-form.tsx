@@ -51,7 +51,7 @@ export function RegisterForm() {
         setServerError('Account created but auto sign-in failed. Please log in.')
         return
       }
-      router.push('/home')
+      router.push('/')
       router.refresh()
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Registration failed')

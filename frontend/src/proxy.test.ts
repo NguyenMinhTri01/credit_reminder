@@ -53,10 +53,10 @@ function makeReq(pathname: string, auth: unknown, search = '') {
 
 describe('proxy middleware', () => {
   describe('public auth paths', () => {
-    it('should redirect logged-in user from /login to /home', () => {
+    it('should redirect logged-in user from /login to /', () => {
       const res = proxy(makeReq('/login', { accessToken: 'tok' })) as unknown as { status: number; headers: Map<string, string> }
       expect(res.status).toBe(307)
-      expect(res.headers.get('location')).toContain('/home')
+      expect(res.headers.get('location')).toContain('/')
     })
 
     it('should allow anonymous user to access /login', () => {
@@ -74,24 +74,24 @@ describe('proxy middleware', () => {
       expect(res.status).toBe(200)
     })
 
-    it('should redirect logged-in user from /forgot-password to /home', () => {
+    it('should redirect logged-in user from /forgot-password to /', () => {
       const res = proxy(makeReq('/forgot-password', { accessToken: 'tok' })) as unknown as { status: number; headers: Map<string, string> }
       expect(res.status).toBe(307)
-      expect(res.headers.get('location')).toContain('/home')
+      expect(res.headers.get('location')).toContain('/')
     })
   })
 
   describe('protected paths', () => {
-    it('should redirect anonymous user from /home to /login with callbackUrl', () => {
-      const res = proxy(makeReq('/home', null)) as unknown as { status: number; headers: Map<string, string> }
+    it('should redirect anonymous user from / to /login with callbackUrl', () => {
+      const res = proxy(makeReq('/', null)) as unknown as { status: number; headers: Map<string, string> }
       expect(res.status).toBe(307)
       const location = res.headers.get('location') ?? ''
       expect(location).toContain('/login')
-      expect(location).toContain('callbackUrl=%2Fhome')
+      expect(location).toContain('callbackUrl=%2F')
     })
 
-    it('should allow logged-in user to access /home', () => {
-      const res = proxy(makeReq('/home', { accessToken: 'tok' })) as unknown as { status: number }
+    it('should allow logged-in user to access /', () => {
+      const res = proxy(makeReq('/', { accessToken: 'tok' })) as unknown as { status: number }
       expect(res.status).toBe(200)
     })
 

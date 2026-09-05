@@ -23,7 +23,7 @@ import { loginSchema, type LoginFormData } from '@/lib/validations'
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/home'
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/'
 
   const [serverError, setServerError] = React.useState<string | null>(null)
 

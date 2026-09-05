@@ -53,7 +53,7 @@ describe('components/auth/login-form', () => {
     })
   })
 
-  it('should call signIn on valid submit and redirect to /home', async () => {
+  it('should call signIn on valid submit and redirect to /', async () => {
     ;(signIn as jest.Mock).mockResolvedValueOnce({ error: null })
 
     render(<LoginForm />)
@@ -72,7 +72,7 @@ describe('components/auth/login-form', () => {
       })
     })
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith('/home')
+      expect(push).toHaveBeenCalledWith('/')
     })
   })
 

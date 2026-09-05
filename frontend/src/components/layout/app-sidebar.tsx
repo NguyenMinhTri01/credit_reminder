@@ -26,7 +26,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip={common('appName')}>
-              <Link href="/home">
+              <Link href="/">
                 <WalletCards />
                 <span>{common('appName')}</span>
               </Link>

@@ -32,7 +32,7 @@ describe('AppShell', () => {
     )
     expect(screen.getByRole('navigation', { name: 'main' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toHaveTextContent('dashboard child')
-    expect(screen.getByRole('link', { name: /dashboard/ })).toHaveAttribute('href', '/home')
+    expect(screen.getByRole('link', { name: /dashboard/ })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: /dashboard/ })).toHaveAttribute('aria-current', 'page')
   })
 

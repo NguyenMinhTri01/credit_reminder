@@ -73,7 +73,7 @@ describe('components/auth/register-form', () => {
     })
   })
 
-  it('should register, auto sign-in and redirect to /home', async () => {
+  it('should register, auto sign-in and redirect to /', async () => {
     ;(authApi.register as jest.Mock).mockResolvedValueOnce({})
     ;(signIn as jest.Mock).mockResolvedValueOnce({ error: null })
 
@@ -97,7 +97,7 @@ describe('components/auth/register-form', () => {
       })
     })
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith('/home')
+      expect(push).toHaveBeenCalledWith('/')
     })
   })
 
