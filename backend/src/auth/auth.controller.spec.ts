@@ -8,6 +8,7 @@ const mockAuthService = {
   googleAuth: jest.fn(),
   forgotPassword: jest.fn(),
   resetPassword: jest.fn(),
+  refreshToken: jest.fn(),
 };
 
 describe('AuthController', () => {
@@ -65,6 +66,14 @@ describe('AuthController', () => {
 
     await controller.resetPassword(dto);
     expect(mockAuthService.resetPassword).toHaveBeenCalledWith(dto);
+  });
+
+  it('should call refreshToken', async () => {
+    const dto = { refreshToken: 'my-refresh-token' };
+    mockAuthService.refreshToken.mockResolvedValue({ accessToken: 'new', refreshToken: 'new-r' });
+
+    await controller.refresh(dto);
+    expect(mockAuthService.refreshToken).toHaveBeenCalledWith(dto.refreshToken);
   });
 
   it('should return req.user from getMe', async () => {

@@ -149,6 +149,32 @@ describe('AuthService', () => {
     });
   });
 
+  describe('refreshToken', () => {
+    it('should return new tokens when refresh token is valid', async () => {
+      mockJwtService.signAsync.mockResolvedValue('new-token');
+      (mockJwtService as Record<string, jest.Mock>)['verifyAsync'] = jest
+        .fn()
+        .mockResolvedValue({ sub: '1', email: 'test@example.com' });
+
+      const result = await service.refreshToken('valid-refresh-token');
+
+      expect((mockJwtService as Record<string, jest.Mock>)['verifyAsync']).toHaveBeenCalledWith(
+        'valid-refresh-token',
+        expect.objectContaining({ secret: 'test-value' }),
+      );
+      expect(result.accessToken).toBe('new-token');
+      expect(result.refreshToken).toBe('new-token');
+    });
+
+    it('should throw UnauthorizedException when refresh token is invalid', async () => {
+      (mockJwtService as Record<string, jest.Mock>)['verifyAsync'] = jest
+        .fn()
+        .mockRejectedValue(new Error('invalid token'));
+
+      await expect(service.refreshToken('bad-token')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
   describe('googleAuth', () => {
     const googleUser = { sub: 'g-1', email: 'g@example.com', name: 'Google User' };
 

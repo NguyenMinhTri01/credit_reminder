@@ -13,6 +13,8 @@ export const AUTH_MESSAGES = {
   GOOGLE_INVALID_TOKEN: 'Invalid Google token',
   UNAUTHORIZED: 'Unauthorized access',
   TOKEN_EXPIRED: 'Token has expired',
+  REFRESH_TOKEN_INVALID: 'Invalid or expired refresh token',
+  REFRESH_SUCCESS: 'Token refreshed successfully',
   GET_ME_SUCCESS: 'Current user retrieved successfully',
 } as const;
 
@@ -31,6 +33,7 @@ export const VALIDATION_MESSAGES = {
   RESET_TOKEN_REQUIRED: 'Reset token is required',
   NEW_PASSWORD_REQUIRED: 'New password is required',
   GOOGLE_TOKEN_REQUIRED: 'Google ID token is required',
+  REFRESH_TOKEN_REQUIRED: 'Refresh token is required',
 } as const;
 
 // ─── Swagger Descriptions ───────────────────────────────────
@@ -41,6 +44,7 @@ export const SWAGGER_DESCRIPTIONS = {
   GOOGLE_LOGIN: 'Login or register with Google',
   FORGOT_PASSWORD: 'Request a password reset link',
   RESET_PASSWORD: 'Reset password using a valid reset token',
+  REFRESH: 'Refresh access token using a valid refresh token',
   GET_ME: 'Get current authenticated user',
   EMAIL_EXAMPLE: 'user@example.com',
   PASSWORD_EXAMPLE: 'StrongP@ss1',

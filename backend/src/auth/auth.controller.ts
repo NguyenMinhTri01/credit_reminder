@@ -7,6 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleAuthDto } from './dto/google-auth.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AUTH_MESSAGES, IAuthenticatedUser, SWAGGER_DESCRIPTIONS } from '@/shared';
 
@@ -44,6 +45,18 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: AUTH_MESSAGES.GOOGLE_AUTH_FAILED })
   async googleAuth(@Body() dto: GoogleAuthDto) {
     return this.authService.googleAuth(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: SWAGGER_DESCRIPTIONS.REFRESH })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGES.REFRESH_SUCCESS })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: AUTH_MESSAGES.REFRESH_TOKEN_INVALID,
+  })
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshToken(dto.refreshToken);
   }
 
   @Post('forgot-password')

@@ -133,6 +133,112 @@ describe('lib/auth', () => {
       const result = await jwt()({ token, user: undefined, account: null })
       expect(result).toEqual({ existing: 'value' })
     })
+
+    describe('token refresh', () => {
+      /** Build a minimal JWT with the given `exp` (Unix seconds). */
+      function makeJwt(exp: number): string {
+        const payload = Buffer.from(JSON.stringify({ sub: '1', email: 'a@b.com', exp })).toString(
+          'base64url',
+        )
+        return `header.${payload}.sig`
+      }
+
+      it('should not refresh when access token is still valid', async () => {
+        const futureExp = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+        const token = {
+          accessToken: makeJwt(futureExp),
+          refreshToken: 'ref-tok',
+          accessTokenExpiresAt: Date.now() + 3600 * 1000,
+        }
+
+        const result = await jwt()({ token, user: undefined, account: null })
+
+        expect(mockFetch).not.toHaveBeenCalled()
+        expect(result).toMatchObject({ accessToken: token.accessToken })
+      })
+
+      it('should not refresh when accessTokenExpiresAt is 0 (unknown or missing expiry)', async () => {
+        const token = {
+          accessToken: 'jwt-without-exp',
+          refreshToken: 'ref-tok',
+          accessTokenExpiresAt: 0,
+        }
+
+        const result = await jwt()({ token, user: undefined, account: null })
+
+        expect(mockFetch).not.toHaveBeenCalled()
+        expect(result).toMatchObject({ accessToken: token.accessToken })
+      })
+
+      it('should call /auth/refresh when token is expired and return new tokens', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ accessToken: 'new-access', refreshToken: 'new-refresh' }),
+        } as Response)
+
+        const token = {
+          accessToken: 'old-access',
+          refreshToken: 'old-refresh',
+          accessTokenExpiresAt: Date.now() - 1000, // already expired
+        }
+
+        const result = await jwt()({ token, user: undefined, account: null })
+
+        const [url, init] = mockFetch.mock.calls[0]
+        expect(url).toContain('/auth/refresh')
+        expect(init?.body).toBe(JSON.stringify({ refreshToken: 'old-refresh' }))
+        expect(result).toMatchObject({
+          accessToken: 'new-access',
+          refreshToken: 'new-refresh',
+        })
+      })
+
+      it('should set error when /auth/refresh returns non-ok', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          json: () => Promise.resolve({ message: 'Expired' }),
+        } as Response)
+
+        const token = {
+          accessToken: 'old',
+          refreshToken: 'old-ref',
+          accessTokenExpiresAt: Date.now() - 1000,
+        }
+
+        const result = (await jwt()({ token, user: undefined, account: null })) as {
+          error?: string
+        }
+        expect(result.error).toBe('RefreshAccessTokenError')
+      })
+
+      it('should set error when there is no refreshToken', async () => {
+        const token = {
+          accessToken: 'old',
+          accessTokenExpiresAt: Date.now() - 1000,
+        }
+
+        const result = (await jwt()({ token, user: undefined, account: null })) as {
+          error?: string
+        }
+        expect(result.error).toBe('RefreshAccessTokenError')
+        expect(mockFetch).not.toHaveBeenCalled()
+      })
+
+      it('should set error when fetch throws', async () => {
+        mockFetch.mockRejectedValueOnce(new Error('network failure'))
+
+        const token = {
+          accessToken: 'old',
+          refreshToken: 'old-ref',
+          accessTokenExpiresAt: Date.now() - 1000,
+        }
+
+        const result = (await jwt()({ token, user: undefined, account: null })) as {
+          error?: string
+        }
+        expect(result.error).toBe('RefreshAccessTokenError')
+      })
+    })
   })
 
   describe('session callback', () => {
@@ -157,6 +263,15 @@ describe('lib/auth', () => {
       })
 
       expect(result).toMatchObject({ accessToken: 'tok' })
+    })
+
+    it('should expose error on session when token has error', async () => {
+      const result = await session()({
+        session: { user: {} },
+        token: { accessToken: 'tok', userId: '1', error: 'RefreshAccessTokenError' },
+      })
+
+      expect(result).toMatchObject({ error: 'RefreshAccessTokenError' })
     })
   })
 

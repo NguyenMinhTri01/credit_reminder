@@ -8,6 +8,8 @@ import 'next-auth/jwt'
 declare module 'next-auth' {
   interface Session {
     accessToken?: string
+    /** Set to 'RefreshAccessTokenError' when the refresh token has expired. */
+    error?: string
     user: {
       id: string
       email?: string | null
@@ -28,5 +30,9 @@ declare module 'next-auth/jwt' {
     accessToken?: string
     refreshToken?: string
     userId?: string
+    /** Unix timestamp (ms) when the access token expires. */
+    accessTokenExpiresAt?: number
+    /** Set to 'RefreshAccessTokenError' when the refresh token has expired. */
+    error?: string
   }
 }

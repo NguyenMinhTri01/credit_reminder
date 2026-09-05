@@ -178,6 +178,16 @@ export class AuthService {
     return { message: AUTH_MESSAGES.RESET_PASSWORD_SUCCESS };
   }
 
+  async refreshToken(token: string): Promise<AuthTokens> {
+    const secret = this.configService.get<string>('JWT_SECRET');
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, { secret });
+      return this.generateTokens({ sub: payload.sub, email: payload.email });
+    } catch {
+      throw new UnauthorizedException(AUTH_MESSAGES.REFRESH_TOKEN_INVALID);
+    }
+  }
+
   private async generateTokens(payload: JwtPayload): Promise<AuthTokens> {
     const secret = this.configService.get<string>('JWT_SECRET');
     const [accessToken, refreshToken] = await Promise.all([
