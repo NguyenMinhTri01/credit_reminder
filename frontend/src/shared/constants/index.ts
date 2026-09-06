@@ -26,3 +26,25 @@ export const API_BASE_PATH = `${API_PREFIX}/${API_VERSION}`
 // ─── Date Formats ────────────────────────────────────────────
 export const DATE_FORMAT = 'yyyy-MM-dd'
 export const DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"
+
+// ─── API Paths: Credit Cards ─────────────────────────────────
+export const CREDIT_CARDS_PATH = '/credit-cards'
+export const CREDIT_CARD_PATH = (id: string) => `/credit-cards/${id}`
+export const CREDIT_CARD_RESTORE_PATH = (id: string) => `/credit-cards/${id}/restore`
+export const CREDIT_CARD_RECONCILE_PATH = (id: string) => `/credit-cards/${id}/reconcile`
+export const BANK_CATALOG_PATH = '/credit-cards/banks'
+
+// ─── API Paths: Transactions ─────────────────────────────────
+export const TRANSACTIONS_PATH = (cardId: string) => `/credit-cards/${cardId}/transactions`
+export const TRANSACTION_PATH = (cardId: string, id: string) =>
+  `/credit-cards/${cardId}/transactions/${id}`
+
+// ─── Card Form Validation Limits ────────────────────────────
+export const LAST_FOUR_DIGITS_LENGTH = 4
+export const STATEMENT_DAY_MIN = 1
+export const STATEMENT_DAY_MAX = 31
+export const PAYMENT_DUE_DAYS_MIN = 1
+export const EXPIRY_MONTH_MIN = 1
+export const EXPIRY_MONTH_MAX = 12
+export const CREDIT_LIMIT_MIN = 1
+export const TRANSACTION_AMOUNT_MIN = 1

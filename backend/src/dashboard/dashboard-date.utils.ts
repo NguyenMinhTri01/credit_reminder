@@ -1,3 +1,5 @@
+import { calculateNextPaymentDue } from '@/shared/utils/schedule.utils';
+
 export const DEFAULT_APP_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 
 interface CalendarDateParts {
@@ -27,10 +29,6 @@ function getCalendarDateParts(date: Date, timeZone: string): CalendarDateParts {
   };
 }
 
-function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
-
 function isoDate({ year, month, day }: CalendarDateParts): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
@@ -39,37 +37,18 @@ export function getTodayIso(date: Date, timeZone = DEFAULT_APP_TIME_ZONE): strin
   return isoDate(getCalendarDateParts(date, timeZone));
 }
 
+/**
+ * @deprecated Use calculateNextPaymentDue from @/shared/utils/schedule.utils instead.
+ */
 export function calculateNextDueDate(
   dueDay: number | null,
   now: Date,
   timeZone = DEFAULT_APP_TIME_ZONE,
 ): NextDueDate | null {
-  if (dueDay === null || !Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
-    return null;
-  }
-
-  const current = getCalendarDateParts(now, timeZone);
-  let targetYear = current.year;
-  let targetMonth = current.month;
-
-  if (dueDay < current.day) {
-    targetMonth += 1;
-    if (targetMonth === 13) {
-      targetMonth = 1;
-      targetYear += 1;
-    }
-  }
-
-  const target: CalendarDateParts = {
-    year: targetYear,
-    month: targetMonth,
-    day: Math.min(dueDay, daysInMonth(targetYear, targetMonth)),
-  };
-  const currentUtc = Date.UTC(current.year, current.month - 1, current.day);
-  const targetUtc = Date.UTC(target.year, target.month - 1, target.day);
-
+  const result = calculateNextPaymentDue(null, null, dueDay, now, timeZone);
+  if (!result) return null;
   return {
-    nextDueDate: isoDate(target),
-    daysUntilDue: Math.round((targetUtc - currentUtc) / 86_400_000),
+    nextDueDate: result.nextDueDate,
+    daysUntilDue: result.daysUntilDue,
   };
 }

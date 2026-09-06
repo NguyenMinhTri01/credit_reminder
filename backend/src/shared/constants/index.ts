@@ -1,4 +1,5 @@
 export * from './messages';
+export * from './bank-catalog';
 
 // ─── Pagination ──────────────────────────────────────────────
 export const DEFAULT_PAGE = 1;

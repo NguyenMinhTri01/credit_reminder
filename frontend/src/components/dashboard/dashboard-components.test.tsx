@@ -15,7 +15,11 @@ jest.mock('next-intl', () => ({
 const fullCard: IDashboardCard = {
   id: 'card-1',
   bankName: 'Vietcombank',
+  bankCode: 'vietcombank',
+  bankShortName: 'Vietcombank',
+  logoPath: '/images/banks/vietcombank.svg',
   cardName: 'Platinum',
+  lastFourDigits: '1234',
   cardNumberMasked: '1234',
   creditLimit: '50000000.00',
   currentBalance: '12500000.00',
@@ -23,6 +27,10 @@ const fullCard: IDashboardCard = {
   utilizationPercent: 25,
   nextDueDate: '2026-09-15',
   daysUntilDue: 11,
+  statementDate: '2026-08-20',
+  expiryStatus: 'valid',
+  expiryMonth: 12,
+  expiryYear: 2028,
 }
 
 describe('dashboard presentation', () => {
@@ -66,6 +74,7 @@ describe('dashboard presentation', () => {
       ...fullCard,
       id: 'card-2',
       cardName: 'Over-limit',
+      lastFourDigits: null,
       cardNumberMasked: null,
       creditLimit: null,
       availableCredit: null,
@@ -88,12 +97,12 @@ describe('dashboard presentation', () => {
     expect(screen.queryByRole('progressbar', { name: 'utilization' })).not.toBeInTheDocument()
   })
 
-  it('uses the shadcn empty state and keeps add-card actions disabled', () => {
+  it('uses the shadcn empty state and provides active link to /cards', () => {
     render(<CreditCardGrid cards={[]} />)
     expect(screen.getByText('noCardsTitle')).toBeInTheDocument()
-    const buttons = screen.getAllByRole('button', { name: /addCard/ })
-    expect(buttons).toHaveLength(2)
-    buttons.forEach((button) => expect(button).toBeDisabled())
+    const links = screen.getAllByRole('link', { name: /addCard/ })
+    expect(links).toHaveLength(2)
+    links.forEach((link) => expect(link).toHaveAttribute('href', '/cards'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByRole('form')).not.toBeInTheDocument()
   })

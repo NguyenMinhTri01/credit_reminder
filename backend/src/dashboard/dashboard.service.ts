@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/prisma/prisma.service';
 import { IDashboardSnapshot } from '@/shared';
-import { calculateNextDueDate, DEFAULT_APP_TIME_ZONE, getTodayIso } from './dashboard-date.utils';
+import { calculateNextPaymentDue } from '@/shared/utils/schedule.utils';
+import { getExpiryStatus } from '@/shared/utils/expiry.utils';
+import { findBankByCode } from '@/shared/constants/bank-catalog';
+import { DEFAULT_APP_TIME_ZONE, getTodayIso } from './dashboard-date.utils';
 import {
   aggregateDashboardMoney,
   calculateUtilization,
+  deriveUsedBalance,
   serializeMoney,
 } from './dashboard-money.utils';
 
@@ -22,16 +26,23 @@ export class DashboardService {
 
     const [cards, reminders] = await Promise.all([
       this.prisma.creditCard.findMany({
-        where: { userId },
+        where: { userId, deletedAt: null },
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         select: {
           id: true,
+          bankCode: true,
           bankName: true,
           cardName: true,
+          lastFourDigits: true,
           cardNumberMasked: true,
           creditLimit: true,
           currentBalance: true,
+          availableCredit: true,
           dueDay: true,
+          statementDay: true,
+          paymentDueDaysAfterStatement: true,
+          expiryMonth: true,
+          expiryYear: true,
         },
       }),
       this.prisma.reminder.findMany({
@@ -56,21 +67,37 @@ export class DashboardService {
       generatedAt: now.toISOString(),
       summary: aggregateDashboardMoney(cards),
       cards: cards.map((card) => {
-        const due = calculateNextDueDate(card.dueDay, now, timeZone);
+        const scheduleInfo = calculateNextPaymentDue(
+          card.statementDay,
+          card.paymentDueDaysAfterStatement,
+          card.dueDay,
+          now,
+          timeZone,
+        );
+        const expiryInfo = getExpiryStatus(card.expiryMonth, card.expiryYear, now, timeZone);
+        const bank = card.bankCode != null ? findBankByCode(card.bankCode) : undefined;
+        const usedBalance = deriveUsedBalance(card);
+
         return {
           id: card.id,
           bankName: card.bankName,
+          bankCode: card.bankCode ?? null,
+          bankShortName: bank?.shortName ?? null,
+          logoPath: bank?.logoPath ?? null,
           cardName: card.cardName,
-          cardNumberMasked: card.cardNumberMasked,
+          lastFourDigits: card.lastFourDigits ?? null,
+          cardNumberMasked: card.cardNumberMasked ?? null,
           creditLimit: card.creditLimit === null ? null : serializeMoney(card.creditLimit),
-          currentBalance: serializeMoney(card.currentBalance),
+          currentBalance: serializeMoney(usedBalance),
           availableCredit:
-            card.creditLimit === null
-              ? null
-              : serializeMoney(card.creditLimit.minus(card.currentBalance)),
-          utilizationPercent: calculateUtilization(card.currentBalance, card.creditLimit),
-          nextDueDate: due?.nextDueDate ?? null,
-          daysUntilDue: due?.daysUntilDue ?? null,
+            card.availableCredit === null ? null : serializeMoney(card.availableCredit),
+          utilizationPercent: calculateUtilization(usedBalance, card.creditLimit),
+          nextDueDate: scheduleInfo?.nextDueDate ?? null,
+          daysUntilDue: scheduleInfo?.daysUntilDue ?? null,
+          statementDate: scheduleInfo?.statementDate ?? null,
+          expiryStatus: expiryInfo?.status ?? null,
+          expiryMonth: card.expiryMonth ?? null,
+          expiryYear: card.expiryYear ?? null,
         };
       }),
       upcomingReminders: reminders.map((reminder) => ({

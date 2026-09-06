@@ -106,6 +106,99 @@ export interface ISearchParams extends IPaginationParams {
   search?: string
 }
 
+// ─── Credit Card Types ───────────────────────────────────────
+export type ExpiryStatus = 'valid' | 'expiring_soon' | 'expired'
+export type TransactionType = 'EXPENSE' | 'PAYMENT' | 'REFUND' | 'ADJUSTMENT'
+
+export interface IBankCatalogEntry {
+  bankCode: string
+  name: string
+  shortName: string
+  logoPath: string
+  category: 'state-owned' | 'private' | 'international' | 'finance-company'
+}
+
+export interface ICreditCard {
+  id: string
+  userId: string
+  bankCode: string | null
+  bankName: string
+  bankShortName: string | null
+  logoPath: string | null
+  cardName: string
+  lastFourDigits: string | null
+  cardNumberMasked: string | null
+  creditLimit: string | null
+  availableCredit: string | null
+  utilizationPercent: number | null
+  statementDay: number | null
+  paymentDueDaysAfterStatement: number | null
+  dueDay: number | null
+  expiryMonth: number | null
+  expiryYear: number | null
+  expiryStatus: ExpiryStatus | null
+  scheduleInfo: {
+    statementDate: string | null
+    nextDueDate: string | null
+    daysUntilDue: number | null
+  }
+  lastReconciledAt: string | null
+  deletedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type ICreditCardDetail = ICreditCard
+
+export interface ITransaction {
+  id: string
+  cardId: string
+  type: TransactionType
+  amount: string
+  transactionDate: string
+  description: string | null
+  merchant: string | null
+  idempotencyKey: string | null
+  reconciledAt: string | null
+  createdAt: string
+}
+
+export interface ICreateCreditCardPayload {
+  bankCode: string
+  cardName?: string
+  lastFourDigits: string
+  creditLimit: string
+  availableCredit: string
+  statementDay: number
+  paymentDueDaysAfterStatement: number
+  expiryMonth?: number
+  expiryYear?: number
+}
+
+export interface IUpdateCreditCardPayload {
+  bankCode?: string
+  cardName?: string
+  lastFourDigits?: string
+  creditLimit?: string
+  statementDay?: number
+  paymentDueDaysAfterStatement?: number
+  expiryMonth?: number
+  expiryYear?: number
+}
+
+export interface ICreateTransactionPayload {
+  type: 'EXPENSE' | 'PAYMENT' | 'REFUND'
+  amount: string
+  transactionDate: string
+  description?: string
+  merchant?: string
+  idempotencyKey?: string
+}
+
+export interface IReconcilePayload {
+  availableCredit: string
+}
+
 // ─── Dashboard Types ────────────────────────────────────────
 export interface IDashboardSummary {
   cardCount: number
@@ -119,7 +212,11 @@ export interface IDashboardSummary {
 export interface IDashboardCard {
   id: string
   bankName: string
+  bankCode: string | null
+  bankShortName: string | null
+  logoPath: string | null
   cardName: string
+  lastFourDigits: string | null
   cardNumberMasked: string | null
   creditLimit: string | null
   currentBalance: string
@@ -127,6 +224,10 @@ export interface IDashboardCard {
   utilizationPercent: number | null
   nextDueDate: string | null
   daysUntilDue: number | null
+  statementDate: string | null
+  expiryStatus: ExpiryStatus | null
+  expiryMonth: number | null
+  expiryYear: number | null
 }
 
 export interface IDashboardReminder {

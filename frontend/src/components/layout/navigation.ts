@@ -10,7 +10,7 @@ export interface NavigationItem {
 
 export const navigationItems: NavigationItem[] = [
   { labelKey: 'dashboard', icon: LayoutDashboard, href: '/', active: true },
-  { labelKey: 'cards', icon: CreditCard },
+  { labelKey: 'cards', icon: CreditCard, href: '/cards', active: true },
   { labelKey: 'reminders', icon: Bell },
   { labelKey: 'history', icon: History },
   { labelKey: 'settings', icon: Settings },

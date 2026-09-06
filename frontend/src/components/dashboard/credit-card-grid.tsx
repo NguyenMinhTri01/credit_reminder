@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { CreditCard, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { IDashboardCard } from '@/shared'
@@ -22,17 +23,6 @@ import { CreditCardTile } from './credit-card-tile'
 
 const tones = ['primary', 'secondary', 'muted'] as const
 
-function ComingSoonButton({ label }: { label: string }) {
-  const navigation = useTranslations('navigation')
-  return (
-    <Button disabled title={navigation('comingSoon')}>
-      <Plus data-icon="inline-start" />
-      {label}
-      <span className="sr-only">— {navigation('comingSoon')}</span>
-    </Button>
-  )
-}
-
 export function CreditCardGrid({ cards }: { cards: IDashboardCard[] }) {
   const dashboard = useTranslations('dashboard')
 
@@ -45,7 +35,12 @@ export function CreditCardGrid({ cards }: { cards: IDashboardCard[] }) {
           </h2>
           <p className="text-muted-foreground text-sm">{dashboard('cardsDescription')}</p>
         </div>
-        <ComingSoonButton label={dashboard('addCard')} />
+        <Button asChild>
+          <Link href="/cards">
+            <Plus data-icon="inline-start" />
+            {dashboard('addCard')}
+          </Link>
+        </Button>
       </div>
       {cards.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -69,7 +64,12 @@ export function CreditCardGrid({ cards }: { cards: IDashboardCard[] }) {
                 <EmptyDescription>{dashboard('noCardsDescription')}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <ComingSoonButton label={dashboard('addCard')} />
+                <Button asChild>
+                  <Link href="/cards">
+                    <Plus data-icon="inline-start" />
+                    {dashboard('addCard')}
+                  </Link>
+                </Button>
               </EmptyContent>
             </Empty>
           </CardContent>

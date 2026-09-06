@@ -1,4 +1,5 @@
 import { UserRole, ReminderStatus, SortOrder } from '../enums';
+import { IBankCatalogEntry } from '../constants/bank-catalog';
 
 // ─── Base Types ──────────────────────────────────────────────
 export interface BaseEntity {
@@ -130,7 +131,11 @@ export interface IDashboardSummary {
 export interface IDashboardCard {
   id: string;
   bankName: string;
+  bankCode: string | null;
+  bankShortName: string | null;
+  logoPath: string | null;
   cardName: string;
+  lastFourDigits: string | null;
   cardNumberMasked: string | null;
   creditLimit: string | null;
   currentBalance: string;
@@ -138,6 +143,10 @@ export interface IDashboardCard {
   utilizationPercent: number | null;
   nextDueDate: string | null;
   daysUntilDue: number | null;
+  statementDate: string | null;
+  expiryStatus: ExpiryStatus | null;
+  expiryMonth: number | null;
+  expiryYear: number | null;
 }
 
 export interface IDashboardReminder {
@@ -147,6 +156,98 @@ export interface IDashboardReminder {
   frequency: 'MONTHLY' | 'QUARTERLY' | 'ONE_TIME' | null;
   nextTriggerDate: string;
 }
+
+// ─── Credit Card Types ───────────────────────────────────────
+export type ExpiryStatus = 'valid' | 'expiring_soon' | 'expired';
+
+export interface IScheduleInfo {
+  statementDate: string | null;
+  nextDueDate: string | null;
+  daysUntilDue: number | null;
+}
+
+export interface ICreditCard {
+  id: string;
+  userId: string;
+  bankCode: string | null;
+  bankName: string;
+  cardName: string;
+  lastFourDigits: string | null;
+  cardNumberMasked: string | null;
+  creditLimit: string | null;
+  availableCredit: string | null;
+  utilizationPercent: number | null;
+  statementDay: number | null;
+  paymentDueDaysAfterStatement: number | null;
+  dueDay: number | null;
+  expiryMonth: number | null;
+  expiryYear: number | null;
+  lastReconciledAt: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // Computed
+  bankShortName: string | null;
+  logoPath: string | null;
+  expiryStatus: ExpiryStatus | null;
+  scheduleInfo: IScheduleInfo;
+}
+
+export type ICreditCardDetail = ICreditCard;
+
+export type ICreditCardListItem = ICreditCard;
+
+export interface ITransaction {
+  id: string;
+  cardId: string;
+  type: 'EXPENSE' | 'PAYMENT' | 'REFUND' | 'ADJUSTMENT';
+  amount: string;
+  transactionDate: string;
+  description: string | null;
+  merchant: string | null;
+  idempotencyKey: string | null;
+  reconciledAt: string | null;
+  createdAt: string;
+}
+
+export interface ICreateCreditCardDto {
+  bankCode: string;
+  cardName?: string;
+  lastFourDigits: string;
+  creditLimit: string;
+  availableCredit: string;
+  statementDay: number;
+  paymentDueDaysAfterStatement: number;
+  expiryMonth?: number;
+  expiryYear?: number;
+}
+
+export interface IUpdateCreditCardDto {
+  bankCode?: string;
+  cardName?: string;
+  lastFourDigits?: string;
+  creditLimit?: string;
+  statementDay?: number;
+  paymentDueDaysAfterStatement?: number;
+  expiryMonth?: number;
+  expiryYear?: number;
+}
+
+export interface ICreateTransactionDto {
+  type: 'EXPENSE' | 'PAYMENT' | 'REFUND';
+  amount: string;
+  transactionDate: string;
+  description?: string;
+  merchant?: string;
+  idempotencyKey?: string;
+}
+
+export interface IReconcileDto {
+  availableCredit: string;
+}
+
+// Re-export IBankCatalogEntry for convenience
+export { IBankCatalogEntry };
 
 export interface IDashboardSnapshot {
   generatedAt: string;

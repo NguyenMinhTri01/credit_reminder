@@ -34,11 +34,12 @@ describe('AppShell', () => {
     expect(screen.getByRole('main')).toHaveTextContent('dashboard child')
     expect(screen.getByRole('link', { name: /dashboard/ })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: /dashboard/ })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: /cards/ })).toHaveAttribute('href', '/cards')
   })
 
   it('keeps unavailable routes and search disabled with accessible context', () => {
     render(<AppShell>content</AppShell>)
-    expect(screen.getByRole('button', { name: /cards/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /reminders/ })).toBeDisabled()
     expect(screen.getByPlaceholderText('searchPlaceholder')).toBeDisabled()
     expect(screen.getByPlaceholderText('searchPlaceholder')).toHaveAccessibleDescription(
       'searchUnavailable',

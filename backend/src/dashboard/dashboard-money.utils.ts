@@ -4,10 +4,19 @@ import { IDashboardSummary } from '@/shared';
 export interface DashboardMoneyCard {
   creditLimit: Prisma.Decimal | null;
   currentBalance: Prisma.Decimal;
+  availableCredit: Prisma.Decimal | null;
 }
 
 export function serializeMoney(value: Prisma.Decimal): string {
   return value.toFixed(2);
+}
+
+export function deriveUsedBalance(card: DashboardMoneyCard): Prisma.Decimal {
+  if (card.creditLimit !== null && card.availableCredit !== null) {
+    return card.creditLimit.minus(card.availableCredit);
+  }
+
+  return card.currentBalance;
 }
 
 export function calculateUtilization(
@@ -26,15 +35,18 @@ export function aggregateDashboardMoney(cards: DashboardMoneyCard[]): IDashboard
   let hasUnknownLimits = false;
 
   for (const card of cards) {
-    totalCurrentBalance = totalCurrentBalance.plus(card.currentBalance);
+    const usedBalance = deriveUsedBalance(card);
+    totalCurrentBalance = totalCurrentBalance.plus(usedBalance);
     if (card.creditLimit === null) {
       hasUnknownLimits = true;
-      continue;
+    } else {
+      totalCreditLimit = totalCreditLimit.plus(card.creditLimit);
+      knownLimitBalance = knownLimitBalance.plus(usedBalance);
     }
 
-    totalCreditLimit = totalCreditLimit.plus(card.creditLimit);
-    knownLimitBalance = knownLimitBalance.plus(card.currentBalance);
-    availableCredit = availableCredit.plus(card.creditLimit.minus(card.currentBalance));
+    if (card.availableCredit !== null) {
+      availableCredit = availableCredit.plus(card.availableCredit);
+    }
   }
 
   return {

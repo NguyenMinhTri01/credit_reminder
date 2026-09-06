@@ -36,6 +36,76 @@ export const VALIDATION_MESSAGES = {
   REFRESH_TOKEN_REQUIRED: 'Refresh token is required',
 } as const;
 
+// ─── Credit Card Messages ───────────────────────────────────
+export const CREDIT_CARD_MESSAGES = {
+  // Success
+  CREATE_SUCCESS: 'Credit card created successfully',
+  UPDATE_SUCCESS: 'Credit card updated successfully',
+  DELETE_SUCCESS: 'Credit card deleted successfully',
+  RESTORE_SUCCESS: 'Credit card restored successfully',
+  RECONCILE_SUCCESS: 'Credit card reconciled successfully',
+  BANK_CATALOG_SUCCESS: 'Bank catalog retrieved successfully',
+  LIST_SUCCESS: 'Credit cards retrieved successfully',
+  FIND_ONE_SUCCESS: 'Credit card retrieved successfully',
+  // Errors
+  NOT_FOUND: 'Credit card not found',
+  INVALID_BANK_CODE: 'Bank code is not in the supported catalog',
+  // Validation
+  BANK_CODE_REQUIRED: 'Bank code is required',
+  LAST_FOUR_DIGITS_REQUIRED: 'Last four digits are required',
+  LAST_FOUR_DIGITS_FORMAT: 'Last four digits must be exactly 4 numeric characters',
+  CREDIT_LIMIT_REQUIRED: 'Credit limit is required',
+  CREDIT_LIMIT_POSITIVE: 'Credit limit must be greater than 0',
+  CREDIT_LIMIT_FORMAT: 'Credit limit must be a valid decimal string',
+  AVAILABLE_CREDIT_FORMAT: 'Available credit must be a valid decimal string',
+  STATEMENT_DAY_REQUIRED: 'Statement day is required',
+  STATEMENT_DAY_RANGE: 'Statement day must be between 1 and 31',
+  PAYMENT_DUE_DAYS_POSITIVE: 'Payment due days after statement must be greater than 0',
+  EXPIRY_MONTH_RANGE: 'Expiry month must be between 1 and 12',
+  EXPIRY_YEAR_MIN: 'Expiry year must be the current year or later',
+  AVAILABLE_CREDIT_RECONCILE_REQUIRED: 'New available credit value is required',
+  // Swagger
+  SWAGGER_TAG: 'Credit Cards',
+  SWAGGER_CREATE: 'Create a new credit card',
+  SWAGGER_LIST: 'Get all credit cards for the authenticated user',
+  SWAGGER_FIND_ONE: 'Get a credit card by ID',
+  SWAGGER_UPDATE: 'Update a credit card',
+  SWAGGER_DELETE: 'Soft-delete a credit card',
+  SWAGGER_RESTORE: 'Restore a soft-deleted credit card',
+  SWAGGER_RECONCILE: 'Manually reconcile available credit',
+  SWAGGER_BANKS: 'Get the supported bank catalog',
+} as const;
+
+// ─── Transaction Messages ────────────────────────────────────
+export const TRANSACTION_MESSAGES = {
+  // Success
+  CREATE_SUCCESS: 'Transaction created successfully',
+  UPDATE_SUCCESS: 'Transaction updated successfully',
+  DELETE_SUCCESS: 'Transaction deleted successfully',
+  LIST_SUCCESS: 'Transactions retrieved successfully',
+  // Errors
+  NOT_FOUND: 'Transaction not found',
+  PRE_RECONCILIATION_EDIT: 'This transaction predates the last reconciliation and cannot be edited',
+  PRE_RECONCILIATION_DELETE:
+    'This transaction predates the last reconciliation and cannot be deleted',
+  CARD_NOT_FOUND: 'Credit card not found',
+  // Validation
+  TYPE_REQUIRED: 'Transaction type is required',
+  TYPE_INVALID: 'Transaction type must be EXPENSE, PAYMENT, or REFUND',
+  AMOUNT_REQUIRED: 'Amount is required',
+  AMOUNT_POSITIVE: 'Amount must be greater than 0',
+  AMOUNT_FORMAT: 'Amount must be a valid decimal string',
+  DATE_REQUIRED: 'Transaction date is required',
+  DATE_FORMAT: 'Transaction date must be in YYYY-MM-DD format',
+  IDEMPOTENCY_KEY_FORMAT: 'Idempotency key must be a valid UUID',
+  // Swagger
+  SWAGGER_TAG: 'Transactions',
+  SWAGGER_CREATE: 'Create a new transaction for a credit card',
+  SWAGGER_LIST: 'Get paginated transactions for a credit card',
+  SWAGGER_UPDATE: 'Update a transaction',
+  SWAGGER_DELETE: 'Delete a transaction',
+} as const;
+
 // ─── Swagger Descriptions ───────────────────────────────────
 export const SWAGGER_DESCRIPTIONS = {
   AUTH_TAG: 'Authentication',
