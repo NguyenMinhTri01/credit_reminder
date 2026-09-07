@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { CardForm } from './card-form'
+import { CardForm, computeNextDue } from './card-form'
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: { count?: number }) =>
@@ -57,13 +57,24 @@ describe('CardForm', () => {
       />,
     )
 
-    expect(screen.getByText('19/09/2026')).toBeInTheDocument()
+    expect(screen.getByText('20/09/2026')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('formStatementDay'), {
       target: { value: '10' },
     })
 
-    expect(screen.getByText('24/09/2026')).toBeInTheDocument()
+    expect(screen.getByText('25/09/2026')).toBeInTheDocument()
+  })
+
+  it('computeNextDue returns identical preview under UTC and Asia/Ho_Chi_Minh (TZ regression)', () => {
+    // Spec scenario: clock = 2026-09-04T05:00:00Z, statementDay=5, graceDays=15 → 2026-09-20
+    const fixedInstant = new Date('2026-09-04T05:00:00.000Z')
+
+    const resultHCM = computeNextDue(5, 15, fixedInstant, 'Asia/Ho_Chi_Minh')
+    const resultUTC = computeNextDue(5, 15, fixedInstant, 'UTC')
+
+    expect(resultHCM).toBe('2026-09-20')
+    expect(resultUTC).toBe('2026-09-20')
   })
 
   it('renders exactly one bank logo and compact short name in the select trigger', () => {

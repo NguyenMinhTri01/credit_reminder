@@ -27,6 +27,10 @@ export const API_BASE_PATH = `${API_PREFIX}/${API_VERSION}`
 export const DATE_FORMAT = 'yyyy-MM-dd'
 export const DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"
 
+// ─── Application Time Zone ───────────────────────────────────
+/** Default application time zone. Matches the backend default. */
+export const APP_TIMEZONE = 'Asia/Ho_Chi_Minh'
+
 // ─── API Paths: Credit Cards ─────────────────────────────────
 export const CREDIT_CARDS_PATH = '/credit-cards'
 export const CREDIT_CARD_PATH = (id: string) => `/credit-cards/${id}`

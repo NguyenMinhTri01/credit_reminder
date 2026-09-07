@@ -26,6 +26,7 @@ import {
   STATEMENT_DAY_MAX,
   PAYMENT_DUE_DAYS_MIN,
   CREDIT_LIMIT_MIN,
+  APP_TIMEZONE,
 } from '@/shared/constants'
 import type { IUpdateCreditCardPayload } from '@/shared'
 import { formatCalendarDate } from '@/lib/dashboard-formatters'
@@ -119,16 +120,54 @@ function parseExpiryRaw(raw: string): { expiryMonth?: number; expiryYear?: numbe
 
 // ─── Next due date preview ────────────────────────────────────
 
-function computeNextDue(statementDay: number, graceDays: number): string | null {
+/**
+ * Returns the next payment due date as `YYYY-MM-DD` in the application time
+ * zone. Calendar-day extraction and arithmetic are explicit so the result is
+ * identical regardless of the host OS time zone.
+ *
+ * @param statementDay - Day-of-month when the credit-card statement is cut.
+ * @param graceDays    - Days after the statement date until payment is due.
+ * @param now          - Reference instant (default: current wall-clock time).
+ *                       Pass a fixed value in tests to keep results stable.
+ * @param timezone     - IANA time zone (default: `APP_TIMEZONE`).
+ */
+function computeNextDue(
+  statementDay: number,
+  graceDays: number,
+  now: Date = new Date(),
+  timezone: string = APP_TIMEZONE,
+): string | null {
   if (!statementDay || !graceDays) return null
-  const today = new Date()
-  let statDate = new Date(today.getFullYear(), today.getMonth(), statementDay)
-  if (statDate <= today) {
-    statDate = new Date(today.getFullYear(), today.getMonth() + 1, statementDay)
+
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+
+  const parts = fmt.formatToParts(now)
+  const get = (type: string): number =>
+    parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10)
+
+  const todayYear = get('year')
+  const todayMonth = get('month') // 1-indexed
+  const todayDay = get('day')
+
+  // Build statement date as UTC-backed arithmetic container.
+  // Using UTC avoids any OS-time-zone offset leaking into the arithmetic.
+  let statMs = Date.UTC(todayYear, todayMonth - 1, statementDay)
+  const todayMs = Date.UTC(todayYear, todayMonth - 1, todayDay)
+  if (statMs <= todayMs) {
+    statMs = Date.UTC(todayYear, todayMonth /* already next month index */, statementDay)
   }
-  const due = new Date(statDate)
-  due.setDate(due.getDate() + graceDays)
-  return due.toISOString().slice(0, 10)
+
+  const dueMs = statMs + graceDays * 24 * 60 * 60 * 1000
+  const due = new Date(dueMs)
+  const y = due.getUTCFullYear()
+  const m = String(due.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(due.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 // ─── Component ───────────────────────────────────────────────
@@ -396,5 +435,5 @@ export function CardForm({
   )
 }
 
-export { parseExpiryRaw }
+export { parseExpiryRaw, computeNextDue }
 export type { CardFormValues }
