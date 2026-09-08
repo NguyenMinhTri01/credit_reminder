@@ -2,6 +2,7 @@ import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { CreateTransactionDto } from './create-transaction.dto';
 import { UpdateTransactionDto } from './update-transaction.dto';
+import { TransactionsPaginationDto } from './transactions-pagination.dto';
 
 describe('Transaction DTOs', () => {
   describe('CreateTransactionDto', () => {
@@ -47,6 +48,19 @@ describe('Transaction DTOs', () => {
       const nonStringErrors = await validate(nonStringDto);
       expect(nonStringErrors.find((e) => e.property === 'amount')).toBeDefined();
     });
+
+    it('rejects calendar-invalid dates and values outside DECIMAL(15,2)', async () => {
+      const dto = plainToInstance(CreateTransactionDto, {
+        type: 'EXPENSE',
+        amount: '10000000000000.001',
+        transactionDate: '2026-02-30',
+      });
+
+      const errors = await validate(dto);
+      expect(errors.map((error) => error.property)).toEqual(
+        expect.arrayContaining(['amount', 'transactionDate']),
+      );
+    });
   });
 
   describe('UpdateTransactionDto', () => {
@@ -74,6 +88,37 @@ describe('Transaction DTOs', () => {
       });
       const nonStringErrors = await validate(nonStringDto);
       expect(nonStringErrors).toHaveLength(1);
+    });
+
+    it('rejects null non-nullable fields and unsupported money precision in update', async () => {
+      const dto = plainToInstance(UpdateTransactionDto, {
+        type: null,
+        transactionDate: null,
+        amount: '0.001',
+      });
+
+      const errors = await validate(dto);
+      expect(errors.map((error) => error.property)).toEqual(
+        expect.arrayContaining(['type', 'transactionDate', 'amount']),
+      );
+    });
+  });
+
+  describe('TransactionsPaginationDto', () => {
+    it('transforms valid numeric query strings into numbers', async () => {
+      const dto = plainToInstance(TransactionsPaginationDto, { page: '2', limit: '20' });
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+      expect(dto.page).toBe(2);
+      expect(dto.limit).toBe(20);
+    });
+
+    it('rejects partially numeric query strings and out-of-range limits', async () => {
+      const dto = plainToInstance(TransactionsPaginationDto, { page: '2abc', limit: '101' });
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(2);
     });
   });
 });

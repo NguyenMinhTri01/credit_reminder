@@ -59,6 +59,14 @@ interface TransactionFormProps {
   isSubmitting?: boolean
 }
 
+export function formatLocalIsoDate(date: Date = new Date()): string {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 export function TransactionForm({
   initialData,
   onSubmit,
@@ -69,7 +77,7 @@ export function TransactionForm({
   const tCommon = useTranslations('common')
   const schema = buildTransactionSchema(t)
 
-  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayIso = formatLocalIsoDate()
 
   const {
     register,
@@ -140,9 +148,11 @@ export function TransactionForm({
               inputMode="decimal"
               placeholder="0.00đ"
               value={field.value}
-              onChange={(e) => {
-                const formatted = formatMoneyInputDisplay(e.target.value)
-                field.onChange(formatted)
+              onFocus={() => field.onChange(parseMoneyInputToCanonicalDecimal(field.value))}
+              onChange={(e) => field.onChange(e.target.value)}
+              onBlur={() => {
+                field.onBlur()
+                field.onChange(formatMoneyInputDisplay(field.value))
               }}
             />
           )}

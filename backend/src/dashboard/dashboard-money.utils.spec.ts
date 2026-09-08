@@ -108,4 +108,13 @@ describe('dashboard money utilities', () => {
       }),
     );
   });
+
+  it('excludes available credit from cards whose credit limit is unknown', () => {
+    expect(
+      aggregateDashboardMoney([
+        { creditLimit: null, currentBalance: money('10'), availableCredit: money('90') },
+        { creditLimit: money('100'), currentBalance: money('20'), availableCredit: money('80') },
+      ]),
+    ).toEqual(expect.objectContaining({ availableCredit: '80.00' }));
+  });
 });

@@ -72,7 +72,14 @@ export function CardDetailView({ card, open, onOpenChange }: CardDetailViewProps
   const handleUpdateTx = async (values: ICreateTransactionPayload) => {
     if (!editingTx) return
     try {
-      await updateTxMutation.mutateAsync({ id: editingTx.id, payload: values })
+      await updateTxMutation.mutateAsync({
+        id: editingTx.id,
+        payload: {
+          ...values,
+          description: values.description ?? '',
+          merchant: values.merchant ?? '',
+        },
+      })
       toast.success(tTx('updateSuccess'))
       setEditingTx(null)
     } catch {
@@ -202,7 +209,7 @@ export function CardDetailView({ card, open, onOpenChange }: CardDetailViewProps
               <span>{tCards('lastReconciledAt')}:</span>
               <span className="font-medium text-foreground">
                 {card.lastReconciledAt
-                  ? formatCalendarDate(card.lastReconciledAt, locale)
+                  ? formatCalendarDate(card.lastReconciledAt.slice(0, 10), locale)
                   : tCards('neverReconciled')}
               </span>
             </div>
@@ -253,6 +260,7 @@ export function CardDetailView({ card, open, onOpenChange }: CardDetailViewProps
             <div className="mt-4 rounded-xl border p-4 bg-muted/20">
               <h3 className="mb-3 font-semibold text-sm">{tTx('editTransaction')}</h3>
               <TransactionForm
+                key={editingTx.id}
                 initialData={editingTx}
                 onSubmit={handleUpdateTx}
                 onCancel={() => setEditingTx(null)}

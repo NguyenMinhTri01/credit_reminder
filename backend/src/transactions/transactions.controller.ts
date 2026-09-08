@@ -34,7 +34,9 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import {
   DeleteTransactionResponseDto,
   TransactionResponseDto,
+  TransactionsPageResponseDto,
 } from './dto/transaction-response.dto';
+import { TransactionsPaginationDto } from './dto/transactions-pagination.dto';
 import { TransactionsService } from './transactions.service';
 
 interface AuthenticatedRequest extends Request {
@@ -69,7 +71,7 @@ export class TransactionsController {
 
   @Get()
   @ApiOperation({ summary: TRANSACTION_MESSAGES.SWAGGER_LIST })
-  @ApiOkResponse({ type: TransactionResponseDto, isArray: true })
+  @ApiOkResponse({ type: TransactionsPageResponseDto })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   @ApiResponse({
@@ -80,16 +82,16 @@ export class TransactionsController {
     status: HttpStatus.NOT_FOUND,
     description: TRANSACTION_MESSAGES.CARD_NOT_FOUND,
   })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: TRANSACTION_MESSAGES.LIMIT_INVALID,
+  })
   findAll(
     @Param('cardId') cardId: string,
     @Req() request: AuthenticatedRequest,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: TransactionsPaginationDto,
   ): Promise<IPaginatedResponse<ITransaction>> {
-    return this.transactionsService.findAllByCard(cardId, request.user.id, {
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
-    });
+    return this.transactionsService.findAllByCard(cardId, request.user.id, query);
   }
 
   @Patch(':id')

@@ -30,7 +30,7 @@ CREATE UNIQUE INDEX "transactions_card_id_idempotency_key_key" ON "transactions"
 UPDATE "credit_cards"
 SET "available_credit" = CASE
   WHEN "credit_limit" IS NOT NULL THEN "credit_limit" - "current_balance"
-  ELSE 0
+  ELSE NULL
 END
 WHERE "available_credit" IS NULL;
 

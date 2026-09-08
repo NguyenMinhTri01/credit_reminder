@@ -1,37 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsString, Matches, Max, Min, ValidateIf } from 'class-validator';
 import {
-  IsInt,
-  IsOptional,
-  IsString,
-  Matches,
-  Max,
-  Min,
-  registerDecorator,
-  ValidationOptions,
-} from 'class-validator';
-import { CREDIT_CARD_MESSAGES } from '@/shared';
-
-// ─── Custom validator ─────────────────────────────────────────
-
-function IsPositiveDecimalString(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
-    registerDecorator({
-      name: 'isPositiveDecimalString',
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      validator: {
-        validate(value: unknown): boolean {
-          if (typeof value !== 'string') return false;
-          const num = parseFloat(value);
-          return !isNaN(num) && num > 0;
-        },
-      },
-    });
-  };
-}
-
-const CURRENT_YEAR = new Date().getFullYear();
+  CREDIT_CARD_MESSAGES,
+  IsCurrentOrFutureYear,
+  IsDecimal15_2String,
+  IsPositiveDecimalString,
+} from '@/shared';
 
 // ─── DTO ─────────────────────────────────────────────────────
 
@@ -40,7 +14,7 @@ export class UpdateCreditCardDto {
     example: 'vietcombank',
     description: 'Bank code from the supported catalog',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsString({ message: CREDIT_CARD_MESSAGES.BANK_CODE_REQUIRED })
   readonly bankCode?: string;
 
@@ -48,7 +22,7 @@ export class UpdateCreditCardDto {
     example: '1234',
     description: 'Last 4 digits of the card',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @Matches(/^\d{4}$/, { message: CREDIT_CARD_MESSAGES.LAST_FOUR_DIGITS_FORMAT })
   readonly lastFourDigits?: string;
 
@@ -56,8 +30,8 @@ export class UpdateCreditCardDto {
     example: '60000000.00',
     description: 'New credit limit as decimal string (VND)',
   })
-  @IsOptional()
-  @Matches(/^\d+(\.\d+)?$/, { message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_FORMAT })
+  @ValidateIf((_object, value: unknown) => value !== undefined)
+  @IsDecimal15_2String({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_FORMAT })
   @IsPositiveDecimalString({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_POSITIVE })
   readonly creditLimit?: string;
 
@@ -65,7 +39,7 @@ export class UpdateCreditCardDto {
     example: 25,
     description: 'Statement closing day of month (1–31)',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
   @Min(1, { message: CREDIT_CARD_MESSAGES.STATEMENT_DAY_RANGE })
   @Max(31, { message: CREDIT_CARD_MESSAGES.STATEMENT_DAY_RANGE })
@@ -75,7 +49,7 @@ export class UpdateCreditCardDto {
     example: 21,
     description: 'Number of grace-period days after statement close',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
   @Min(1, { message: CREDIT_CARD_MESSAGES.PAYMENT_DUE_DAYS_POSITIVE })
   readonly paymentDueDaysAfterStatement?: number;
@@ -84,7 +58,7 @@ export class UpdateCreditCardDto {
     example: 12,
     description: 'Expiry month (1–12)',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
   @Min(1, { message: CREDIT_CARD_MESSAGES.EXPIRY_MONTH_RANGE })
   @Max(12, { message: CREDIT_CARD_MESSAGES.EXPIRY_MONTH_RANGE })
@@ -94,16 +68,16 @@ export class UpdateCreditCardDto {
     example: 2028,
     description: 'Expiry year (current year or later)',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
-  @Min(CURRENT_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
+  @IsCurrentOrFutureYear({ message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
   readonly expiryYear?: number;
 
   @ApiPropertyOptional({
     example: 'Platinum Rewards',
     description: 'Custom display name for the card',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsString()
   readonly cardName?: string;
 }

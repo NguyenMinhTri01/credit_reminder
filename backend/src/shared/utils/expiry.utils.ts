@@ -18,6 +18,15 @@ function isoDate(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+function compareCalendarDates(
+  left: { year: number; month: number; day: number },
+  right: { year: number; month: number; day: number },
+): number {
+  if (left.year !== right.year) return left.year - right.year;
+  if (left.month !== right.month) return left.month - right.month;
+  return left.day - right.day;
+}
+
 function getCalendarDatePartsFromDate(
   date: Date,
   timeZone: string,
@@ -94,12 +103,14 @@ export function getExpiryStatus(
 
   // Today in app time zone
   const today = getCalendarDatePartsFromDate(now, timeZone);
-  const todayIso = isoDate(today.year, today.month, today.day);
+  const [warningYear, warningMonth, warningDay] = warningStartDate.split('-').map(Number);
+  const expiry = { year: expiryYear, month: expiryMonth, day: lastDayOfExpiryMonth };
+  const warningStart = { year: warningYear, month: warningMonth, day: warningDay };
 
   let status: ExpiryStatusValue;
-  if (todayIso > expiryDate) {
+  if (compareCalendarDates(today, expiry) > 0) {
     status = 'expired';
-  } else if (todayIso >= warningStartDate) {
+  } else if (compareCalendarDates(today, warningStart) >= 0) {
     status = 'expiring_soon';
   } else {
     status = 'valid';

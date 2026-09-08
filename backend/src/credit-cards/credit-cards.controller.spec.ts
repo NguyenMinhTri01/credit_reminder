@@ -10,6 +10,7 @@ describe('CreditCardsController', () => {
   let controller: CreditCardsController;
   const mockService = {
     getBankCatalog: jest.fn(),
+    getScheduleConfig: jest.fn(),
     create: jest.fn(),
     findAll: jest.fn(),
     findOne: jest.fn(),
@@ -41,6 +42,13 @@ describe('CreditCardsController', () => {
     const result = controller.getBankCatalog();
     expect(result).toEqual([{ bankCode: 'vcb' }]);
     expect(mockService.getBankCatalog).toHaveBeenCalled();
+  });
+
+  it('delegates getScheduleConfig to service', () => {
+    mockService.getScheduleConfig.mockReturnValue({ timeZone: 'America/New_York' });
+
+    expect(controller.getScheduleConfig()).toEqual({ timeZone: 'America/New_York' });
+    expect(mockService.getScheduleConfig).toHaveBeenCalled();
   });
 
   it('delegates create to service', async () => {

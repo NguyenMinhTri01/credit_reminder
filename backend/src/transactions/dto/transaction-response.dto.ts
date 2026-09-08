@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ITransaction } from '@/shared';
+import { IPaginatedResponse, IPaginationMeta, ITransaction } from '@/shared';
 
 export class TransactionResponseDto implements ITransaction {
   @ApiProperty({ format: 'uuid' })
@@ -36,4 +36,26 @@ export class TransactionResponseDto implements ITransaction {
 export class DeleteTransactionResponseDto {
   @ApiProperty({ example: 'Transaction deleted successfully' })
   message!: string;
+}
+
+export class TransactionPaginationMetaDto implements IPaginationMeta {
+  @ApiProperty({ example: 1 })
+  page!: number;
+
+  @ApiProperty({ example: 20 })
+  limit!: number;
+
+  @ApiProperty({ example: 42 })
+  total!: number;
+
+  @ApiProperty({ example: 3 })
+  totalPages!: number;
+}
+
+export class TransactionsPageResponseDto implements IPaginatedResponse<TransactionResponseDto> {
+  @ApiProperty({ type: TransactionResponseDto, isArray: true })
+  items!: TransactionResponseDto[];
+
+  @ApiProperty({ type: TransactionPaginationMetaDto })
+  meta!: TransactionPaginationMetaDto;
 }

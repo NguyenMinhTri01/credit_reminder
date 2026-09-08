@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -65,11 +65,23 @@ export function TransactionList({ card, onEditTransaction }: TransactionListProp
   const [page, setPage] = useState(1)
   const [deletingTx, setDeletingTx] = useState<ITransaction | null>(null)
 
-  const { data, isLoading } = useTransactionList(card.id, page)
+  const { data, isLoading, isError } = useTransactionList(card.id, page)
   const deleteMutation = useDeleteTransaction(card.id)
 
   const transactions = data?.items ?? []
   const meta = data?.meta
+  const isPageOutOfRange = meta !== undefined && page > Math.max(1, meta.totalPages)
+
+  useEffect(() => {
+    if (meta === undefined) return
+
+    const lastPage = Math.max(1, meta.totalPages)
+    if (page > lastPage) {
+      // The server is authoritative after a deletion/refetch reduces the page count.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(lastPage)
+    }
+  }, [meta, page])
 
   const isImmutable = (tx: ITransaction) => {
     if (tx.type === 'ADJUSTMENT') return true
@@ -88,11 +100,19 @@ export function TransactionList({ card, onEditTransaction }: TransactionListProp
     }
   }
 
-  if (isLoading) {
+  if (isLoading || isPageOutOfRange) {
     return (
       <div className="text-muted-foreground flex items-center justify-center p-8 text-sm">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         <span>{tCommon('loading')}</span>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="text-destructive rounded-lg border border-dashed p-8 text-center text-sm">
+        {t('errorLoading')}
       </div>
     )
   }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
@@ -21,8 +22,11 @@ interface AddCardSheetProps {
 export function AddCardSheet({ open, onOpenChange }: AddCardSheetProps) {
   const t = useTranslations('cards')
   const createCard = useCreateCard()
+  const isSubmittingRef = useRef(false)
 
   const handleSubmit = async (data: CardFormValues) => {
+    if (isSubmittingRef.current || createCard.isPending) return
+    isSubmittingRef.current = true
     const { expiryRaw, ...rest } = data
     const expiry = parseExpiryRaw(expiryRaw ?? '')
 
@@ -41,6 +45,8 @@ export function AddCardSheet({ open, onOpenChange }: AddCardSheetProps) {
       onOpenChange(false)
     } catch {
       toast.error(t('errorCreating'))
+    } finally {
+      isSubmittingRef.current = false
     }
   }
 

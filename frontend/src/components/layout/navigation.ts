@@ -5,12 +5,11 @@ export interface NavigationItem {
   labelKey: 'dashboard' | 'cards' | 'reminders' | 'history' | 'settings'
   icon: LucideIcon
   href?: string
-  active?: boolean
 }
 
 export const navigationItems: NavigationItem[] = [
-  { labelKey: 'dashboard', icon: LayoutDashboard, href: '/', active: true },
-  { labelKey: 'cards', icon: CreditCard, href: '/cards', active: true },
+  { labelKey: 'dashboard', icon: LayoutDashboard, href: '/' },
+  { labelKey: 'cards', icon: CreditCard, href: '/cards' },
   { labelKey: 'reminders', icon: Bell },
   { labelKey: 'history', icon: History },
   { labelKey: 'settings', icon: Settings },

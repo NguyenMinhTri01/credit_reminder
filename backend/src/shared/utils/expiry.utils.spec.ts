@@ -76,4 +76,9 @@ describe('getExpiryStatus', () => {
       expect(info!.status).toBe('expired');
     });
   });
+
+  it('compares five-digit expiry years numerically', () => {
+    const info = getExpiryStatus(12, 10000, hcmDate('9999-12-31'), TZ);
+    expect(info!.status).toBe('valid');
+  });
 });

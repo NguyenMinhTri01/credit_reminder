@@ -40,6 +40,10 @@ describe('money-input.utils', () => {
       expect(formatMoneyInputDisplay('999999999999999.99')).toBe('999,999,999,999,999.99đ')
     })
 
+    it('expands a numeric exponential value instead of treating its exponent as digits', () => {
+      expect(formatMoneyInputDisplay(1e21)).toBe('1,000,000,000,000,000,000,000.00đ')
+    })
+
     it('returns empty string for null, undefined, empty, or non-numeric input', () => {
       expect(formatMoneyInputDisplay(null)).toBe('')
       expect(formatMoneyInputDisplay(undefined)).toBe('')
@@ -72,10 +76,15 @@ describe('money-input.utils', () => {
       expect(parseMoneyInputToCanonicalDecimal('-50000')).toBe('-50000.00')
     })
 
-    it('parses very large numbers without precision loss', () => {
-      expect(parseMoneyInputToCanonicalDecimal('999,999,999,999,999.99đ')).toBe(
-        '999999999999999.99',
+    it('parses the largest DECIMAL(15,2) value without precision loss', () => {
+      expect(parseMoneyInputToCanonicalDecimal('9,999,999,999,999.99đ')).toBe(
+        '9999999999999.99',
       )
+    })
+
+    it('rejects canonical values outside DECIMAL(15,2) precision', () => {
+      expect(parseMoneyInputToCanonicalDecimal('10000000000000.00')).toBe('')
+      expect(parseMoneyInputToCanonicalDecimal('1.001')).toBe('')
     })
 
     it('returns empty string for empty or non-numeric values', () => {

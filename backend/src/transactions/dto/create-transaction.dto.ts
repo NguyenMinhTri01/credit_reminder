@@ -1,36 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Matches,
-  registerDecorator,
-  ValidationOptions,
-} from 'class-validator';
-import { TRANSACTION_MESSAGES } from '@/shared';
-
-/**
- * Validates that a string value, when parsed as a float, is strictly positive (> 0).
- */
-function IsPositiveDecimalString(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
-    registerDecorator({
-      name: 'isPositiveDecimalString',
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      validator: {
-        validate(value: unknown): boolean {
-          if (typeof value !== 'string') return false;
-          const num = parseFloat(value);
-          return !isNaN(num) && num > 0;
-        },
-      },
-    });
-  };
-}
+  IsCalendarDateString,
+  IsDecimal15_2String,
+  IsPositiveDecimalString,
+  TRANSACTION_MESSAGES,
+} from '@/shared';
 
 export class CreateTransactionDto {
   @ApiProperty({
@@ -46,7 +21,7 @@ export class CreateTransactionDto {
     description: 'Transaction amount as decimal string (VND)',
   })
   @IsNotEmpty({ message: TRANSACTION_MESSAGES.AMOUNT_REQUIRED })
-  @Matches(/^\d+(\.\d+)?$/, { message: TRANSACTION_MESSAGES.AMOUNT_FORMAT })
+  @IsDecimal15_2String({ message: TRANSACTION_MESSAGES.AMOUNT_FORMAT })
   @IsPositiveDecimalString({ message: TRANSACTION_MESSAGES.AMOUNT_POSITIVE })
   readonly amount: string;
 
@@ -55,7 +30,7 @@ export class CreateTransactionDto {
     description: 'Transaction date in YYYY-MM-DD format',
   })
   @IsNotEmpty({ message: TRANSACTION_MESSAGES.DATE_REQUIRED })
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: TRANSACTION_MESSAGES.DATE_FORMAT })
+  @IsCalendarDateString({ message: TRANSACTION_MESSAGES.DATE_FORMAT })
   readonly transactionDate: string;
 
   @ApiPropertyOptional({

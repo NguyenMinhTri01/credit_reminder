@@ -5,6 +5,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import {
   BANK_CATALOG,
   CREDIT_CARD_MESSAGES,
+  ICardScheduleConfig,
   ICreditCard,
   IScheduleInfo,
   IBankCatalogEntry,
@@ -128,6 +129,11 @@ export class CreditCardsService {
     return BANK_CATALOG;
   }
 
+  /** Return the server-side time zone used to calculate card schedules. */
+  getScheduleConfig(): ICardScheduleConfig {
+    return { timeZone: this.getTimeZone() };
+  }
+
   /**
    * Create a new credit card for the authenticated user.
    * bankCode is validated against the catalog; userId is taken from the JWT session.
@@ -158,11 +164,11 @@ export class CreditCardsService {
   }
 
   /**
-   * Return all non-deleted cards for the authenticated user, ordered by creation date.
+   * Return active and soft-deleted cards for the authenticated user, ordered by creation date.
    */
   async findAll(userId: string): Promise<ICreditCard[]> {
     const cards = await this.prisma.creditCard.findMany({
-      where: { userId, deletedAt: null },
+      where: { userId },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -187,51 +193,64 @@ export class CreditCardsService {
    *   newAvailableCredit = newLimit − (oldLimit − oldAvailableCredit)
    */
   async update(id: string, userId: string, dto: UpdateCreditCardDto): Promise<ICreditCard> {
-    const existing = await this.findOneRaw(id, userId);
-
     // Validate bankCode if being changed
+    let bankEntry: IBankCatalogEntry | undefined;
     if (dto.bankCode !== undefined) {
-      const bankEntry = findBankByCode(dto.bankCode);
+      bankEntry = findBankByCode(dto.bankCode);
       if (!bankEntry) {
         throw new BadRequestException(CREDIT_CARD_MESSAGES.INVALID_BANK_CODE);
       }
     }
 
-    // When creditLimit changes, preserve the used amount to derive new availableCredit
-    let newAvailableCredit: Prisma.Decimal | undefined;
+    const updatedCard = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Serialize a limit recalculation with transaction balance increments on the same card.
+      await tx.$queryRaw`
+        SELECT "id"
+        FROM "credit_cards"
+        WHERE "id" = ${id}
+          AND "user_id" = ${userId}
+          AND "deleted_at" IS NULL
+        FOR UPDATE
+      `;
 
-    if (dto.creditLimit !== undefined) {
-      const newLimit = new Prisma.Decimal(dto.creditLimit);
+      const existing = await tx.creditCard.findFirst({
+        where: { id, userId, deletedAt: null },
+      });
 
-      if (existing.creditLimit !== null && existing.availableCredit !== null) {
-        const usedAmount = existing.creditLimit.minus(existing.availableCredit);
-        newAvailableCredit = newLimit.minus(usedAmount);
-      } else {
-        // No prior limit/available data — set available = new limit
-        newAvailableCredit = newLimit;
+      if (!existing) {
+        throw new NotFoundException(CREDIT_CARD_MESSAGES.NOT_FOUND);
       }
-    }
 
-    const bankEntry = dto.bankCode ? findBankByCode(dto.bankCode) : undefined;
+      let newAvailableCredit: Prisma.Decimal | undefined;
+      if (dto.creditLimit !== undefined) {
+        const newLimit = new Prisma.Decimal(dto.creditLimit);
+        newAvailableCredit =
+          existing.creditLimit !== null && existing.availableCredit !== null
+            ? newLimit.minus(existing.creditLimit.minus(existing.availableCredit))
+            : newLimit;
+      }
 
-    const updatedCard = await this.prisma.creditCard.update({
-      where: { id },
-      data: {
-        ...(dto.bankCode !== undefined && {
-          bankCode: dto.bankCode,
-          bankName: bankEntry?.name ?? existing.bankName,
-        }),
-        ...(dto.cardName !== undefined && { cardName: dto.cardName }),
-        ...(dto.lastFourDigits !== undefined && { lastFourDigits: dto.lastFourDigits }),
-        ...(dto.creditLimit !== undefined && { creditLimit: new Prisma.Decimal(dto.creditLimit) }),
-        ...(newAvailableCredit !== undefined && { availableCredit: newAvailableCredit }),
-        ...(dto.statementDay !== undefined && { statementDay: dto.statementDay }),
-        ...(dto.paymentDueDaysAfterStatement !== undefined && {
-          paymentDueDaysAfterStatement: dto.paymentDueDaysAfterStatement,
-        }),
-        ...(dto.expiryMonth !== undefined && { expiryMonth: dto.expiryMonth }),
-        ...(dto.expiryYear !== undefined && { expiryYear: dto.expiryYear }),
-      },
+      return tx.creditCard.update({
+        where: { id },
+        data: {
+          ...(dto.bankCode !== undefined && {
+            bankCode: dto.bankCode,
+            bankName: bankEntry?.name ?? existing.bankName,
+          }),
+          ...(dto.cardName !== undefined && { cardName: dto.cardName }),
+          ...(dto.lastFourDigits !== undefined && { lastFourDigits: dto.lastFourDigits }),
+          ...(dto.creditLimit !== undefined && {
+            creditLimit: new Prisma.Decimal(dto.creditLimit),
+          }),
+          ...(newAvailableCredit !== undefined && { availableCredit: newAvailableCredit }),
+          ...(dto.statementDay !== undefined && { statementDay: dto.statementDay }),
+          ...(dto.paymentDueDaysAfterStatement !== undefined && {
+            paymentDueDaysAfterStatement: dto.paymentDueDaysAfterStatement,
+          }),
+          ...(dto.expiryMonth !== undefined && { expiryMonth: dto.expiryMonth }),
+          ...(dto.expiryYear !== undefined && { expiryYear: dto.expiryYear }),
+        },
+      });
     });
 
     return this.mapCardToResponse(updatedCard, new Date(), this.getTimeZone());
@@ -280,15 +299,32 @@ export class CreditCardsService {
    *   2. Creates an ADJUSTMENT transaction with the signed delta for auditability.
    */
   async reconcile(id: string, userId: string, dto: ReconcileCreditCardDto): Promise<ICreditCard> {
-    const existing = await this.findOneRaw(id, userId);
-
     const newAvailableCredit = new Prisma.Decimal(dto.availableCredit);
-    const currentAvailableCredit = existing.availableCredit ?? new Prisma.Decimal(0);
-    const delta = newAvailableCredit.minus(currentAvailableCredit);
-
     const reconciledAt = new Date();
 
     const updatedCard = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Prisma's regular read API does not expose FOR UPDATE. Lock the owned row first so the
+      // delta is calculated from the same balance that the absolute reconciliation update uses.
+      await tx.$queryRaw`
+        SELECT "id"
+        FROM "credit_cards"
+        WHERE "id" = ${id}
+          AND "user_id" = ${userId}
+          AND "deleted_at" IS NULL
+        FOR UPDATE
+      `;
+
+      const existing = await tx.creditCard.findFirst({
+        where: { id, userId, deletedAt: null },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(CREDIT_CARD_MESSAGES.NOT_FOUND);
+      }
+
+      const currentAvailableCredit = existing.availableCredit ?? new Prisma.Decimal(0);
+      const delta = newAvailableCredit.minus(currentAvailableCredit);
+
       const card = await tx.creditCard.update({
         where: { id },
         data: {

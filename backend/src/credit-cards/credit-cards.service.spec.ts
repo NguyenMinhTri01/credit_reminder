@@ -60,6 +60,7 @@ function makePrisma() {
     transaction: {
       create: jest.fn(),
     },
+    $queryRaw: jest.fn(),
     $transaction: jest.fn(),
   };
 }
@@ -84,6 +85,9 @@ describe('CreditCardsService', () => {
       prisma as unknown as PrismaService,
       config as unknown as ConfigService,
     );
+    prisma.$transaction.mockImplementation((callback: (tx: typeof prisma) => Promise<unknown>) =>
+      callback(prisma),
+    );
     jest.clearAllMocks();
   });
 
@@ -96,6 +100,14 @@ describe('CreditCardsService', () => {
       expect(catalog.length).toBeGreaterThan(0);
       expect(catalog[0]).toHaveProperty('bankCode');
       expect(catalog[0]).toHaveProperty('shortName');
+    });
+  });
+
+  describe('getScheduleConfig', () => {
+    it('returns the configured application time zone', () => {
+      config.get.mockReturnValue('America/New_York');
+
+      expect(service.getScheduleConfig()).toEqual({ timeZone: 'America/New_York' });
     });
   });
 
@@ -213,14 +225,14 @@ describe('CreditCardsService', () => {
   // ── findAll ───────────────────────────────────────────────────
 
   describe('findAll', () => {
-    it('queries only non-deleted cards for the given userId', async () => {
+    it('queries active and soft-deleted cards for the given userId', async () => {
       prisma.creditCard.findMany.mockResolvedValue([]);
 
       await service.findAll('user-uuid-1');
 
       expect(prisma.creditCard.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { userId: 'user-uuid-1', deletedAt: null },
+          where: { userId: 'user-uuid-1' },
           orderBy: { createdAt: 'asc' },
         }),
       );
@@ -251,7 +263,7 @@ describe('CreditCardsService', () => {
       await service.findAll('user-uuid-2');
 
       expect(prisma.creditCard.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { userId: 'user-uuid-2', deletedAt: null } }),
+        expect.objectContaining({ where: { userId: 'user-uuid-2' } }),
       );
     });
   });
@@ -311,6 +323,7 @@ describe('CreditCardsService', () => {
       const dto: UpdateCreditCardDto = { cardName: 'New Name' } as UpdateCreditCardDto;
       const result = await service.update('card-uuid-1', 'user-uuid-1', dto);
 
+      expect(prisma.$queryRaw).toHaveBeenCalled();
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
@@ -496,6 +509,7 @@ describe('CreditCardsService', () => {
       const result = await service.reconcile('card-uuid-1', 'user-uuid-1', dto);
 
       expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.$queryRaw).toHaveBeenCalled();
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
@@ -565,7 +579,7 @@ describe('CreditCardsService', () => {
       await expect(service.reconcile('card-uuid-1', 'user-uuid-1', dto)).rejects.toThrow(
         NotFoundException,
       );
-      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 

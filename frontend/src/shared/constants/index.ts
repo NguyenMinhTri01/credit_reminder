@@ -37,6 +37,7 @@ export const CREDIT_CARD_PATH = (id: string) => `/credit-cards/${id}`
 export const CREDIT_CARD_RESTORE_PATH = (id: string) => `/credit-cards/${id}/restore`
 export const CREDIT_CARD_RECONCILE_PATH = (id: string) => `/credit-cards/${id}/reconcile`
 export const BANK_CATALOG_PATH = '/credit-cards/banks'
+export const CARD_SCHEDULE_CONFIG_PATH = '/credit-cards/schedule-config'
 
 // ─── API Paths: Transactions ─────────────────────────────────
 export const TRANSACTIONS_PATH = (cardId: string) => `/credit-cards/${cardId}/transactions`
@@ -51,4 +52,6 @@ export const PAYMENT_DUE_DAYS_MIN = 1
 export const EXPIRY_MONTH_MIN = 1
 export const EXPIRY_MONTH_MAX = 12
 export const CREDIT_LIMIT_MIN = 1
-export const TRANSACTION_AMOUNT_MIN = 1
+
+// ─── UI ──────────────────────────────────────────────────────
+export const SIDEBAR_COOKIE_NAME = 'sidebar_state'

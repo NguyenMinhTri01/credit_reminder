@@ -52,10 +52,34 @@ function extractMoneyParts(input: string): {
   return {
     isNegative: isNegative && hasAnyDigit,
     integerDigits,
-    fractionDigits: fractionDigits.slice(0, 2),
+    fractionDigits,
     hasDecimalPoint,
     hasAnyDigit,
   }
+}
+
+function expandExponentialNumber(value: number): string {
+  const input = String(value)
+  if (!/[eE]/.test(input)) return input
+
+  const [coefficient, exponentRaw] = input.toLowerCase().split('e')
+  const exponent = Number(exponentRaw)
+  if (!Number.isInteger(exponent)) return ''
+
+  const sign = coefficient.startsWith('-') ? '-' : ''
+  const unsigned = sign ? coefficient.slice(1) : coefficient
+  const [integer = '', fraction = ''] = unsigned.split('.')
+  const digits = `${integer}${fraction}`.replace(/^0+/, '') || '0'
+  const decimalIndex = integer.length + exponent
+
+  if (decimalIndex <= 0) return `${sign}0.${'0'.repeat(-decimalIndex)}${digits}`
+  if (decimalIndex >= digits.length) return `${sign}${digits}${'0'.repeat(decimalIndex - digits.length)}`
+  return `${sign}${digits.slice(0, decimalIndex)}.${digits.slice(decimalIndex)}`
+}
+
+function isStoragePrecisionSupported(integerDigits: string, fractionDigits: string): boolean {
+  const integer = integerDigits.replace(/^0+/, '') || '0'
+  return integer.length <= 13 && fractionDigits.length <= 2
 }
 
 /**
@@ -75,7 +99,7 @@ export function formatMoneyInputDisplay(
   raw: string | number | null | undefined,
 ): string {
   if (raw === null || raw === undefined) return ''
-  const str = String(raw).trim()
+  const str = (typeof raw === 'number' ? expandExponentialNumber(raw) : raw).trim()
   if (!str) return ''
 
   const { isNegative, integerDigits, fractionDigits, hasAnyDigit } = extractMoneyParts(str)
@@ -103,6 +127,7 @@ export function parseMoneyInputToCanonicalDecimal(
 
   const { isNegative, integerDigits, fractionDigits, hasAnyDigit } = extractMoneyParts(str)
   if (!hasAnyDigit) return ''
+  if (!isStoragePrecisionSupported(integerDigits, fractionDigits)) return ''
 
   const intPart = integerDigits || '0'
   const fracPart = fractionDigits.padEnd(2, '0')

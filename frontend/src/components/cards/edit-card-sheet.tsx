@@ -12,7 +12,7 @@ import {
 import { CardForm, parseExpiryRaw } from '@/components/cards/card-form'
 import type { CardFormValues } from '@/components/cards/card-form'
 import { useUpdateCard } from '@/hooks/use-credit-cards'
-import type { ICreditCard } from '@/shared'
+import type { ICreditCard, IUpdateCreditCardPayload } from '@/shared'
 
 interface EditCardSheetProps {
   card: ICreditCard
@@ -27,20 +27,24 @@ export function EditCardSheet({ card, open, onOpenChange }: EditCardSheetProps) 
   const handleSubmit = async (data: CardFormValues) => {
     if (updateCard.isPending) return
 
-    const expiry = parseExpiryRaw(data.expiryRaw ?? '')
-
     try {
+      const payload: IUpdateCreditCardPayload = {}
+      const expiry = parseExpiryRaw(data.expiryRaw ?? '')
+
+      if (data.bankCode !== card.bankCode) payload.bankCode = data.bankCode
+      if (data.cardName !== card.cardName) payload.cardName = data.cardName || undefined
+      if (data.lastFourDigits !== card.lastFourDigits) payload.lastFourDigits = data.lastFourDigits
+      if (data.creditLimit !== card.creditLimit) payload.creditLimit = data.creditLimit
+      if (data.statementDay !== card.statementDay) payload.statementDay = data.statementDay
+      if (data.paymentDueDaysAfterStatement !== card.paymentDueDaysAfterStatement) {
+        payload.paymentDueDaysAfterStatement = data.paymentDueDaysAfterStatement
+      }
+      if (expiry.expiryMonth !== card.expiryMonth) payload.expiryMonth = expiry.expiryMonth
+      if (expiry.expiryYear !== card.expiryYear) payload.expiryYear = expiry.expiryYear
+
       await updateCard.mutateAsync({
         id: card.id,
-        payload: {
-          bankCode: data.bankCode,
-          cardName: data.cardName || undefined,
-          lastFourDigits: data.lastFourDigits,
-          creditLimit: data.creditLimit,
-          statementDay: data.statementDay,
-          paymentDueDaysAfterStatement: data.paymentDueDaysAfterStatement,
-          ...expiry,
-        },
+        payload,
       })
       toast.success(t('updateSuccess'))
       onOpenChange(false)

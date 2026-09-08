@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { WalletCards } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
@@ -19,6 +20,7 @@ import { navigationItems } from './navigation'
 export function AppSidebar() {
   const common = useTranslations('common')
   const navigation = useTranslations('navigation')
+  const pathname = usePathname()
 
   return (
     <Sidebar collapsible="icon">
@@ -39,11 +41,15 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <nav aria-label={navigation('main')}>
               <SidebarMenu>
-                {navigationItems.map(({ labelKey, icon: Icon, href, active }) => (
+                {navigationItems.map(({ labelKey, icon: Icon, href }) => {
+                  const active =
+                    href === '/' ? pathname === '/' : (pathname ?? '').startsWith(href ?? '')
+
+                  return (
                   <SidebarMenuItem key={labelKey}>
                     {href ? (
                       <SidebarMenuButton asChild isActive={active} tooltip={navigation(labelKey)}>
-                        <Link href={href} aria-current="page">
+                        <Link href={href} aria-current={active ? 'page' : undefined}>
                           <Icon />
                           <span>{navigation(labelKey)}</span>
                         </Link>
@@ -60,7 +66,8 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                     )}
                   </SidebarMenuItem>
-                ))}
+                  )
+                })}
               </SidebarMenu>
             </nav>
           </SidebarGroupContent>

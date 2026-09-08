@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { CardForm, computeNextDue } from './card-form'
+import { CardForm, computeNextDue, parseExpiryRaw } from './card-form'
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: { count?: number }) =>
@@ -20,6 +20,10 @@ jest.mock('@/hooks/use-bank-catalog', () => ({
     isLoading: false,
     error: null,
   }),
+}))
+
+jest.mock('@/hooks/use-card-schedule-config', () => ({
+  useCardScheduleConfig: () => ({ timeZone: 'Asia/Ho_Chi_Minh' }),
 }))
 
 jest.mock('@/components/cards/bank-logo', () => ({
@@ -66,15 +70,27 @@ describe('CardForm', () => {
     expect(screen.getByText('25/09/2026')).toBeInTheDocument()
   })
 
-  it('computeNextDue returns identical preview under UTC and Asia/Ho_Chi_Minh (TZ regression)', () => {
-    // Spec scenario: clock = 2026-09-04T05:00:00Z, statementDay=5, graceDays=15 → 2026-09-20
-    const fixedInstant = new Date('2026-09-04T05:00:00.000Z')
+  it('uses the configured application timezone when an instant crosses a calendar-day boundary', () => {
+    const fixedInstant = new Date('2026-09-06T20:00:00.000Z')
 
-    const resultHCM = computeNextDue(5, 15, fixedInstant, 'Asia/Ho_Chi_Minh')
-    const resultUTC = computeNextDue(5, 15, fixedInstant, 'UTC')
+    const resultHCM = computeNextDue(5, 1, fixedInstant, 'Asia/Ho_Chi_Minh')
+    const resultUTC = computeNextDue(5, 1, fixedInstant, 'UTC')
 
-    expect(resultHCM).toBe('2026-09-20')
-    expect(resultUTC).toBe('2026-09-20')
+    expect(resultHCM).toBe('2026-10-06')
+    expect(resultUTC).toBe('2026-09-06')
+  })
+
+  it('uses the most recent statement cycle when the current statement date is still ahead', () => {
+    const result = computeNextDue(20, 20, new Date('2026-09-05T05:00:00.000Z'))
+
+    expect(result).toBe('2026-09-09')
+  })
+
+  it('accepts only calendar-valid expiry months when parsing MM/YY', () => {
+    expect(parseExpiryRaw('09/28')).toEqual({ expiryMonth: 9, expiryYear: 2028 })
+    expect(parseExpiryRaw('00/28')).toEqual({})
+    expect(parseExpiryRaw('13/28')).toEqual({})
+    expect(parseExpiryRaw('9/28')).toEqual({})
   })
 
   it('renders exactly one bank logo and compact short name in the select trigger', () => {

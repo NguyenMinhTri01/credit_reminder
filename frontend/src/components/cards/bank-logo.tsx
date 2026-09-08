@@ -10,7 +10,8 @@ interface BankLogoProps {
 }
 
 export function BankLogo({ bankCode, bankName, size = 32 }: BankLogoProps) {
-  const [hasError, setHasError] = useState(false)
+  const [failedBankCode, setFailedBankCode] = useState<string | null>(null)
+  const hasError = failedBankCode === bankCode && bankCode !== null
 
   const src =
     !hasError && bankCode
@@ -24,7 +25,7 @@ export function BankLogo({ bankCode, bankName, size = 32 }: BankLogoProps) {
       width={size}
       height={size}
       className="shrink-0 object-contain"
-      onError={() => setHasError(true)}
+      onError={() => setFailedBankCode(bankCode)}
       unoptimized
     />
   )

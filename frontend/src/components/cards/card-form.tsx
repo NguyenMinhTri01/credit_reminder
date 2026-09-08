@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { BankLogo } from '@/components/cards/bank-logo'
 import { useBankCatalog } from '@/hooks/use-bank-catalog'
+import { useCardScheduleConfig } from '@/hooks/use-card-schedule-config'
 import {
   LAST_FOUR_DIGITS_LENGTH,
   STATEMENT_DAY_MIN,
@@ -75,9 +76,11 @@ function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit:
       .refine(
         (v) => {
           if (!v || v.trim() === '') return true
-          return /^\d{2}\/\d{2}$/.test(v)
+          if (!EXPIRY_REGEX.test(v) || isEdit) return EXPIRY_REGEX.test(v)
+
+          return 2000 + Number(v.slice(-2)) >= new Date().getFullYear()
         },
-        { message: t('validationExpiryFormat') },
+        { message: isEdit ? t('validationExpiryFormat') : t('validationExpiryYearMin') },
       ),
   })
 }
@@ -92,6 +95,8 @@ type CardFormValues = {
   paymentDueDaysAfterStatement: number
   expiryRaw?: string
 }
+
+const EXPIRY_REGEX = /^(0[1-9]|1[0-2])\/\d{2}$/
 
 // ─── Props ───────────────────────────────────────────────────
 
@@ -111,7 +116,7 @@ function buildExpiryRaw(month?: number | null, year?: number | null): string {
 }
 
 function parseExpiryRaw(raw: string): { expiryMonth?: number; expiryYear?: number } {
-  if (!raw || !/^\d{2}\/\d{2}$/.test(raw)) return {}
+  if (!raw || !EXPIRY_REGEX.test(raw)) return {}
   const [mm, yy] = raw.split('/')
   const month = parseInt(mm, 10)
   const year = 2000 + parseInt(yy, 10)
@@ -154,16 +159,27 @@ function computeNextDue(
   const todayMonth = get('month') // 1-indexed
   const todayDay = get('day')
 
-  // Build statement date as UTC-backed arithmetic container.
-  // Using UTC avoids any OS-time-zone offset leaking into the arithmetic.
-  let statMs = Date.UTC(todayYear, todayMonth - 1, statementDay)
-  const todayMs = Date.UTC(todayYear, todayMonth - 1, todayDay)
-  if (statMs <= todayMs) {
-    statMs = Date.UTC(todayYear, todayMonth /* already next month index */, statementDay)
+  const statementDate = (year: number, month: number): Date => {
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
+    return new Date(Date.UTC(year, month - 1, Math.min(statementDay, lastDay)))
   }
 
-  const dueMs = statMs + graceDays * 24 * 60 * 60 * 1000
-  const due = new Date(dueMs)
+  let statement = statementDate(todayYear, todayMonth)
+  const todayMs = Date.UTC(todayYear, todayMonth - 1, todayDay)
+  if (statement.getTime() > todayMs) {
+    const previousMonth = todayMonth === 1 ? 12 : todayMonth - 1
+    const previousYear = todayMonth === 1 ? todayYear - 1 : todayYear
+    statement = statementDate(previousYear, previousMonth)
+  }
+
+  let due = new Date(statement.getTime() + graceDays * 24 * 60 * 60 * 1000)
+  if (due.getTime() < todayMs) {
+    const statementMonth = statement.getUTCMonth() + 1
+    const nextMonth = statementMonth === 12 ? 1 : statementMonth + 1
+    const nextYear = statementMonth === 12 ? statement.getUTCFullYear() + 1 : statement.getUTCFullYear()
+    statement = statementDate(nextYear, nextMonth)
+    due = new Date(statement.getTime() + graceDays * 24 * 60 * 60 * 1000)
+  }
   const y = due.getUTCFullYear()
   const m = String(due.getUTCMonth() + 1).padStart(2, '0')
   const d = String(due.getUTCDate()).padStart(2, '0')
@@ -181,6 +197,7 @@ export function CardForm({
 }: CardFormProps) {
   const t = useTranslations('cards')
   const { banks, isLoading: banksLoading } = useBankCatalog()
+  const { timeZone } = useCardScheduleConfig()
 
   const schema = useMemo(() => buildCardSchema(t, isEdit), [isEdit, t])
 
@@ -210,7 +227,7 @@ export function CardForm({
 
   const statementDay = useWatch({ control, name: 'statementDay' })
   const graceDays = useWatch({ control, name: 'paymentDueDaysAfterStatement' })
-  const nextDue = computeNextDue(Number(statementDay), Number(graceDays))
+  const nextDue = computeNextDue(Number(statementDay), Number(graceDays), new Date(), timeZone)
 
   const handleFormSubmit = async (data: CardFormValues) => {
     await onSubmit({

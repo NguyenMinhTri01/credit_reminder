@@ -132,7 +132,7 @@ describe('TransactionsService', () => {
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
-          data: { availableCredit: money('55000000') },
+          data: { availableCredit: { increment: money('-5000000') } },
         }),
       );
       expect(result.amount).toBe('5000000.00');
@@ -160,7 +160,7 @@ describe('TransactionsService', () => {
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
-          data: { availableCredit: money('65000000') },
+          data: { availableCredit: { increment: money('10000000') } },
         }),
       );
       expect(result.type).toBe('PAYMENT');
@@ -187,7 +187,7 @@ describe('TransactionsService', () => {
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
-          data: { availableCredit: money('64000000') },
+          data: { availableCredit: { increment: money('2000000') } },
         }),
       );
       expect(result.type).toBe('REFUND');
@@ -213,7 +213,7 @@ describe('TransactionsService', () => {
 
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { availableCredit: money('-3000000') },
+          data: { availableCredit: { increment: money('-5000000') } },
         }),
       );
     });
@@ -237,7 +237,7 @@ describe('TransactionsService', () => {
 
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { availableCredit: money('70000000') },
+          data: { availableCredit: { increment: money('15000000') } },
         }),
       );
     });
@@ -336,7 +336,7 @@ describe('TransactionsService', () => {
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
-          data: { availableCredit: money('53000000') },
+          data: { availableCredit: { increment: money('-2000000') } },
         }),
       );
       expect(result.amount).toBe('7000000.00');
@@ -366,7 +366,7 @@ describe('TransactionsService', () => {
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'card-uuid-1' },
-          data: { availableCredit: money('65000000') },
+          data: { availableCredit: { increment: money('10000000') } },
         }),
       );
     });
@@ -461,7 +461,7 @@ describe('TransactionsService', () => {
       });
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { availableCredit: money('60000000') },
+          data: { availableCredit: { increment: money('5000000') } },
         }),
       );
       expect(result).toEqual({ message: TRANSACTION_MESSAGES.DELETE_SUCCESS });
@@ -483,7 +483,7 @@ describe('TransactionsService', () => {
 
       expect(prisma.creditCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { availableCredit: money('55000000') },
+          data: { availableCredit: { increment: money('-10000000') } },
         }),
       );
     });

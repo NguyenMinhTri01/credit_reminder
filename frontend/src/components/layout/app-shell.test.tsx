@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { AppShell } from './app-shell'
 
 jest.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))
+jest.mock('next/navigation', () => ({ usePathname: () => '/' }))
 jest.mock('@/hooks/use-auth', () => ({
   useAuth: () => ({
     user: { name: 'Nguyễn Minh Trí', email: 'tri@example.com' },
@@ -46,5 +47,13 @@ describe('AppShell', () => {
     )
     expect(screen.getByRole('button', { name: 'account' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'toggleSidebar' })).toHaveLength(2)
+  })
+
+  it('uses the server-provided sidebar state on the initial render', () => {
+    render(<AppShell defaultOpen={false}>content</AppShell>)
+
+    expect(
+      document.querySelector('[data-state="collapsed"][data-collapsible="icon"]'),
+    ).toBeInTheDocument()
   })
 })

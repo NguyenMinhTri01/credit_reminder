@@ -6,9 +6,9 @@ Full-stack monorepo. Manage credit payment reminders.
 
 ```
 credit_reminder/
-├── backend/        # NestJS API server (port 3001)
-├── frontend/       # Next.js web app (port 3000)
-├── shared/         # Shared types, enums, constants, utils
+├── backend/        # NestJS API server and backend-local shared code (port 3001)
+├── frontend/       # Next.js web app and frontend-local shared code (port 3000)
+├── openspec/       # Product specifications and change artifacts
 ├── pnpm-workspace.yaml
 ├── package.json    # Root workspace scripts
 └── README.md
@@ -25,7 +25,7 @@ credit_reminder/
 - **class-validator** — Request validation
 
 ### Frontend
-- **Next.js 15** — App Router
+- **Next.js 16** — App Router
 - **Tailwind CSS + shadcn/ui** — Styling & components
 - **TanStack Query v5** — Server state
 - **Zustand v5** — UI state
@@ -34,9 +34,11 @@ credit_reminder/
 - **Lucide React** — Icons
 - **Jest + React Testing Library** — Testing
 
-### Shared
-- Types, interfaces, enums, constants, utils for both backend + frontend
-- Published as `@credit-reminder/shared` workspace package
+### Shared Code
+- Backend-local types, enums, constants, and utilities live in `backend/src/shared/`
+- Frontend-local types, enums, constants, and utilities live in `frontend/src/shared/`
+- There is no published shared workspace package; each application imports from its local
+  `@/shared` alias
 
 ## Prerequisites
 
@@ -133,3 +135,5 @@ Review generated adapter changes separately from edits to canonical project skil
 
 - Backend: [backend/README.md](./backend/README.md)
 - Frontend: [frontend/README.md](./frontend/README.md)
+- Credit-card management post-review record:
+  [docs/credit-card-management-post-review.md](./docs/credit-card-management-post-review.md)

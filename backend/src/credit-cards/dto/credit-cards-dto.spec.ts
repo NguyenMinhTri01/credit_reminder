@@ -64,6 +64,46 @@ describe('CreditCard DTOs', () => {
       const limitError = errors.find((e) => e.property === 'creditLimit');
       expect(limitError).toBeDefined();
     });
+
+    it('rejects money values outside DECIMAL(15,2) precision', async () => {
+      const dto = plainToInstance(CreateCreditCardDto, {
+        bankCode: 'vietcombank',
+        lastFourDigits: '1234',
+        creditLimit: '10000000000000.00',
+        availableCredit: '0.001',
+        statementDay: 10,
+        paymentDueDaysAfterStatement: 15,
+      });
+
+      const errors = await validate(dto);
+      expect(errors.map((error) => error.property)).toEqual(
+        expect.arrayContaining(['creditLimit', 'availableCredit']),
+      );
+    });
+
+    it('evaluates expiry year against the current year at validation time', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-12-31T12:00:00.000Z'));
+
+      const dto = plainToInstance(CreateCreditCardDto, {
+        bankCode: 'vietcombank',
+        lastFourDigits: '1234',
+        creditLimit: '500',
+        availableCredit: '500',
+        statementDay: 10,
+        paymentDueDaysAfterStatement: 15,
+        expiryYear: 2026,
+      });
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+
+      jest.setSystemTime(new Date('2027-01-01T12:00:00.000Z'));
+      const expiredErrors = await validate(dto);
+      expect(expiredErrors.find((error) => error.property === 'expiryYear')).toBeDefined();
+
+      jest.useRealTimers();
+    });
   });
 
   describe('UpdateCreditCardDto', () => {
@@ -93,6 +133,20 @@ describe('CreditCard DTOs', () => {
       const nonStringErrors = await validate(nonStringDto);
       expect(nonStringErrors).toHaveLength(1);
     });
+
+    it('does not skip creditLimit validators when the value is null', async () => {
+      const dto = plainToInstance(UpdateCreditCardDto, { creditLimit: null });
+
+      const errors = await validate(dto);
+      expect(errors.find((error) => error.property === 'creditLimit')).toBeDefined();
+    });
+
+    it('rejects null for required persisted update fields', async () => {
+      const dto = plainToInstance(UpdateCreditCardDto, { cardName: null });
+
+      const errors = await validate(dto);
+      expect(errors.find((error) => error.property === 'cardName')).toBeDefined();
+    });
   });
 
   describe('ReconcileCreditCardDto', () => {
@@ -110,6 +164,15 @@ describe('CreditCard DTOs', () => {
       });
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
+    });
+
+    it('rejects reconcile amounts outside DECIMAL(15,2) precision', async () => {
+      const dto = plainToInstance(ReconcileCreditCardDto, {
+        availableCredit: '10000000000000.001',
+      });
+
+      const errors = await validate(dto);
+      expect(errors.find((error) => error.property === 'availableCredit')).toBeDefined();
     });
   });
 });

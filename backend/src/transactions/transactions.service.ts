@@ -59,7 +59,7 @@ export class TransactionsService {
    * If an idempotencyKey is supplied and a matching record exists, return the existing transaction.
    */
   async create(cardId: string, userId: string, dto: CreateTransactionDto): Promise<ITransaction> {
-    const card = await this.findOwnedCard(cardId, userId);
+    await this.findOwnedCard(cardId, userId);
 
     // Check idempotency first before transaction
     if (dto.idempotencyKey) {
@@ -80,8 +80,6 @@ export class TransactionsService {
       return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const amount = new Prisma.Decimal(dto.amount);
         const effect = dto.type === 'EXPENSE' ? amount.negated() : amount;
-        const currentAvailable = card.availableCredit ?? new Prisma.Decimal(0);
-        const newAvailableCredit = currentAvailable.plus(effect);
 
         const created = await tx.transaction.create({
           data: {
@@ -98,7 +96,7 @@ export class TransactionsService {
 
         await tx.creditCard.update({
           where: { id: cardId },
-          data: { availableCredit: newAvailableCredit },
+          data: { availableCredit: { increment: effect } },
         });
 
         return this.mapTransactionToResponse(created);
@@ -166,8 +164,6 @@ export class TransactionsService {
 
       // Net difference to apply
       const delta = newEffect.minus(oldEffect);
-      const currentAvailable = card.availableCredit ?? new Prisma.Decimal(0);
-      const newAvailableCredit = currentAvailable.plus(delta);
 
       const updated = await tx.transaction.update({
         where: { id: transactionId },
@@ -185,7 +181,7 @@ export class TransactionsService {
       if (!delta.isZero()) {
         await tx.creditCard.update({
           where: { id: cardId },
-          data: { availableCredit: newAvailableCredit },
+          data: { availableCredit: { increment: delta } },
         });
       }
 
@@ -228,16 +224,13 @@ export class TransactionsService {
         transaction.type === TransactionType.EXPENSE ? oldAmount.negated() : oldAmount;
       const reversal = oldEffect.negated();
 
-      const currentAvailable = card.availableCredit ?? new Prisma.Decimal(0);
-      const newAvailableCredit = currentAvailable.plus(reversal);
-
       await tx.transaction.delete({
         where: { id: transactionId },
       });
 
       await tx.creditCard.update({
         where: { id: cardId },
-        data: { availableCredit: newAvailableCredit },
+        data: { availableCredit: { increment: reversal } },
       });
     });
 

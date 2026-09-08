@@ -1,31 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsString, ValidateIf } from 'class-validator';
 import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  Matches,
-  registerDecorator,
-  ValidationOptions,
-} from 'class-validator';
-import { TRANSACTION_MESSAGES } from '@/shared';
-
-function IsPositiveDecimalString(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
-    registerDecorator({
-      name: 'isPositiveDecimalString',
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      validator: {
-        validate(value: unknown): boolean {
-          if (typeof value !== 'string') return false;
-          const num = parseFloat(value);
-          return !isNaN(num) && num > 0;
-        },
-      },
-    });
-  };
-}
+  IsCalendarDateString,
+  IsDecimal15_2String,
+  IsPositiveDecimalString,
+  TRANSACTION_MESSAGES,
+} from '@/shared';
 
 export class UpdateTransactionDto {
   @ApiPropertyOptional({
@@ -33,7 +13,7 @@ export class UpdateTransactionDto {
     enum: ['EXPENSE', 'PAYMENT', 'REFUND'],
     description: 'Transaction type',
   })
-  @IsOptional()
+  @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsEnum(['EXPENSE', 'PAYMENT', 'REFUND'], { message: TRANSACTION_MESSAGES.TYPE_INVALID })
   readonly type?: 'EXPENSE' | 'PAYMENT' | 'REFUND';
 
@@ -41,8 +21,8 @@ export class UpdateTransactionDto {
     example: '7000000.00',
     description: 'Transaction amount as decimal string (VND)',
   })
-  @IsOptional()
-  @Matches(/^\d+(\.\d+)?$/, { message: TRANSACTION_MESSAGES.AMOUNT_FORMAT })
+  @ValidateIf((_object, value: unknown) => value !== undefined)
+  @IsDecimal15_2String({ message: TRANSACTION_MESSAGES.AMOUNT_FORMAT })
   @IsPositiveDecimalString({ message: TRANSACTION_MESSAGES.AMOUNT_POSITIVE })
   readonly amount?: string;
 
@@ -50,8 +30,8 @@ export class UpdateTransactionDto {
     example: '2026-09-06',
     description: 'Transaction date in YYYY-MM-DD format',
   })
-  @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: TRANSACTION_MESSAGES.DATE_FORMAT })
+  @ValidateIf((_object, value: unknown) => value !== undefined)
+  @IsCalendarDateString({ message: TRANSACTION_MESSAGES.DATE_FORMAT })
   readonly transactionDate?: string;
 
   @ApiPropertyOptional({

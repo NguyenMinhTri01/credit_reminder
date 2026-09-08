@@ -4,6 +4,7 @@ import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { TransactionsPaginationDto } from './dto/transactions-pagination.dto';
 
 describe('TransactionsController', () => {
   let controller: TransactionsController;
@@ -48,7 +49,8 @@ describe('TransactionsController', () => {
   it('delegates findAll to service with parsed pagination params', async () => {
     mockService.findAllByCard.mockResolvedValue({ items: [], meta: {} });
 
-    const result = await controller.findAll('card-1', mockReq, '2', '15');
+    const query: TransactionsPaginationDto = { page: 2, limit: 15 };
+    const result = await controller.findAll('card-1', mockReq, query);
 
     expect(result).toEqual({ items: [], meta: {} });
     expect(mockService.findAllByCard).toHaveBeenCalledWith('card-1', 'user-uuid-1', {
@@ -60,12 +62,10 @@ describe('TransactionsController', () => {
   it('delegates findAll to service with default undefined pagination params', async () => {
     mockService.findAllByCard.mockResolvedValue({ items: [], meta: {} });
 
-    await controller.findAll('card-1', mockReq);
+    const query: TransactionsPaginationDto = {};
+    await controller.findAll('card-1', mockReq, query);
 
-    expect(mockService.findAllByCard).toHaveBeenCalledWith('card-1', 'user-uuid-1', {
-      page: undefined,
-      limit: undefined,
-    });
+    expect(mockService.findAllByCard).toHaveBeenCalledWith('card-1', 'user-uuid-1', query);
   });
 
   it('delegates update to service', async () => {

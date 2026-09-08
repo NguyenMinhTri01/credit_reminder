@@ -21,7 +21,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { IAuthenticatedUser, ICreditCard, IBankCatalogEntry, CREDIT_CARD_MESSAGES } from '@/shared';
+import {
+  IAuthenticatedUser,
+  ICardScheduleConfig,
+  ICreditCard,
+  IBankCatalogEntry,
+  CREDIT_CARD_MESSAGES,
+} from '@/shared';
 import { CreditCardResponseDto, DeleteResponseDto } from './dto/credit-card-response.dto';
 import { CreateCreditCardDto } from './dto/create-credit-card.dto';
 import { UpdateCreditCardDto } from './dto/update-credit-card.dto';
@@ -49,6 +55,14 @@ export class CreditCardsController {
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: CREDIT_CARD_MESSAGES.SWAGGER_TAG })
   getBankCatalog(): ReadonlyArray<IBankCatalogEntry> {
     return this.creditCardsService.getBankCatalog();
+  }
+
+  /** Return the backend configuration used for client-side schedule previews. */
+  @Get('schedule-config')
+  @ApiOperation({ summary: CREDIT_CARD_MESSAGES.SWAGGER_SCHEDULE_CONFIG })
+  @ApiOkResponse({ description: CREDIT_CARD_MESSAGES.SWAGGER_SCHEDULE_CONFIG })
+  getScheduleConfig(): ICardScheduleConfig {
+    return this.creditCardsService.getScheduleConfig();
   }
 
   @Post()

@@ -1,41 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Matches,
-  Max,
-  Min,
-  registerDecorator,
-  ValidationOptions,
-} from 'class-validator';
-import { CREDIT_CARD_MESSAGES } from '@/shared';
-
-// ─── Custom validator ─────────────────────────────────────────
-
-/**
- * Validates that a string value, when parsed as a float, is strictly positive (> 0).
- */
-function IsPositiveDecimalString(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
-    registerDecorator({
-      name: 'isPositiveDecimalString',
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      validator: {
-        validate(value: unknown): boolean {
-          if (typeof value !== 'string') return false;
-          const num = parseFloat(value);
-          return !isNaN(num) && num > 0;
-        },
-      },
-    });
-  };
-}
-
-const CURRENT_YEAR = new Date().getFullYear();
+  CREDIT_CARD_MESSAGES,
+  IsCurrentOrFutureYear,
+  IsDecimal15_2String,
+  IsPositiveDecimalString,
+} from '@/shared';
 
 // ─── DTO ─────────────────────────────────────────────────────
 
@@ -60,7 +30,7 @@ export class CreateCreditCardDto {
     description: 'Credit limit as decimal string (VND)',
   })
   @IsNotEmpty({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_REQUIRED })
-  @Matches(/^\d+(\.\d+)?$/, { message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_FORMAT })
+  @IsDecimal15_2String({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_FORMAT })
   @IsPositiveDecimalString({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_POSITIVE })
   readonly creditLimit: string;
 
@@ -68,7 +38,7 @@ export class CreateCreditCardDto {
     example: '50000000.00',
     description: 'Available credit as decimal string (VND)',
   })
-  @Matches(/^\d+(\.\d+)?$/, { message: CREDIT_CARD_MESSAGES.AVAILABLE_CREDIT_FORMAT })
+  @IsDecimal15_2String({ message: CREDIT_CARD_MESSAGES.AVAILABLE_CREDIT_FORMAT })
   readonly availableCredit: string;
 
   @ApiProperty({
@@ -104,7 +74,7 @@ export class CreateCreditCardDto {
   })
   @IsOptional()
   @IsInt()
-  @Min(CURRENT_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
+  @IsCurrentOrFutureYear({ message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
   readonly expiryYear?: number;
 
   @ApiPropertyOptional({

@@ -118,6 +118,10 @@ export interface IBankCatalogEntry {
   category: 'state-owned' | 'private' | 'international' | 'finance-company'
 }
 
+export interface ICardScheduleConfig {
+  timeZone: string
+}
+
 export interface ICreditCard {
   id: string
   userId: string

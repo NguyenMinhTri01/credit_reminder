@@ -79,12 +79,12 @@ describe('hooks/use-credit-cards', () => {
       renderHook(() => useCardList())
 
       const options = mockUseQuery.mock.calls[0][0]
-      expect(options.queryKey).toEqual(['credit-cards'])
+      expect(options.queryKey).toEqual(['credit-cards', undefined])
       expect(options.enabled).toBe(false)
     })
 
     it('enables the query and forwards initialData when a session is present', () => {
-      mockUseSession.mockReturnValue({ data: { accessToken: 'token' } })
+      mockUseSession.mockReturnValue({ data: { accessToken: 'token', user: { id: 'user-1' } } })
       mockUseQuery.mockReturnValue({})
       const initialData: ICreditCard[] = []
 
@@ -92,6 +92,7 @@ describe('hooks/use-credit-cards', () => {
 
       const options = mockUseQuery.mock.calls[0][0]
       expect(options.enabled).toBe(true)
+      expect(options.queryKey).toEqual(['credit-cards', 'user-1'])
       expect(options.initialData).toBe(initialData)
     })
   })

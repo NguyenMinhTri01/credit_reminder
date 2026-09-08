@@ -40,6 +40,10 @@ export interface IAuthenticatedUser {
   fullName: string | null;
 }
 
+export interface ICardScheduleConfig {
+  timeZone: string;
+}
+
 export interface ILoginDto {
   email: string;
   password: string;

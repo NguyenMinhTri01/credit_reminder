@@ -25,7 +25,7 @@ export function useCardList(initialData?: ICreditCard[]) {
   const { data: session } = useSession()
 
   return useQuery({
-    queryKey: CARDS_KEY,
+    queryKey: [...CARDS_KEY, session?.user?.id],
     queryFn: () =>
       apiClient.get<ICreditCard[]>(CREDIT_CARDS_PATH, {
         accessToken: session?.accessToken,

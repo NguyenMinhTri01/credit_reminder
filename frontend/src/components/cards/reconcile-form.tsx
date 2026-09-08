@@ -22,8 +22,8 @@ function buildReconcileSchema(t: ReturnType<typeof useTranslations<'cards'>>) {
       .min(1, t('validationAvailableCreditRequired'))
       .refine((v) => {
         const canonical = parseMoneyInputToCanonicalDecimal(v)
-        return canonical !== ''
-      }, t('validationAvailableCreditRequired')),
+        return canonical !== '' && Number(canonical) >= 0
+      }, t('validationAvailableCreditNonNegative')),
   })
 }
 

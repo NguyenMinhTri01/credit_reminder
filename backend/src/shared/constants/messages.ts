@@ -74,6 +74,7 @@ export const CREDIT_CARD_MESSAGES = {
   SWAGGER_RESTORE: 'Restore a soft-deleted credit card',
   SWAGGER_RECONCILE: 'Manually reconcile available credit',
   SWAGGER_BANKS: 'Get the supported bank catalog',
+  SWAGGER_SCHEDULE_CONFIG: 'Get the configured card schedule time zone',
 } as const;
 
 // ─── Transaction Messages ────────────────────────────────────
@@ -98,6 +99,8 @@ export const TRANSACTION_MESSAGES = {
   DATE_REQUIRED: 'Transaction date is required',
   DATE_FORMAT: 'Transaction date must be in YYYY-MM-DD format',
   IDEMPOTENCY_KEY_FORMAT: 'Idempotency key must be a valid UUID',
+  PAGE_INVALID: 'Page must be a positive integer',
+  LIMIT_INVALID: 'Limit must be an integer between 1 and 100',
   // Swagger
   SWAGGER_TAG: 'Transactions',
   SWAGGER_CREATE: 'Create a new transaction for a credit card',

@@ -26,18 +26,28 @@ frontend/
 │   │   │   ├── login/page.tsx      # Login + Register tabs
 │   │   │   ├── forgot-password/page.tsx
 │   │   │   └── reset-password/page.tsx
+│   │   ├── (app)/                  # Authenticated application shell
+│   │   │   ├── cards/page.tsx      # Credit-card management page
+│   │   │   ├── home/page.tsx       # Legacy redirect to the dashboard
+│   │   │   ├── layout.tsx          # Sidebar state initialized from server cookie
+│   │   │   └── page.tsx            # Dashboard route
 │   │   ├── api/auth/[...nextauth]/route.ts # Auth.js handler
-│   │   ├── home/page.tsx           # Authenticated landing
 │   │   ├── system-theme/page.tsx   # Design system reference
 │   │   ├── globals.css             # Global styles + theme tokens
 │   │   └── layout.tsx              # Root layout (i18n + Session + Query)
 │   ├── assets/                     # Images & icons imported in code
 │   ├── components/
 │   │   ├── auth/                   # Auth-specific UI (forms, inputs)
+│   │   ├── cards/                  # Card, transaction, and reconciliation UI
+│   │   ├── dashboard/              # Dashboard cards, summaries, reminders
+│   │   ├── layout/                 # Authenticated shell, sidebar, header
 │   │   └── ui/                     # shadcn/ui primitives
 │   ├── hooks/
 │   │   ├── use-auth.ts             # Session + signOut helper
-│   │   └── use-reminders.ts        # TanStack Query hooks
+│   │   ├── use-bank-catalog.ts     # Supported bank catalog query
+│   │   ├── use-credit-cards.ts     # Card queries and mutations
+│   │   ├── use-transactions.ts     # Transaction queries and mutations
+│   │   └── use-reminders.ts        # Reminder query
 │   ├── i18n/request.ts             # next-intl configuration
 │   ├── lib/
 │   │   ├── auth.ts                 # next-auth (Auth.js v5) config
@@ -47,10 +57,12 @@ frontend/
 │   │   └── validations.ts          # Zod schemas
 │   ├── messages/                   # next-intl translations
 │   ├── providers/                  # SessionProvider, QueryProvider
+│   ├── shared/                     # Frontend-local types, constants, enums, utils
 │   ├── stores/ui-store.ts          # Zustand UI store
 │   ├── types/next-auth.d.ts        # next-auth module augmentation
 │   ├── proxy.ts                    # Route protection (Next 16 proxy)
 │   └── __tests__/utils.test.ts
+├── public/images/banks/            # Bank logos and generic fallback asset
 ├── .env.example
 ├── .gitignore
 ├── components.json                 # shadcn/ui config
@@ -100,7 +112,13 @@ API calls use custom hooks in `src/hooks/` wrapping TanStack Query with fetch-ba
 UI state (sidebar, loading, etc.) via Zustand stores in `src/stores/`.
 
 ### Validation (Zod)
-Form schemas in `src/lib/validations.ts`, sharing constants from `@credit-reminder/shared`.
+Form schemas use Zod and frontend-local constants from `@/shared`.
+
+### Credit-card management
+The authenticated `/cards` route provides card create, detail, edit, soft-delete, transaction, and
+reconciliation flows. TanStack Query hooks in `src/hooks/use-credit-cards.ts` and
+`src/hooks/use-transactions.ts` own API cache invalidation, while bank metadata comes from
+`src/hooks/use-bank-catalog.ts`. Bank logo assets live in `public/images/banks/`.
 
 ### i18n
 Translations in `src/messages/{locale}.json`. Language switching cookie-based via `LanguageSwitcher`.

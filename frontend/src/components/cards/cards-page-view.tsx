@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { CreditCard, Plus } from 'lucide-react'
+import { AlertCircle, CreditCard, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Empty,
   EmptyContent,
@@ -39,13 +40,14 @@ export function CardsPageView({ initialCards }: CardsPageViewProps) {
   const t = useTranslations('cards')
   const [addOpen, setAddOpen] = useState(false)
   const [showDeleted, setShowDeleted] = useState(false)
-  const [detailCard, setDetailCard] = useState<ICreditCard | null>(null)
+  const [detailCardId, setDetailCardId] = useState<string | null>(null)
 
-  const { data: cards, isLoading } = useCardList(initialCards)
+  const { data: cards, isLoading, isError, refetch } = useCardList(initialCards)
 
   const allCards = cards ?? []
   const activeCards = allCards.filter((c) => !c.deletedAt)
   const deletedCards = allCards.filter((c) => !!c.deletedAt)
+  const detailCard = allCards.find((card) => card.id === detailCardId) ?? null
 
   return (
     <div className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col gap-8 p-4 md:p-6 lg:p-8">
@@ -68,6 +70,17 @@ export function CardsPageView({ initialCards }: CardsPageViewProps) {
           <CardSkeleton />
           <CardSkeleton />
         </div>
+      ) : isError ? (
+        <Alert variant="destructive">
+          <AlertCircle aria-hidden="true" />
+          <AlertTitle>{t('loadErrorTitle')}</AlertTitle>
+          <AlertDescription className="flex flex-col items-start gap-4">
+            <p>{t('loadErrorDescription')}</p>
+            <Button variant="outline" onClick={() => void refetch()}>
+              {t('retry')}
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : activeCards.length === 0 ? (
         /* Empty state */
         <Empty>
@@ -89,7 +102,11 @@ export function CardsPageView({ initialCards }: CardsPageViewProps) {
         /* Card grid */
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {activeCards.map((card) => (
-            <CardTile key={card.id} card={card} onViewDetail={setDetailCard} />
+            <CardTile
+              key={card.id}
+              card={card}
+              onViewDetail={(selectedCard) => setDetailCardId(selectedCard.id)}
+            />
           ))}
         </div>
       )}
@@ -124,7 +141,7 @@ export function CardsPageView({ initialCards }: CardsPageViewProps) {
         <CardDetailView
           card={detailCard}
           open={!!detailCard}
-          onOpenChange={(open) => { if (!open) setDetailCard(null) }}
+          onOpenChange={(open) => { if (!open) setDetailCardId(null) }}
         />
       )}
     </div>

@@ -42,10 +42,9 @@ export function aggregateDashboardMoney(cards: DashboardMoneyCard[]): IDashboard
     } else {
       totalCreditLimit = totalCreditLimit.plus(card.creditLimit);
       knownLimitBalance = knownLimitBalance.plus(usedBalance);
-    }
-
-    if (card.availableCredit !== null) {
-      availableCredit = availableCredit.plus(card.availableCredit);
+      if (card.availableCredit !== null) {
+        availableCredit = availableCredit.plus(card.availableCredit);
+      }
     }
   }
 
