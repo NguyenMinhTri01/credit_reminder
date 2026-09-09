@@ -76,7 +76,7 @@ export class UpdateCreditCardDto {
   @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
   @IsCurrentOrFutureYear({ message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
-  @Max(MAX_EXPIRY_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
+  @Max(MAX_EXPIRY_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MAX })
   readonly expiryYear?: number;
 
   @ApiPropertyOptional({

@@ -251,4 +251,65 @@ describe('CardForm', () => {
       )
     })
   })
+
+  it('rejects clearing creditLimit when the original card had a value', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          cardName: 'Visa',
+          lastFourDigits: '1234',
+          creditLimit: '50000000.00',
+          statementDay: 15,
+          paymentDueDaysAfterStatement: 20,
+        }}
+        onSubmit={onSubmit}
+        isLoading={false}
+        isEdit
+        submitLabel="editCard"
+      />,
+    )
+
+    // Clear the credit limit field
+    fireEvent.change(screen.getByLabelText('formCreditLimit'), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'editCard' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('validationCreditLimitPositive')).toBeInTheDocument()
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('rejects clearing statementDay and paymentDueDaysAfterStatement when the original card had values', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          cardName: 'Visa',
+          lastFourDigits: '1234',
+          creditLimit: '50000000.00',
+          statementDay: 15,
+          paymentDueDaysAfterStatement: 20,
+        }}
+        onSubmit={onSubmit}
+        isLoading={false}
+        isEdit
+        submitLabel="editCard"
+      />,
+    )
+
+    // Clear both schedule fields
+    fireEvent.change(screen.getByLabelText('formStatementDay'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('formPaymentDueDays'), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'editCard' }))
+
+    await waitFor(() => {
+      expect(screen.getAllByText('validationStatementDayRequired').length).toBeGreaterThan(0)
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
 })

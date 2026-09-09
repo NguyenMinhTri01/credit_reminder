@@ -1,5 +1,4 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
-import { MAX_EXPIRY_YEAR } from '../constants';
 
 /**
  * Validates that a string value, when parsed as a float, is strictly positive (> 0).
@@ -73,6 +72,8 @@ export function IsCalendarDateString(validationOptions?: ValidationOptions) {
 
 /**
  * Validates an expiry year against the current application year at request time.
+ * Upper bound is enforced separately by `@Max(MAX_EXPIRY_YEAR)` so each bound
+ * reports its own message instead of duplicating this validator's failure.
  */
 export function IsCurrentOrFutureYear(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string): void {
@@ -86,8 +87,7 @@ export function IsCurrentOrFutureYear(validationOptions?: ValidationOptions) {
           return (
             typeof value === 'number' &&
             Number.isInteger(value) &&
-            value >= new Date().getFullYear() &&
-            value <= MAX_EXPIRY_YEAR
+            value >= new Date().getFullYear()
           );
         },
       },

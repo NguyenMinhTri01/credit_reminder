@@ -36,7 +36,9 @@ export function EditCardSheet({ card, open, onOpenChange }: EditCardSheetProps) 
       if (data.cardName !== card.cardName) payload.cardName = data.cardName ?? ''
       if (data.lastFourDigits !== card.lastFourDigits) payload.lastFourDigits = data.lastFourDigits
       const creditLimit = parseMoneyInputToCanonicalDecimal(data.creditLimit)
-      if (creditLimit && creditLimit !== card.creditLimit) payload.creditLimit = creditLimit
+      // Schema guarantees creditLimit is non-empty when the original had a value,
+      // so checking `creditLimit !== card.creditLimit` is safe here.
+      if (creditLimit !== card.creditLimit) payload.creditLimit = creditLimit
       if (data.statementDay !== undefined && data.statementDay !== card.statementDay) {
         payload.statementDay = data.statementDay
       }

@@ -35,10 +35,33 @@ import { formatMoneyInputDisplay, parseMoneyInputToCanonicalDecimal } from '@/li
 
 // ─── Zod schema ──────────────────────────────────────────────
 
-function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit: boolean) {
+interface OriginalCardValues {
+  creditLimit?: string | null
+  statementDay?: number | null
+  paymentDueDaysAfterStatement?: number | null
+}
+
+function buildCardSchema(
+  t: ReturnType<typeof useTranslations<'cards'>>,
+  isEdit: boolean,
+  original: OriginalCardValues = {},
+) {
+  /**
+   * Determines whether a field that was populated in the original card may be
+   * cleared by the user.  Clearing is only allowed when the original value was
+   * already absent (legacy-null), so that a real value cannot be silently
+   * dropped via a no-op save.
+   */
+  const hadCreditLimit = Boolean(original.creditLimit && original.creditLimit.trim() !== '')
+  const hadStatementDay = original.statementDay != null
+  const hadPaymentDueDays = original.paymentDueDaysAfterStatement != null
+
   const creditLimitSchema = z.string().refine(
     (value) => {
-      if (isEdit && value.trim() === '') return true
+      if (isEdit && value.trim() === '') {
+        // Reject clearing a field that previously held a real value
+        return !hadCreditLimit
+      }
       const canonical = parseMoneyInputToCanonicalDecimal(value)
       if (!canonical) return false
       const num = Number(canonical)
@@ -47,13 +70,28 @@ function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit:
     t('validationCreditLimitPositive'),
   )
 
-  const optionalScheduleNumber = (message: string, min: number, max?: number) =>
-    z
+  const optionalScheduleNumber = (
+    message: string,
+    min: number,
+    wasPopulated: boolean,
+    max?: number,
+  ) => {
+    const base = z
       .number({ message })
       .int()
       .min(min, message)
       .pipe(max === undefined ? z.number() : z.number().max(max, message))
       .optional()
+
+    if (!wasPopulated) return base
+
+    // Field had a real value — undefined (cleared) must be rejected
+    return z
+      .number({ message })
+      .int()
+      .min(min, message)
+      .pipe(max === undefined ? z.number() : z.number().max(max, message))
+  }
 
   return z.object({
     bankCode: z.string().min(1, t('validationBankRequired')),
@@ -78,6 +116,7 @@ function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit:
       ? optionalScheduleNumber(
           t('validationStatementDayRequired'),
           STATEMENT_DAY_MIN,
+          hadStatementDay,
           STATEMENT_DAY_MAX,
         )
       : z
@@ -86,7 +125,11 @@ function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit:
           .min(STATEMENT_DAY_MIN, t('validationStatementDayRange'))
           .max(STATEMENT_DAY_MAX, t('validationStatementDayRange')),
     paymentDueDaysAfterStatement: isEdit
-      ? optionalScheduleNumber(t('validationPaymentDueDaysRequired'), PAYMENT_DUE_DAYS_MIN)
+      ? optionalScheduleNumber(
+          t('validationPaymentDueDaysRequired'),
+          PAYMENT_DUE_DAYS_MIN,
+          hadPaymentDueDays,
+        )
       : z
           .number({ message: t('validationPaymentDueDaysRequired') })
           .int()
@@ -220,7 +263,18 @@ export function CardForm({
   const { banks, isLoading: banksLoading } = useBankCatalog()
   const { timeZone } = useCardScheduleConfig()
 
-  const schema = useMemo(() => buildCardSchema(t, isEdit), [isEdit, t])
+  const schema = useMemo(
+    () =>
+      buildCardSchema(t, isEdit, {
+        creditLimit: defaultValues?.creditLimit,
+        statementDay: defaultValues?.statementDay,
+        paymentDueDaysAfterStatement: defaultValues?.paymentDueDaysAfterStatement,
+      }),
+    // defaultValues is intentionally excluded: the schema is built once from the
+    // initial card snapshot and must not change when the user edits field values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isEdit, t],
+  )
 
   const {
     register,

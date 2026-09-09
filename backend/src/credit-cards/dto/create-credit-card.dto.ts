@@ -18,14 +18,14 @@ export class CreateCreditCardDto {
   })
   @IsString({ message: CREDIT_CARD_MESSAGES.BANK_CODE_REQUIRED })
   @IsNotEmpty({ message: CREDIT_CARD_MESSAGES.BANK_CODE_REQUIRED })
-  readonly bankCode: string;
+  readonly bankCode!: string;
 
   @ApiProperty({
     example: '1234',
     description: 'Last 4 digits of the card',
   })
   @Matches(/^\d{4}$/, { message: CREDIT_CARD_MESSAGES.LAST_FOUR_DIGITS_FORMAT })
-  readonly lastFourDigits: string;
+  readonly lastFourDigits!: string;
 
   @ApiProperty({
     example: '50000000.00',
@@ -34,14 +34,14 @@ export class CreateCreditCardDto {
   @IsNotEmpty({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_REQUIRED })
   @IsDecimal15_2String({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_FORMAT })
   @IsPositiveDecimalString({ message: CREDIT_CARD_MESSAGES.CREDIT_LIMIT_POSITIVE })
-  readonly creditLimit: string;
+  readonly creditLimit!: string;
 
   @ApiProperty({
     example: '50000000.00',
     description: 'Available credit as decimal string (VND)',
   })
   @IsDecimal15_2String({ message: CREDIT_CARD_MESSAGES.AVAILABLE_CREDIT_FORMAT })
-  readonly availableCredit: string;
+  readonly availableCredit!: string;
 
   @ApiProperty({
     example: 25,
@@ -50,7 +50,7 @@ export class CreateCreditCardDto {
   @IsInt({ message: CREDIT_CARD_MESSAGES.STATEMENT_DAY_REQUIRED })
   @Min(1, { message: CREDIT_CARD_MESSAGES.STATEMENT_DAY_RANGE })
   @Max(31, { message: CREDIT_CARD_MESSAGES.STATEMENT_DAY_RANGE })
-  readonly statementDay: number;
+  readonly statementDay!: number;
 
   @ApiProperty({
     example: 21,
@@ -61,7 +61,7 @@ export class CreateCreditCardDto {
   @Max(MAX_PAYMENT_DUE_DAYS_AFTER_STATEMENT, {
     message: CREDIT_CARD_MESSAGES.PAYMENT_DUE_DAYS_RANGE,
   })
-  readonly paymentDueDaysAfterStatement: number;
+  readonly paymentDueDaysAfterStatement!: number;
 
   @ApiPropertyOptional({
     example: 12,
@@ -80,7 +80,7 @@ export class CreateCreditCardDto {
   @IsOptional()
   @IsInt()
   @IsCurrentOrFutureYear({ message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
-  @Max(MAX_EXPIRY_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
+  @Max(MAX_EXPIRY_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MAX })
   readonly expiryYear?: number;
 
   @ApiPropertyOptional({

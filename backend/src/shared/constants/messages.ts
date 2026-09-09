@@ -64,6 +64,7 @@ export const CREDIT_CARD_MESSAGES = {
   PAYMENT_DUE_DAYS_RANGE: 'Payment due days after statement must be at most 366',
   EXPIRY_MONTH_RANGE: 'Expiry month must be between 1 and 12',
   EXPIRY_YEAR_MIN: 'Expiry year must be the current year or later',
+  EXPIRY_YEAR_MAX: 'Expiry year must be at most 9999',
   AVAILABLE_CREDIT_RECONCILE_REQUIRED: 'New available credit value is required',
   // Swagger
   SWAGGER_TAG: 'Credit Cards',

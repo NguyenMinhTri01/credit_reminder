@@ -19,12 +19,14 @@ interface DeleteResponse {
   message: string
 }
 
+// Always resolve the session via getSession() rather than reusing the token
+// captured by useSession(): the captured token may be stale (e.g. a tab left
+// open past the access-token lifetime). getSession() re-runs the jwt callback,
+// which refreshes the access token when needed, so mutations always send a
+// valid token as long as the refresh token is still good.
 function withCurrentAccessToken<T>(
-  currentToken: string | undefined,
   request: (accessToken: string) => Promise<T>,
 ): Promise<T> {
-  if (currentToken) return request(currentToken)
-
   return getSession().then((session) => {
     if (!session?.accessToken) {
       throw new Error(AUTHENTICATION_REQUIRED_ERROR)
@@ -51,13 +53,12 @@ export function useTransactionList(cardId: string, page = 1) {
 }
 
 export function useCreateTransaction(cardId: string) {
-  const { data: session } = useSession()
   const queryClient = useQueryClient()
   const router = useRouter()
 
   return useMutation({
     mutationFn: (payload: ICreateTransactionPayload) =>
-      withCurrentAccessToken(session?.accessToken, (accessToken) =>
+      withCurrentAccessToken((accessToken) =>
         apiClient.post<ITransaction>(TRANSACTIONS_PATH(cardId), payload, { accessToken }),
       ),
     onSuccess: () => {
@@ -70,7 +71,6 @@ export function useCreateTransaction(cardId: string) {
 }
 
 export function useUpdateTransaction(cardId: string) {
-  const { data: session } = useSession()
   const queryClient = useQueryClient()
   const router = useRouter()
 
@@ -82,7 +82,7 @@ export function useUpdateTransaction(cardId: string) {
       id: string
       payload: Partial<ICreateTransactionPayload>
     }) =>
-      withCurrentAccessToken(session?.accessToken, (accessToken) =>
+      withCurrentAccessToken((accessToken) =>
         apiClient.patch<ITransaction>(TRANSACTION_PATH(cardId, id), payload, { accessToken }),
       ),
     onSuccess: () => {
@@ -95,13 +95,12 @@ export function useUpdateTransaction(cardId: string) {
 }
 
 export function useDeleteTransaction(cardId: string) {
-  const { data: session } = useSession()
   const queryClient = useQueryClient()
   const router = useRouter()
 
   return useMutation({
     mutationFn: (id: string) =>
-      withCurrentAccessToken(session?.accessToken, (accessToken) =>
+      withCurrentAccessToken((accessToken) =>
         apiClient.delete<DeleteResponse>(TRANSACTION_PATH(cardId, id), { accessToken }),
       ),
     onSuccess: () => {

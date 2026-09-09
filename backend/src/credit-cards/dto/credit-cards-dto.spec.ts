@@ -3,6 +3,7 @@ import { plainToInstance } from 'class-transformer';
 import { CreateCreditCardDto } from './create-credit-card.dto';
 import { UpdateCreditCardDto } from './update-credit-card.dto';
 import { ReconcileCreditCardDto } from './reconcile-credit-card.dto';
+import { CREDIT_CARD_MESSAGES } from '@/shared';
 
 describe('CreditCard DTOs', () => {
   describe('CreateCreditCardDto', () => {
@@ -121,6 +122,26 @@ describe('CreditCard DTOs', () => {
       expect(errors.map((error) => error.property)).toEqual(
         expect.arrayContaining(['paymentDueDaysAfterStatement', 'expiryYear']),
       );
+    });
+
+    it('reports a single upper-bound error for an expiry year over the maximum', async () => {
+      const dto = plainToInstance(CreateCreditCardDto, {
+        bankCode: 'vietcombank',
+        lastFourDigits: '1234',
+        creditLimit: '500',
+        availableCredit: '500',
+        statementDay: 10,
+        paymentDueDaysAfterStatement: 15,
+        expiryYear: 10000,
+      });
+
+      const errors = await validate(dto);
+      const expiryErrors = errors.filter((error) => error.property === 'expiryYear');
+
+      expect(expiryErrors).toHaveLength(1);
+      expect(expiryErrors[0].constraints).toEqual({
+        max: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MAX,
+      });
     });
   });
 
