@@ -13,6 +13,7 @@ import { CardForm, parseExpiryRaw } from '@/components/cards/card-form'
 import type { CardFormValues } from '@/components/cards/card-form'
 import { useUpdateCard } from '@/hooks/use-credit-cards'
 import type { ICreditCard, IUpdateCreditCardPayload } from '@/shared'
+import { parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
 
 interface EditCardSheetProps {
   card: ICreditCard
@@ -32,15 +33,25 @@ export function EditCardSheet({ card, open, onOpenChange }: EditCardSheetProps) 
       const expiry = parseExpiryRaw(data.expiryRaw ?? '')
 
       if (data.bankCode !== card.bankCode) payload.bankCode = data.bankCode
-      if (data.cardName !== card.cardName) payload.cardName = data.cardName || undefined
+      if (data.cardName !== card.cardName) payload.cardName = data.cardName ?? ''
       if (data.lastFourDigits !== card.lastFourDigits) payload.lastFourDigits = data.lastFourDigits
-      if (data.creditLimit !== card.creditLimit) payload.creditLimit = data.creditLimit
-      if (data.statementDay !== card.statementDay) payload.statementDay = data.statementDay
-      if (data.paymentDueDaysAfterStatement !== card.paymentDueDaysAfterStatement) {
+      const creditLimit = parseMoneyInputToCanonicalDecimal(data.creditLimit)
+      if (creditLimit && creditLimit !== card.creditLimit) payload.creditLimit = creditLimit
+      if (data.statementDay !== undefined && data.statementDay !== card.statementDay) {
+        payload.statementDay = data.statementDay
+      }
+      if (
+        data.paymentDueDaysAfterStatement !== undefined &&
+        data.paymentDueDaysAfterStatement !== card.paymentDueDaysAfterStatement
+      ) {
         payload.paymentDueDaysAfterStatement = data.paymentDueDaysAfterStatement
       }
-      if (expiry.expiryMonth !== card.expiryMonth) payload.expiryMonth = expiry.expiryMonth
-      if (expiry.expiryYear !== card.expiryYear) payload.expiryYear = expiry.expiryYear
+      if (expiry.expiryMonth !== undefined && expiry.expiryMonth !== card.expiryMonth) {
+        payload.expiryMonth = expiry.expiryMonth
+      }
+      if (expiry.expiryYear !== undefined && expiry.expiryYear !== card.expiryYear) {
+        payload.expiryYear = expiry.expiryYear
+      }
 
       await updateCard.mutateAsync({
         id: card.id,

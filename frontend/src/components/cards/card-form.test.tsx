@@ -221,4 +221,34 @@ describe('CardForm', () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
   })
+
+  it('allows metadata-only edits for a legacy card with unknown limit and schedule', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          cardName: 'Legacy Visa',
+          lastFourDigits: '1234',
+        }}
+        onSubmit={onSubmit}
+        isLoading={false}
+        isEdit
+        submitLabel="editCard"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'editCard' }))
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          creditLimit: '',
+          statementDay: undefined,
+          paymentDueDaysAfterStatement: undefined,
+        }),
+      )
+    })
+  })
 })

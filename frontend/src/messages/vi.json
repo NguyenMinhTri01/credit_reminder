@@ -140,6 +140,7 @@
     "overdue": "Quá hạn",
     "urgency": {
       "overdue": "Quá hạn",
+      "overLimit": "Vượt hạn mức",
       "urgent": "Khẩn cấp",
       "warning": "Cảnh báo",
       "normal": "Bình thường"

@@ -129,7 +129,7 @@ pnpm dev
 ### Credit Cards
 - `GET /api/v1/credit-cards/banks` — Get the supported bank catalog
 - `POST /api/v1/credit-cards` — Create a card
-- `GET /api/v1/credit-cards` — List active cards
+- `GET /api/v1/credit-cards` — List the user's active and soft-deleted cards (for restore)
 - `GET /api/v1/credit-cards/:id` — Get card details
 - `PATCH /api/v1/credit-cards/:id` — Update card metadata
 - `DELETE /api/v1/credit-cards/:id` — Soft-delete a card

@@ -9,6 +9,7 @@ import { TRANSACTIONS_PATH, TRANSACTION_PATH } from '@/shared/constants'
 
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
+  getSession: jest.fn(),
 }))
 
 jest.mock('next/navigation', () => ({
@@ -30,12 +31,13 @@ jest.mock('@/lib/api-client', () => ({
   },
 }))
 
-import { useSession } from 'next-auth/react'
+import { getSession, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 
 const mockUseSession = useSession as jest.Mock
+const mockGetSession = getSession as jest.Mock
 const mockUseRouter = useRouter as jest.Mock
 const mockUseQuery = useQuery as jest.Mock
 const mockUseMutation = useMutation as jest.Mock
@@ -122,6 +124,27 @@ describe('hooks/use-transactions', () => {
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['credit-cards'] })
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['dashboard'] })
       expect(refresh).toHaveBeenCalledTimes(1)
+    })
+
+    it('resolves a current session token when the hook rendered before session hydration', async () => {
+      mockUseSession.mockReturnValue({ data: undefined })
+      mockGetSession.mockResolvedValue({ accessToken: 'fresh-token' })
+      mockUseMutation.mockReturnValue({})
+
+      renderHook(() => useCreateTransaction('card-1'))
+
+      const options = getMutationOptions()
+      const payload = {
+        type: 'EXPENSE',
+        amount: '1000',
+        transactionDate: '2026-09-07',
+      }
+
+      await options.mutationFn(payload)
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(TRANSACTIONS_PATH('card-1'), payload, {
+        accessToken: 'fresh-token',
+      })
     })
   })
 

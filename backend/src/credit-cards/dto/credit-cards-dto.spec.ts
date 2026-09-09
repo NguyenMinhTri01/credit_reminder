@@ -104,6 +104,24 @@ describe('CreditCard DTOs', () => {
 
       jest.useRealTimers();
     });
+
+    it('rejects schedule and expiry integers outside supported bounds', async () => {
+      const dto = plainToInstance(CreateCreditCardDto, {
+        bankCode: 'vietcombank',
+        lastFourDigits: '1234',
+        creditLimit: '500',
+        availableCredit: '500',
+        statementDay: 10,
+        paymentDueDaysAfterStatement: 367,
+        expiryYear: 10000,
+      });
+
+      const errors = await validate(dto);
+
+      expect(errors.map((error) => error.property)).toEqual(
+        expect.arrayContaining(['paymentDueDaysAfterStatement', 'expiryYear']),
+      );
+    });
   });
 
   describe('UpdateCreditCardDto', () => {

@@ -59,6 +59,7 @@ function makePrisma() {
     },
     transaction: {
       create: jest.fn(),
+      updateMany: jest.fn(),
     },
     $queryRaw: jest.fn(),
     $transaction: jest.fn(),
@@ -137,6 +138,7 @@ describe('CreditCardsService', () => {
             bankCode: 'vietcombank',
             statementDay: 25,
             paymentDueDaysAfterStatement: 21,
+            currentBalance: expect.any(Prisma.Decimal),
           }),
         }),
       );
@@ -519,6 +521,14 @@ describe('CreditCardsService', () => {
           }),
         }),
       );
+      expect(prisma.transaction.updateMany).toHaveBeenCalledWith({
+        where: {
+          cardId: 'card-uuid-1',
+          createdAt: { lte: expect.any(Date) },
+          reconciledAt: null,
+        },
+        data: { reconciledAt: expect.any(Date) },
+      });
       expect(result.availableCredit).toBe('45000000.00');
     });
 
@@ -537,6 +547,7 @@ describe('CreditCardsService', () => {
             type: TransactionType.ADJUSTMENT,
             amount: expect.any(Prisma.Decimal),
             transactionDate: expect.any(Date),
+            reconciledAt: expect.any(Date),
             idempotencyKey: expect.any(String),
           }),
         }),

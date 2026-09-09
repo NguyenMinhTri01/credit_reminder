@@ -51,6 +51,16 @@ describe('money-input.utils', () => {
       expect(formatMoneyInputDisplay('   ')).toBe('')
       expect(formatMoneyInputDisplay('abc')).toBe('')
     })
+
+    it('rejects malformed pasted text instead of extracting digits from it', () => {
+      expect(formatMoneyInputDisplay('12abc34')).toBe('')
+      expect(formatMoneyInputDisplay('1,,000')).toBe('')
+      expect(formatMoneyInputDisplay('1.2.3')).toBe('')
+    })
+
+    it('rejects values with more than two fractional digits', () => {
+      expect(formatMoneyInputDisplay('400000.001')).toBe('')
+    })
   })
 
   describe('parseMoneyInputToCanonicalDecimal', () => {
@@ -85,6 +95,11 @@ describe('money-input.utils', () => {
     it('rejects canonical values outside DECIMAL(15,2) precision', () => {
       expect(parseMoneyInputToCanonicalDecimal('10000000000000.00')).toBe('')
       expect(parseMoneyInputToCanonicalDecimal('1.001')).toBe('')
+    })
+
+    it('rejects malformed pasted text instead of silently changing the amount', () => {
+      expect(parseMoneyInputToCanonicalDecimal('12abc34')).toBe('')
+      expect(parseMoneyInputToCanonicalDecimal('1,00')).toBe('')
     })
 
     it('returns empty string for empty or non-numeric values', () => {

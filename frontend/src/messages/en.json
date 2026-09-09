@@ -140,6 +140,7 @@
     "overdue": "Overdue",
     "urgency": {
       "overdue": "Overdue",
+      "overLimit": "Over limit",
       "urgent": "Urgent",
       "warning": "Warning",
       "normal": "Normal"

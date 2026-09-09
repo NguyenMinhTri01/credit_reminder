@@ -130,5 +130,5 @@ instant are evaluated on hosts with different operating-system time zones.
 
 #### Scenario: Editing the statement day updates the stable preview
 - **WHEN** the same form changes `statementDay` from `5` to `10`
-- **THEN** the preview updates from `2026-09-20` to `2026-09-25` without shifting either date
+- **THEN** the preview updates from `2026-10-06` to `2026-09-11` without shifting either date
   through UTC serialization

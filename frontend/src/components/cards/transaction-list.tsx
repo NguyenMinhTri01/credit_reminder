@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { MouseEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { ChevronLeft, ChevronRight, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -89,7 +90,8 @@ export function TransactionList({ card, onEditTransaction }: TransactionListProp
     return false
   }
 
-  const handleDelete = async () => {
+  const handleDelete = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
     if (!deletingTx) return
     try {
       await deleteMutation.mutateAsync(deletingTx.id)

@@ -174,7 +174,7 @@ describe('DashboardService', () => {
         cardNumberMasked: null,
         creditLimit: null,
         currentBalance: money('10'),
-        availableCredit: null,
+        availableCredit: money('90'),
         dueDay: null,
         statementDay: null,
         paymentDueDaysAfterStatement: null,

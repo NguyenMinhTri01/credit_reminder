@@ -9,13 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CardsPage() {
-  let cards: ICreditCard[] = []
-
-  try {
-    cards = await apiClient.get<ICreditCard[]>(CREDIT_CARDS_PATH, { cache: 'no-store' })
-  } catch {
-    // Render with empty list on error; client will retry via TanStack Query
-  }
+  const cards = await apiClient.get<ICreditCard[]>(CREDIT_CARDS_PATH, { cache: 'no-store' })
 
   return <CardsPageView initialCards={cards} />
 }

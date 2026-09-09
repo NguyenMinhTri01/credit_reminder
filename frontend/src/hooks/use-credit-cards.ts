@@ -15,8 +15,11 @@ import type {
   ICreateCreditCardPayload,
   IUpdateCreditCardPayload,
   IReconcilePayload,
-  IApiResponse,
 } from '@/shared'
+
+interface DeleteResponse {
+  message: string
+}
 
 const CARDS_KEY = ['credit-cards'] as const
 const DASHBOARD_KEY = ['dashboard'] as const
@@ -42,7 +45,7 @@ export function useCreateCard() {
 
   return useMutation({
     mutationFn: (payload: ICreateCreditCardPayload) =>
-      apiClient.post<IApiResponse<ICreditCard>>(CREDIT_CARDS_PATH, payload, {
+      apiClient.post<ICreditCard>(CREDIT_CARDS_PATH, payload, {
         accessToken: session?.accessToken,
       }),
     onSuccess: () => {
@@ -60,7 +63,7 @@ export function useUpdateCard() {
 
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: IUpdateCreditCardPayload }) =>
-      apiClient.patch<IApiResponse<ICreditCard>>(CREDIT_CARD_PATH(id), payload, {
+      apiClient.patch<ICreditCard>(CREDIT_CARD_PATH(id), payload, {
         accessToken: session?.accessToken,
       }),
     onSuccess: (_data, variables) => {
@@ -79,7 +82,7 @@ export function useDeleteCard() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete<IApiResponse<void>>(CREDIT_CARD_PATH(id), {
+      apiClient.delete<DeleteResponse>(CREDIT_CARD_PATH(id), {
         accessToken: session?.accessToken,
       }),
     onSuccess: (_data, id) => {
@@ -98,7 +101,7 @@ export function useRestoreCard() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.post<IApiResponse<ICreditCard>>(CREDIT_CARD_RESTORE_PATH(id), {}, {
+      apiClient.post<ICreditCard>(CREDIT_CARD_RESTORE_PATH(id), {}, {
         accessToken: session?.accessToken,
       }),
     onSuccess: (_data, id) => {
@@ -117,7 +120,7 @@ export function useReconcileCard() {
 
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: IReconcilePayload }) =>
-      apiClient.post<IApiResponse<ICreditCard>>(CREDIT_CARD_RECONCILE_PATH(id), payload, {
+      apiClient.post<ICreditCard>(CREDIT_CARD_RECONCILE_PATH(id), payload, {
         accessToken: session?.accessToken,
       }),
     onSuccess: (_data, variables) => {

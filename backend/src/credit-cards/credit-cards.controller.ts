@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -93,7 +94,10 @@ export class CreditCardsController {
   @ApiOkResponse({ type: CreditCardResponseDto })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: CREDIT_CARD_MESSAGES.SWAGGER_TAG })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: CREDIT_CARD_MESSAGES.NOT_FOUND })
-  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string): Promise<ICreditCard> {
+  findOne(
+    @Req() request: AuthenticatedRequest,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<ICreditCard> {
     return this.creditCardsService.findOne(id, request.user.id);
   }
 
@@ -108,7 +112,7 @@ export class CreditCardsController {
   })
   update(
     @Req() request: AuthenticatedRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateCreditCardDto,
   ): Promise<ICreditCard> {
     return this.creditCardsService.update(id, request.user.id, dto);
@@ -125,7 +129,7 @@ export class CreditCardsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: CREDIT_CARD_MESSAGES.NOT_FOUND })
   softDelete(
     @Req() request: AuthenticatedRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<{ message: string }> {
     return this.creditCardsService.softDelete(id, request.user.id);
   }
@@ -135,7 +139,10 @@ export class CreditCardsController {
   @ApiOkResponse({ type: CreditCardResponseDto })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: CREDIT_CARD_MESSAGES.SWAGGER_TAG })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: CREDIT_CARD_MESSAGES.NOT_FOUND })
-  restore(@Req() request: AuthenticatedRequest, @Param('id') id: string): Promise<ICreditCard> {
+  restore(
+    @Req() request: AuthenticatedRequest,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<ICreditCard> {
     return this.creditCardsService.restore(id, request.user.id);
   }
 
@@ -146,7 +153,7 @@ export class CreditCardsController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: CREDIT_CARD_MESSAGES.NOT_FOUND })
   reconcile(
     @Req() request: AuthenticatedRequest,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: ReconcileCreditCardDto,
   ): Promise<ICreditCard> {
     return this.creditCardsService.reconcile(id, request.user.id, dto);

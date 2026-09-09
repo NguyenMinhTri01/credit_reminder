@@ -5,6 +5,11 @@ export * from './bank-catalog';
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
 export const MAX_LIMIT = 100;
+export const MAX_PAGE = 1_000_000;
+
+// ─── Credit-card validation ──────────────────────────────────
+export const MAX_PAYMENT_DUE_DAYS_AFTER_STATEMENT = 366;
+export const MAX_EXPIRY_YEAR = 9999;
 
 // ─── Auth ────────────────────────────────────────────────────
 export const ACCESS_TOKEN_EXPIRY = '15m';

@@ -29,9 +29,8 @@ function extractMoneyParts(input: string): {
   }
 
   const isNegative = trimmed.startsWith('-')
-  // Remove currency symbol, commas, letters, spaces, etc.
-  // Only keep digits and decimal point.
-  const cleaned = trimmed.replace(/[^\d.]/g, '')
+  const unsigned = isNegative ? trimmed.slice(1) : trimmed
+  const cleaned = unsigned.replace(/,/g, '').replace(/đ$/, '').trim()
 
   // Handle multiple decimal points: keep first, ignore subsequent ones
   const parts = cleaned.split('.')
@@ -56,6 +55,19 @@ function extractMoneyParts(input: string): {
     hasDecimalPoint,
     hasAnyDigit,
   }
+}
+
+/**
+ * Accept only the presentation grammar emitted by this module or a raw decimal being typed.
+ * Invalid pasted text is rejected instead of being silently converted into another amount.
+ */
+function isValidMoneySyntax(input: string): boolean {
+  let value = input.trim()
+  if (value.endsWith('đ')) value = value.slice(0, -1).trimEnd()
+  if (!value || value.includes('đ')) return false
+
+  return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)?(?:\.\d{0,2})?$/.test(value) &&
+    /\d/.test(value)
 }
 
 function expandExponentialNumber(value: number): string {
@@ -100,10 +112,11 @@ export function formatMoneyInputDisplay(
 ): string {
   if (raw === null || raw === undefined) return ''
   const str = (typeof raw === 'number' ? expandExponentialNumber(raw) : raw).trim()
-  if (!str) return ''
+  if (!str || !isValidMoneySyntax(str)) return ''
 
   const { isNegative, integerDigits, fractionDigits, hasAnyDigit } = extractMoneyParts(str)
   if (!hasAnyDigit) return ''
+  if (fractionDigits.length > 2) return ''
 
   const intPart = integerDigits || '0'
   const formattedInt = addThousandSeparators(intPart)
@@ -123,7 +136,7 @@ export function parseMoneyInputToCanonicalDecimal(
 ): string {
   if (value === null || value === undefined) return ''
   const str = String(value).trim()
-  if (!str) return ''
+  if (!str || !isValidMoneySyntax(str)) return ''
 
   const { isNegative, integerDigits, fractionDigits, hasAnyDigit } = extractMoneyParts(str)
   if (!hasAnyDigit) return ''

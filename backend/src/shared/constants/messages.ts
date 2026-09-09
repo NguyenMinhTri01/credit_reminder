@@ -61,6 +61,7 @@ export const CREDIT_CARD_MESSAGES = {
   STATEMENT_DAY_REQUIRED: 'Statement day is required',
   STATEMENT_DAY_RANGE: 'Statement day must be between 1 and 31',
   PAYMENT_DUE_DAYS_POSITIVE: 'Payment due days after statement must be greater than 0',
+  PAYMENT_DUE_DAYS_RANGE: 'Payment due days after statement must be at most 366',
   EXPIRY_MONTH_RANGE: 'Expiry month must be between 1 and 12',
   EXPIRY_YEAR_MIN: 'Expiry year must be the current year or later',
   AVAILABLE_CREDIT_RECONCILE_REQUIRED: 'New available credit value is required',

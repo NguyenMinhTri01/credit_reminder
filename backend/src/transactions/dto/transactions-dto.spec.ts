@@ -120,5 +120,13 @@ describe('Transaction DTOs', () => {
       const errors = await validate(dto);
       expect(errors).toHaveLength(2);
     });
+
+    it('rejects a page value that can overflow the database offset arithmetic', async () => {
+      const dto = plainToInstance(TransactionsPaginationDto, { page: '1000001' });
+
+      const errors = await validate(dto);
+
+      expect(errors.find((error) => error.property === 'page')).toBeDefined();
+    });
   });
 });

@@ -32,10 +32,11 @@ const mockUseTransactionList = jest.fn((cardId?: string, page?: number) => {
     isLoading: false,
   }
 })
+const mockDeleteMutateAsync = jest.fn()
 
 jest.mock('@/hooks/use-transactions', () => ({
   useTransactionList: (cardId: string, page: number) => mockUseTransactionList(cardId, page),
-  useDeleteTransaction: () => ({ isPending: false, mutateAsync: jest.fn() }),
+  useDeleteTransaction: () => ({ isPending: false, mutateAsync: mockDeleteMutateAsync }),
 }))
 
 const card = {
@@ -88,6 +89,39 @@ describe('TransactionList', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('transactions.noTransactions')).not.toBeInTheDocument()
+    })
+  })
+
+  it('keeps the confirmation open until deletion succeeds', async () => {
+    const deletableTransaction: ITransaction = {
+      ...downwardAdjustment,
+      type: 'EXPENSE',
+      amount: '1000.00',
+    }
+    let resolveDelete: (() => void) | undefined
+    mockDeleteMutateAsync.mockImplementation(
+      () => new Promise<void>((resolve) => { resolveDelete = resolve }),
+    )
+    mockUseTransactionList.mockReturnValue({
+      data: {
+        items: [deletableTransaction],
+        meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      },
+      isLoading: false,
+    })
+
+    render(<TransactionList card={{ ...card, lastReconciledAt: null }} />)
+    fireEvent.click(screen.getByTitle('common.delete'))
+
+    const actionButtons = screen.getAllByRole('button', { name: 'common.delete' })
+    fireEvent.click(actionButtons[actionButtons.length - 1])
+
+    expect(screen.getByText('transactions.deleteConfirmTitle')).toBeInTheDocument()
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith('transaction-1')
+
+    resolveDelete?.()
+    await waitFor(() => {
+      expect(screen.queryByText('transactions.deleteConfirmTitle')).not.toBeInTheDocument()
     })
   })
 })

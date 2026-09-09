@@ -1,4 +1,5 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
+import { MAX_EXPIRY_YEAR } from '../constants';
 
 /**
  * Validates that a string value, when parsed as a float, is strictly positive (> 0).
@@ -85,7 +86,8 @@ export function IsCurrentOrFutureYear(validationOptions?: ValidationOptions) {
           return (
             typeof value === 'number' &&
             Number.isInteger(value) &&
-            value >= new Date().getFullYear()
+            value >= new Date().getFullYear() &&
+            value <= MAX_EXPIRY_YEAR
           );
         },
       },

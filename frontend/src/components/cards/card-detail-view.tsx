@@ -177,7 +177,7 @@ export function CardDetailView({ card, open, onOpenChange }: CardDetailViewProps
               )}
               {isOverLimit && (
                 <Badge variant="destructive" className="mt-1 w-fit text-xs">
-                  {tCards('urgency.overdue')}
+                  {tCards('urgency.overLimit')}
                 </Badge>
               )}
             </div>

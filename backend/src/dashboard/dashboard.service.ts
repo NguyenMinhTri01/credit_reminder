@@ -90,7 +90,9 @@ export class DashboardService {
           creditLimit: card.creditLimit === null ? null : serializeMoney(card.creditLimit),
           currentBalance: serializeMoney(usedBalance),
           availableCredit:
-            card.availableCredit === null ? null : serializeMoney(card.availableCredit),
+            card.creditLimit === null || card.availableCredit === null
+              ? null
+              : serializeMoney(card.availableCredit),
           utilizationPercent: calculateUtilization(usedBalance, card.creditLimit),
           nextDueDate: scheduleInfo?.nextDueDate ?? null,
           daysUntilDue: scheduleInfo?.daysUntilDue ?? null,

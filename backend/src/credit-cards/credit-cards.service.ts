@@ -153,6 +153,9 @@ export class CreditCardsService {
         lastFourDigits: dto.lastFourDigits,
         creditLimit: new Prisma.Decimal(dto.creditLimit),
         availableCredit: new Prisma.Decimal(dto.availableCredit),
+        currentBalance: new Prisma.Decimal(dto.creditLimit).minus(
+          new Prisma.Decimal(dto.availableCredit),
+        ),
         statementDay: dto.statementDay,
         paymentDueDaysAfterStatement: dto.paymentDueDaysAfterStatement,
         expiryMonth: dto.expiryMonth,
@@ -325,10 +328,25 @@ export class CreditCardsService {
       const currentAvailableCredit = existing.availableCredit ?? new Prisma.Decimal(0);
       const delta = newAvailableCredit.minus(currentAvailableCredit);
 
+      // Mark the transactions included in this baseline. New transactions created after the
+      // card lock remain unreconciled and are therefore eligible for later edits/deletes.
+      await tx.transaction.updateMany({
+        where: {
+          cardId: id,
+          createdAt: { lte: reconciledAt },
+          reconciledAt: null,
+        },
+        data: { reconciledAt },
+      });
+
       const card = await tx.creditCard.update({
         where: { id },
         data: {
           availableCredit: newAvailableCredit,
+          currentBalance:
+            existing.creditLimit === null
+              ? existing.currentBalance
+              : existing.creditLimit.minus(newAvailableCredit),
           lastReconciledAt: reconciledAt,
         },
       });
@@ -339,6 +357,7 @@ export class CreditCardsService {
           type: TransactionType.ADJUSTMENT,
           amount: delta,
           transactionDate: reconciledAt,
+          reconciledAt,
           idempotencyKey: crypto.randomUUID(),
         },
       });

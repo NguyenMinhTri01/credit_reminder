@@ -41,11 +41,11 @@ The system SHALL allow an authenticated user to create a credit card by providin
 - **THEN** the system returns field-level validation errors without creating the card
 
 ### Requirement: User can view their cards
-The system SHALL provide a list endpoint returning all non-deleted cards belonging to the authenticated user, and a detail endpoint returning a single card by ID.
+The system SHALL provide a list endpoint returning all cards belonging to the authenticated user, including soft-deleted cards so the owner can use the recycle-bin/restore flow. The dashboard remains responsible for excluding soft-deleted cards from aggregate views, and the detail endpoint returns a single non-deleted card by ID.
 
-#### Scenario: List returns only the user's non-deleted cards
+#### Scenario: List returns the user's cards for active and deleted views
 - **WHEN** an authenticated user requests their card list
-- **THEN** the response contains only cards where `userId` matches the authenticated user and `deletedAt` is null, ordered by creation date
+- **THEN** the response contains only cards where `userId` matches the authenticated user, ordered by creation date, and includes `deletedAt` so the client can separate active cards from cards eligible for restoration
 
 #### Scenario: Detail returns a single card with computed fields
 - **WHEN** an authenticated user requests a card by ID that belongs to them
@@ -60,7 +60,7 @@ The system SHALL provide a list endpoint returning all non-deleted cards belongi
 - **THEN** the system returns a not-found response through the standard detail endpoint
 
 ### Requirement: User can update card metadata
-The system SHALL allow the card owner to update metadata fields (bank code, card name, last four digits, statement day, payment due days after statement, expiry date). Updating metadata SHALL NOT alter the available credit or trigger a reconciliation.
+The system SHALL allow the card owner to update metadata fields (bank code, card name, last four digits, statement day, payment due days after statement, expiry date). Updating those metadata fields SHALL NOT alter the available credit or trigger a reconciliation. `creditLimit` is separately updateable and recomputes `availableCredit` while preserving the used amount.
 
 #### Scenario: Update bank and card name
 - **WHEN** a user updates `bankCode` and `cardName` on their card

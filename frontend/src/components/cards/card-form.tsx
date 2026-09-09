@@ -36,6 +36,25 @@ import { formatMoneyInputDisplay, parseMoneyInputToCanonicalDecimal } from '@/li
 // ─── Zod schema ──────────────────────────────────────────────
 
 function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit: boolean) {
+  const creditLimitSchema = z.string().refine(
+    (value) => {
+      if (isEdit && value.trim() === '') return true
+      const canonical = parseMoneyInputToCanonicalDecimal(value)
+      if (!canonical) return false
+      const num = Number(canonical)
+      return !isNaN(num) && num >= CREDIT_LIMIT_MIN
+    },
+    t('validationCreditLimitPositive'),
+  )
+
+  const optionalScheduleNumber = (message: string, min: number, max?: number) =>
+    z
+      .number({ message })
+      .int()
+      .min(min, message)
+      .pipe(max === undefined ? z.number() : z.number().max(max, message))
+      .optional()
+
   return z.object({
     bankCode: z.string().min(1, t('validationBankRequired')),
     cardName: z.string().optional(),
@@ -43,15 +62,9 @@ function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit:
       .string()
       .length(LAST_FOUR_DIGITS_LENGTH, t('validationLastFourFormat'))
       .regex(/^\d{4}$/, t('validationLastFourFormat')),
-    creditLimit: z
-      .string()
-      .min(1, t('validationCreditLimitRequired'))
-      .refine((v) => {
-        const canonical = parseMoneyInputToCanonicalDecimal(v)
-        if (!canonical) return false
-        const num = Number(canonical)
-        return !isNaN(num) && num >= CREDIT_LIMIT_MIN
-      }, t('validationCreditLimitPositive')),
+    creditLimit: isEdit
+      ? creditLimitSchema
+      : creditLimitSchema.min(1, t('validationCreditLimitRequired')),
     availableCredit: isEdit
       ? z.string()
       : z
@@ -61,15 +74,23 @@ function buildCardSchema(t: ReturnType<typeof useTranslations<'cards'>>, isEdit:
             const canonical = parseMoneyInputToCanonicalDecimal(v)
             return canonical !== ''
           }, t('validationAvailableCreditRequired')),
-    statementDay: z
-      .number({ message: t('validationStatementDayRequired') })
-      .int()
-      .min(STATEMENT_DAY_MIN, t('validationStatementDayRange'))
-      .max(STATEMENT_DAY_MAX, t('validationStatementDayRange')),
-    paymentDueDaysAfterStatement: z
-      .number({ message: t('validationPaymentDueDaysRequired') })
-      .int()
-      .min(PAYMENT_DUE_DAYS_MIN, t('validationPaymentDueDaysPositive')),
+    statementDay: isEdit
+      ? optionalScheduleNumber(
+          t('validationStatementDayRequired'),
+          STATEMENT_DAY_MIN,
+          STATEMENT_DAY_MAX,
+        )
+      : z
+          .number({ message: t('validationStatementDayRequired') })
+          .int()
+          .min(STATEMENT_DAY_MIN, t('validationStatementDayRange'))
+          .max(STATEMENT_DAY_MAX, t('validationStatementDayRange')),
+    paymentDueDaysAfterStatement: isEdit
+      ? optionalScheduleNumber(t('validationPaymentDueDaysRequired'), PAYMENT_DUE_DAYS_MIN)
+      : z
+          .number({ message: t('validationPaymentDueDaysRequired') })
+          .int()
+          .min(PAYMENT_DUE_DAYS_MIN, t('validationPaymentDueDaysPositive')),
     expiryRaw: z
       .string()
       .optional()
@@ -91,8 +112,8 @@ type CardFormValues = {
   lastFourDigits: string
   creditLimit: string
   availableCredit: string
-  statementDay: number
-  paymentDueDaysAfterStatement: number
+  statementDay: number | undefined
+  paymentDueDaysAfterStatement: number | undefined
   expiryRaw?: string
 }
 
@@ -218,9 +239,8 @@ export function CardForm({
       availableCredit: defaultValues?.availableCredit
         ? formatMoneyInputDisplay(defaultValues.availableCredit)
         : '',
-      statementDay: defaultValues?.statementDay ?? ('' as unknown as number),
-      paymentDueDaysAfterStatement:
-        defaultValues?.paymentDueDaysAfterStatement ?? ('' as unknown as number),
+      statementDay: defaultValues?.statementDay,
+      paymentDueDaysAfterStatement: defaultValues?.paymentDueDaysAfterStatement,
       expiryRaw: buildExpiryRaw(defaultValues?.expiryMonth, defaultValues?.expiryYear),
     },
   })
@@ -400,7 +420,9 @@ export function CardForm({
             min={STATEMENT_DAY_MIN}
             max={STATEMENT_DAY_MAX}
             placeholder={t('formStatementDayPlaceholder')}
-            {...register('statementDay', { valueAsNumber: true })}
+            {...register('statementDay', {
+              setValueAs: (value: string) => (value === '' ? undefined : Number(value)),
+            })}
           />
           {errors.statementDay && (
             <p className="text-destructive text-xs">{errors.statementDay.message}</p>
@@ -414,7 +436,9 @@ export function CardForm({
             type="number"
             min={PAYMENT_DUE_DAYS_MIN}
             placeholder={t('formPaymentDueDaysPlaceholder')}
-            {...register('paymentDueDaysAfterStatement', { valueAsNumber: true })}
+            {...register('paymentDueDaysAfterStatement', {
+              setValueAs: (value: string) => (value === '' ? undefined : Number(value)),
+            })}
           />
           {errors.paymentDueDaysAfterStatement && (
             <p className="text-destructive text-xs">

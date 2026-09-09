@@ -26,8 +26,10 @@ export function AddCardSheet({ open, onOpenChange }: AddCardSheetProps) {
 
   const handleSubmit = async (data: CardFormValues) => {
     if (isSubmittingRef.current || createCard.isPending) return
-    isSubmittingRef.current = true
     const { expiryRaw, ...rest } = data
+    if (rest.statementDay === undefined || rest.paymentDueDaysAfterStatement === undefined) return
+
+    isSubmittingRef.current = true
     const expiry = parseExpiryRaw(expiryRaw ?? '')
 
     try {

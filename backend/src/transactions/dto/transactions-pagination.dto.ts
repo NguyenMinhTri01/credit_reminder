@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
-import { MAX_LIMIT, TRANSACTION_MESSAGES } from '@/shared';
+import { MAX_LIMIT, MAX_PAGE, TRANSACTION_MESSAGES } from '@/shared';
 
 export class TransactionsPaginationDto {
   @ApiPropertyOptional({ example: 1, minimum: 1 })
@@ -9,6 +9,7 @@ export class TransactionsPaginationDto {
   @Type(() => Number)
   @IsInt({ message: TRANSACTION_MESSAGES.PAGE_INVALID })
   @Min(1, { message: TRANSACTION_MESSAGES.PAGE_INVALID })
+  @Max(MAX_PAGE, { message: TRANSACTION_MESSAGES.PAGE_INVALID })
   readonly page?: number;
 
   @ApiPropertyOptional({ example: 20, minimum: 1, maximum: MAX_LIMIT })

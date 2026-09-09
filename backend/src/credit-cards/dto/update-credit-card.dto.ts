@@ -5,6 +5,8 @@ import {
   IsCurrentOrFutureYear,
   IsDecimal15_2String,
   IsPositiveDecimalString,
+  MAX_EXPIRY_YEAR,
+  MAX_PAYMENT_DUE_DAYS_AFTER_STATEMENT,
 } from '@/shared';
 
 // ─── DTO ─────────────────────────────────────────────────────
@@ -52,6 +54,9 @@ export class UpdateCreditCardDto {
   @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
   @Min(1, { message: CREDIT_CARD_MESSAGES.PAYMENT_DUE_DAYS_POSITIVE })
+  @Max(MAX_PAYMENT_DUE_DAYS_AFTER_STATEMENT, {
+    message: CREDIT_CARD_MESSAGES.PAYMENT_DUE_DAYS_RANGE,
+  })
   readonly paymentDueDaysAfterStatement?: number;
 
   @ApiPropertyOptional({
@@ -71,6 +76,7 @@ export class UpdateCreditCardDto {
   @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsInt()
   @IsCurrentOrFutureYear({ message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
+  @Max(MAX_EXPIRY_YEAR, { message: CREDIT_CARD_MESSAGES.EXPIRY_YEAR_MIN })
   readonly expiryYear?: number;
 
   @ApiPropertyOptional({

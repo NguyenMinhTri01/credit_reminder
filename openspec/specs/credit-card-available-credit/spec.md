@@ -17,8 +17,8 @@ The system SHALL accept an `availableCredit` value when creating a card and stor
 - **WHEN** a user creates a card with `creditLimit` 100,000,000 and `availableCredit` 60,000,000
 - **THEN** the used amount is 40,000,000 and utilization is 40%
 
-### Requirement: Transactions update available credit automatically
-The system SHALL adjust the card's `availableCredit` when a transaction is created. The direction depends on the transaction type: `EXPENSE` decreases available credit, `PAYMENT` and `REFUND` increase it.
+### Requirement: Manual transactions update available credit automatically
+The system SHALL adjust the card's `availableCredit` when a user-created transaction is created. The direction depends on the transaction type: `EXPENSE` decreases available credit, `PAYMENT` and `REFUND` increase it. System-generated `ADJUSTMENT` transactions document reconciliation deltas and SHALL NOT apply a second balance change.
 
 #### Scenario: Expense reduces available credit
 - **WHEN** a card has `availableCredit` 60,000,000 and the user records an `EXPENSE` of 5,000,000
@@ -41,15 +41,19 @@ The system SHALL adjust the card's `availableCredit` when a transaction is creat
 - **THEN** the system stores the actual negative value without clamping it to zero
 
 ### Requirement: Transaction creation requires explicit type
-The system SHALL require a `type` field (`EXPENSE`, `PAYMENT`, `REFUND`) on every transaction. The system MUST NOT infer the direction from the description, amount sign, or any other heuristic.
+The system SHALL require a `type` field (`EXPENSE`, `PAYMENT`, `REFUND`) on every user-created transaction. `ADJUSTMENT` is reserved for system-generated reconciliation records. The system MUST NOT infer the direction from the description, amount sign, or any other heuristic.
 
 #### Scenario: Transaction without type is rejected
 - **WHEN** a user submits a transaction without a `type` field
 - **THEN** the system returns a validation error
 
-#### Scenario: Transaction fields
+#### Scenario: User-created transaction fields
 - **WHEN** a user creates a transaction
 - **THEN** the system accepts `type`, `amount` (positive decimal string), `transactionDate` (YYYY-MM-DD), and optional `description` and `merchant`
+
+#### Scenario: Reconciliation adjustment fields
+- **WHEN** the system creates an `ADJUSTMENT` transaction during reconciliation
+- **THEN** its `amount` is a signed delta for auditability, and the reconciliation's direct balance assignment is the only balance change
 
 ### Requirement: Transaction and card update are atomic
 The system SHALL update the transaction record and the card's `availableCredit` within a single database transaction so that a failure in either operation leaves both unchanged.
@@ -96,7 +100,7 @@ The system SHALL provide a reconciliation endpoint that sets `availableCredit` t
 
 #### Scenario: Reconcile to a specific value
 - **WHEN** a card has `availableCredit` 55,000,000 and the user reconciles to 62,000,000
-- **THEN** `availableCredit` becomes 62,000,000, `lastReconciledAt` is updated, and an `ADJUSTMENT` transaction of +7,000,000 is recorded
+- **THEN** `availableCredit` becomes 62,000,000, `lastReconciledAt` is updated, and an `ADJUSTMENT` transaction of +7,000,000 is recorded without applying that delta again
 
 #### Scenario: Transactions after reconciliation apply on new baseline
 - **WHEN** the user reconciles to 62,000,000 then records an `EXPENSE` of 2,000,000
