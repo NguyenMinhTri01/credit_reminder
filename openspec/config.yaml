@@ -15,8 +15,6 @@ rules:
     - Write the artifact entirely in English.
   tasks:
     - Write the artifact entirely in English.
-  verification:
-    - Write the artifact entirely in English.
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.

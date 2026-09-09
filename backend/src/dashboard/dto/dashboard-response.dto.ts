@@ -33,8 +33,20 @@ export class DashboardCardDto implements IDashboardCard {
   @ApiProperty({ example: 'Vietcombank' })
   bankName!: string;
 
+  @ApiProperty({ example: 'vietcombank', nullable: true, type: String })
+  bankCode!: string | null;
+
+  @ApiProperty({ example: 'Vietcombank', nullable: true, type: String })
+  bankShortName!: string | null;
+
+  @ApiProperty({ example: '/images/banks/vietcombank.svg', nullable: true, type: String })
+  logoPath!: string | null;
+
   @ApiProperty({ example: 'Platinum' })
   cardName!: string;
+
+  @ApiProperty({ example: '1234', nullable: true, type: String })
+  lastFourDigits!: string | null;
 
   @ApiProperty({ example: '1234', nullable: true, type: String })
   cardNumberMasked!: string | null;
@@ -56,6 +68,22 @@ export class DashboardCardDto implements IDashboardCard {
 
   @ApiProperty({ example: 11, nullable: true, type: Number })
   daysUntilDue!: number | null;
+
+  @ApiProperty({ example: '2026-09-05', nullable: true, type: String, format: 'date' })
+  statementDate!: string | null;
+
+  @ApiProperty({
+    example: 'valid',
+    enum: ['valid', 'expiring_soon', 'expired'],
+    nullable: true,
+  })
+  expiryStatus!: 'valid' | 'expiring_soon' | 'expired' | null;
+
+  @ApiProperty({ example: 12, nullable: true, type: Number })
+  expiryMonth!: number | null;
+
+  @ApiProperty({ example: 2028, nullable: true, type: Number })
+  expiryYear!: number | null;
 }
 
 export class DashboardReminderDto implements IDashboardReminder {

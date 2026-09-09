@@ -35,6 +35,13 @@ enum NotificationStatus {
   PENDING
 }
 
+enum TransactionType {
+  EXPENSE
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+}
+
 // Models
 model User {
   id               String    @id @default(uuid()) @db.Uuid
@@ -57,17 +64,27 @@ model User {
 }
 
 model CreditCard {
-  id               String   @id @default(uuid()) @db.Uuid
-  userId           String   @map("user_id") @db.Uuid
-  bankName         String   @map("bank_name")
-  cardName         String   @map("card_name")
-  cardNumberMasked String?  @map("card_number_masked") @db.VarChar(20)
-  creditLimit      Decimal? @map("credit_limit") @db.Decimal(15, 2)
-  currentBalance   Decimal  @default(0) @map("current_balance") @db.Decimal(15, 2)
-  statementDay     Int?     @map("statement_day")
-  dueDay           Int?     @map("due_day")
-  encryptedData    Json?    @map("encrypted_data")
-  createdAt        DateTime @default(now()) @map("created_at")
+  id                          String    @id @default(uuid()) @db.Uuid
+  userId                      String    @map("user_id") @db.Uuid
+  bankName                    String    @map("bank_name")
+  cardName                    String    @map("card_name")
+  cardNumberMasked            String?   @map("card_number_masked") @db.VarChar(20)
+  creditLimit                 Decimal?  @map("credit_limit") @db.Decimal(15, 2)
+  currentBalance              Decimal   @default(0) @map("current_balance") @db.Decimal(15, 2) // @deprecated use availableCredit
+  statementDay                Int?      @map("statement_day")
+  dueDay                      Int?      @map("due_day")
+  encryptedData               Json?     @map("encrypted_data")
+  createdAt                   DateTime  @default(now()) @map("created_at")
+  // New fields from credit-card-management change
+  bankCode                    String?   @map("bank_code")
+  lastFourDigits              String?   @map("last_four_digits") @db.Char(4)
+  expiryMonth                 Int?      @map("expiry_month")
+  expiryYear                  Int?      @map("expiry_year")
+  paymentDueDaysAfterStatement Int?     @map("payment_due_days_after_statement")
+  availableCredit             Decimal?  @map("available_credit") @db.Decimal(15, 2)
+  lastReconciledAt            DateTime? @map("last_reconciled_at")
+  deletedAt                   DateTime? @map("deleted_at")
+  updatedAt                   DateTime  @default(now()) @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
@@ -85,9 +102,14 @@ model Transaction {
   source          TransactionSource @default(MANUAL)
   rawEmailId      String?           @map("raw_email_id")
   createdAt       DateTime          @default(now()) @map("created_at")
+  // New fields from credit-card-management change
+  type            TransactionType   @default(EXPENSE)
+  reconciledAt    DateTime?         @map("reconciled_at")
+  idempotencyKey  String?           @map("idempotency_key") @db.Uuid
 
   card CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
+  @@unique([cardId, idempotencyKey])
   @@map("transactions")
 }
 

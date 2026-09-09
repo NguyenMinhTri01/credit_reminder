@@ -111,7 +111,7 @@ jobs:
       - name: ESLint Check
         run: pnpm --filter frontend lint
 
-      - name: Unit Test & Coverage (>90%)
+      - name: Unit Test & Coverage
         run: pnpm --filter frontend test:cov
 
       - name: Build Application

@@ -4,7 +4,7 @@ NestJS backend API, PostgreSQL + Prisma ORM.
 
 ## Tech Stack
 
-- **Runtime**: Node.js >= 20
+- **Runtime**: Node.js >= 24.12.0
 - **Framework**: NestJS 11
 - **Database**: PostgreSQL
 - **ORM**: Prisma 7
@@ -42,20 +42,25 @@ backend/
 │   ├── health/
 │   │   ├── health.module.ts    # Health check module
 │   │   └── health.controller.ts
-│   └── auth/
-│       ├── auth.module.ts
-│       ├── auth.controller.ts
-│       ├── auth.controller.spec.ts
-│       ├── auth.service.ts
-│       ├── auth.service.spec.ts
-│       ├── strategies/
-│       │   └── jwt.strategy.ts # JWT Passport strategy
-│       └── dto/
-│           ├── register.dto.ts
-│           ├── login.dto.ts
-│           ├── google-auth.dto.ts
-│           ├── forgot-password.dto.ts
-│           └── reset-password.dto.ts
+│   ├── auth/
+│   │   ├── auth.module.ts
+│   │   ├── auth.controller.ts
+│   │   ├── auth.controller.spec.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.service.spec.ts
+│   │   ├── strategies/
+│   │   │   └── jwt.strategy.ts # JWT Passport strategy
+│   │   └── dto/
+│   │       ├── register.dto.ts
+│   │       ├── login.dto.ts
+│   │       ├── google-auth.dto.ts
+│   │       ├── forgot-password.dto.ts
+│   │       └── reset-password.dto.ts
+│   ├── dashboard/              # Authenticated aggregate dashboard
+│   ├── credit-cards/           # Card CRUD, catalog, restore, reconciliation
+│   │   └── dto/                # Card request and response DTOs
+│   └── transactions/           # Nested card transaction CRUD and pagination
+│       └── dto/                # Transaction request, response, and query DTOs
 ├── test/
 │   └── jest-e2e.json           # E2E test config
 ├── .env.example                # Environment variables template
@@ -113,10 +118,39 @@ pnpm dev
 - `POST /api/v1/auth/register` — Register user
 - `POST /api/v1/auth/login` — Login with email + password
 - `POST /api/v1/auth/google` — Login/register via Google
+- `POST /api/v1/auth/refresh` — Refresh an access token
 - `POST /api/v1/auth/forgot-password` — Request password reset
 - `POST /api/v1/auth/reset-password` — Reset password with token
+- `GET /api/v1/auth/me` — Get the authenticated user profile
 
-Swagger docs: `http://localhost:3001/api/docs`
+### Dashboard
+- `GET /api/v1/dashboard` — Get the authenticated user's aggregate dashboard snapshot
+
+### Credit Cards
+- `GET /api/v1/credit-cards/banks` — Get the supported bank catalog
+- `POST /api/v1/credit-cards` — Create a card
+- `GET /api/v1/credit-cards` — List the user's active and soft-deleted cards (for restore)
+- `GET /api/v1/credit-cards/:id` — Get card details
+- `PATCH /api/v1/credit-cards/:id` — Update card metadata
+- `DELETE /api/v1/credit-cards/:id` — Soft-delete a card
+- `POST /api/v1/credit-cards/:id/restore` — Restore a soft-deleted card
+- `POST /api/v1/credit-cards/:id/reconcile` — Reconcile available credit
+
+### Card Transactions
+- `POST /api/v1/credit-cards/:cardId/transactions` — Create a transaction
+- `GET /api/v1/credit-cards/:cardId/transactions` — List transactions with pagination
+- `PATCH /api/v1/credit-cards/:cardId/transactions/:id` — Update a transaction
+- `DELETE /api/v1/credit-cards/:cardId/transactions/:id` — Delete a transaction
+
+Swagger at `http://localhost:3001/api/docs` is the canonical source for authentication,
+request/response schemas, validation rules, pagination parameters, and examples.
+
+## Migration Compatibility
+
+The credit-card management fields and transaction type are introduced by one combined migration.
+Legacy cards without a credit limit preserve `NULL` available credit. See the
+[post-review remediation record](../docs/credit-card-management-post-review.md) for the deployment
+caveat and validation guidance.
 
 ## Environment Variables
 

@@ -4,9 +4,14 @@ import { AppHeader } from './app-header'
 import { AppSidebar } from './app-sidebar'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode
+  defaultOpen?: boolean
+}
+
+export function AppShell({ children, defaultOpen = true }: AppShellProps) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar />
       <SidebarInset className="min-w-0 overflow-x-hidden">
         <AppHeader />
