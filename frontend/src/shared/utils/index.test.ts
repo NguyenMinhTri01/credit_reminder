@@ -5,6 +5,7 @@ import {
   isOverdue,
   safeJsonParse,
   cleanObject,
+  delay,
 } from '@/shared/utils'
 
 describe('shared/utils', () => {
@@ -87,6 +88,15 @@ describe('shared/utils', () => {
 
     it('should keep falsy but defined values', () => {
       expect(cleanObject({ a: 0, b: '', c: false })).toEqual({ a: 0, b: '', c: false })
+    })
+  })
+
+  describe('delay', () => {
+    it('should delay execution', async () => {
+      const start = Date.now()
+      await delay(100)
+      const end = Date.now()
+      expect(end - start).toBeGreaterThanOrEqual(100)
     })
   })
 })

@@ -67,3 +67,16 @@ export function cleanObject<T extends Record<string, unknown>>(obj: T): Partial<
     Object.entries(obj).filter(([, v]) => v !== undefined && v !== null),
   ) as Partial<T>
 }
+
+
+/**
+ * Delay execution for a specified number of milliseconds.
+ */
+export function delay(ms: number, func?: () => unknown): Promise<void> {
+  return new Promise((resolve) => setTimeout(() => {
+    if (func) {
+      func()
+    }
+    resolve()
+  }, ms))
+}
