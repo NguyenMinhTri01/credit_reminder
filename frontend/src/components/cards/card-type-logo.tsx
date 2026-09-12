@@ -17,7 +17,9 @@ export function CardTypeLogo({ cardType, size = 32 }: CardTypeLogoProps) {
   const option = getCardTypeOption(cardType)
   const hasImageError = option !== undefined && failedCardType === cardType
   const label = option && !hasImageError ? t(option.labelKey) : t('cardTypeUnavailable')
-  const height = Math.max(1, Math.round(size * 0.625))
+  const width = Math.max(1, size)
+  const height = Math.max(1, Math.round(width * 0.625))
+  const fallbackIconSize = Math.min(16, height)
 
   if (!option || hasImageError) {
     return (
@@ -25,9 +27,10 @@ export function CardTypeLogo({ cardType, size = 32 }: CardTypeLogoProps) {
         role="img"
         aria-label={label}
         data-fallback="true"
-        className="text-muted-foreground flex h-5 w-8 shrink-0 items-center justify-center"
+        className="text-muted-foreground flex shrink-0 items-center justify-center"
+        style={{ width, height }}
       >
-        <CreditCardIcon aria-hidden="true" className="h-4 w-4" />
+        <CreditCardIcon aria-hidden="true" size={fallbackIconSize} />
       </span>
     )
   }
@@ -36,9 +39,10 @@ export function CardTypeLogo({ cardType, size = 32 }: CardTypeLogoProps) {
     <Image
       src={option.logoPath}
       alt={label}
-      width={size}
+      width={width}
       height={height}
-      className="h-5 w-8 shrink-0 object-contain"
+      className="shrink-0 object-contain"
+      style={{ width, height }}
       onError={() => setFailedCardType(cardType ?? null)}
     />
   )

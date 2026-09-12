@@ -40,33 +40,27 @@ describe('CreditCard DTOs', () => {
       expect(errors).toHaveLength(0);
     });
 
-    it('requires card type on create', async () => {
-      const dto = plainToInstance(CreateCreditCardDto, {
+    it.each([
+      ['missing', undefined, CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED],
+      ['empty', '', CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED],
+      ['null', null, CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED],
+      ['unsupported', 'DISCOVER', CREDIT_CARD_MESSAGES.CARD_TYPE_INVALID],
+    ])('returns one accurate card type error for %s input', async (_label, cardType, message) => {
+      const input: Record<string, unknown> = {
         bankCode: 'vietcombank',
         lastFourDigits: '1234',
         creditLimit: '50000000.00',
         availableCredit: '50000000.00',
         statementDay: 25,
         paymentDueDaysAfterStatement: 20,
-      });
+      };
+      if (cardType !== undefined) input.cardType = cardType;
 
-      const errors = await validate(dto);
-      expect(errors.find((error) => error.property === 'cardType')).toBeDefined();
-    });
+      const errors = await validate(plainToInstance(CreateCreditCardDto, input));
+      const cardTypeErrors = errors.filter((error) => error.property === 'cardType');
 
-    it('rejects an unsupported card type on create', async () => {
-      const dto = plainToInstance(CreateCreditCardDto, {
-        bankCode: 'vietcombank',
-        cardType: 'DISCOVER',
-        lastFourDigits: '1234',
-        creditLimit: '50000000.00',
-        availableCredit: '50000000.00',
-        statementDay: 25,
-        paymentDueDaysAfterStatement: 20,
-      });
-
-      const errors = await validate(dto);
-      expect(errors.find((error) => error.property === 'cardType')).toBeDefined();
+      expect(cardTypeErrors).toHaveLength(1);
+      expect(cardTypeErrors[0].constraints).toEqual({ isEnum: message });
     });
 
     it('rejects invalid fields and non-positive credit limit', async () => {

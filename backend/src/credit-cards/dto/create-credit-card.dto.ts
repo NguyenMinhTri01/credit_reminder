@@ -9,6 +9,7 @@ import {
   Matches,
   Max,
   Min,
+  ValidationArguments,
 } from 'class-validator';
 import {
   CARD_TYPE_VALUES,
@@ -21,6 +22,14 @@ import {
 } from '@/shared';
 
 // ─── DTO ─────────────────────────────────────────────────────
+
+function getCardTypeValidationMessage({ value }: ValidationArguments): string {
+  if (value === undefined || value === null || value === '') {
+    return CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED;
+  }
+
+  return CREDIT_CARD_MESSAGES.CARD_TYPE_INVALID;
+}
 
 export class CreateCreditCardDto {
   @ApiProperty({
@@ -37,8 +46,7 @@ export class CreateCreditCardDto {
     example: CardType.VISA,
     description: 'Supported card network/type',
   })
-  @IsNotEmpty({ message: CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED })
-  @IsEnum(CardType, { message: CREDIT_CARD_MESSAGES.CARD_TYPE_INVALID })
+  @IsEnum(CardType, { message: getCardTypeValidationMessage })
   readonly cardType!: CardType;
 
   @ApiProperty({

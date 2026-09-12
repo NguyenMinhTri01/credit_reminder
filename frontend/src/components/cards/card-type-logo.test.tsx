@@ -31,15 +31,41 @@ describe('CardTypeLogo', () => {
     expect(screen.getByRole('img', { name: 'cardTypeUnavailable' })).toBeInTheDocument()
   })
 
+  it('honors compact dimensions for a known card type', () => {
+    render(<CardTypeLogo cardType="VISA" size={20} />)
+
+    expect(screen.getByRole('img', { name: 'cardTypes.VISA' })).toHaveStyle({
+      width: '20px',
+      height: '13px',
+    })
+  })
+
+  it('honors compact dimensions and bounds the fallback icon', () => {
+    render(<CardTypeLogo cardType="DISCOVER" size={20} />)
+
+    const fallback = screen.getByRole('img', { name: 'cardTypeUnavailable' })
+    expect(fallback).toHaveStyle({ width: '20px', height: '13px' })
+    expect(fallback.querySelector('svg')).toHaveAttribute('width', '13')
+    expect(fallback.querySelector('svg')).toHaveAttribute('height', '13')
+  })
+
+  it('keeps the default dimensions', () => {
+    render(<CardTypeLogo cardType="VISA" />)
+
+    expect(screen.getByRole('img', { name: 'cardTypes.VISA' })).toHaveStyle({
+      width: '32px',
+      height: '20px',
+    })
+  })
+
   it('falls back when a known card-type logo fails to load and resets on type change', async () => {
-    const { rerender } = render(<CardTypeLogo cardType="VISA" />)
+    const { rerender } = render(<CardTypeLogo cardType="VISA" size={20} />)
     fireEvent.error(screen.getByRole('img', { name: 'cardTypes.VISA' }))
 
-    expect(screen.getByRole('img', { name: 'cardTypeUnavailable' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'cardTypeUnavailable' })).toHaveAttribute(
-      'data-fallback',
-      'true',
-    )
+    const fallback = screen.getByRole('img', { name: 'cardTypeUnavailable' })
+    expect(fallback).toBeInTheDocument()
+    expect(fallback).toHaveAttribute('data-fallback', 'true')
+    expect(fallback).toHaveStyle({ width: '20px', height: '13px' })
 
     rerender(<CardTypeLogo cardType="JCB" />)
 
