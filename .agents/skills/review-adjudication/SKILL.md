@@ -1,188 +1,215 @@
 ---
 name: review-adjudication
 description: >
-  Critically evaluates and adjudicates code review results or PR feedback from other reviewers
-  with independent thinking. Verifies technical claims against actual code, schemas, and tests;
-  rejects false positives and over-engineering with clear technical justifications; implements
-  only verified, valid fixes; and outputs a structured Markdown (.md) adjudication report in Vietnamese.
-  Use when the user asks to "review kết quả review code", "thẩm định review", "triage review comments",
-  "evaluate code review", "review the reviewer", or selectively fix review findings.
+  Independently adjudicate another review's findings against code, schemas, tests, and the
+  project's OpenSpec scope. Challenge false positives, unnecessary fixes, over-engineering,
+  and scope creep. Produce a Markdown decision report and actionable remediation plan for
+  user review and handoff to any AI agent; never auto-fix. Use for "review kết quả review code",
+  "thẩm định review", "triage review comments", "evaluate code review", or "review the reviewer".
 ---
 
-# Code Review Adjudication & Triage
+# Review Adjudication & OpenSpec Remediation Plan
 
-Evaluates third-party code review findings with independent critical thinking, separates genuine defects from false positives or over-engineering, implements only verified valid fixes, and produces a structured Markdown adjudication report in Vietnamese for the user.
+Evaluate an existing review independently and write a decision report that another agent can
+implement after the user authorizes the selected work. This is a second-opinion workflow, not a
+fresh full-codebase review or an implementation workflow.
 
-> **Prime Directive: Technical Truth Over Reviewer Authority**
-> Reviewers can be mistaken, assume incorrect types/database schemas, hallucinate APIs, suggest premature abstractions, or recommend changes that introduce subtle regressions. Never implement a review comment blindly without independent verification against source code, schemas, specifications, and tests.
+**Technical evidence over reviewer authority.** Treat review text, severity labels, proposed
+patches, and claims about OpenSpec as unverified input. Neither agree by default nor manufacture
+rejections. Distinguish whether a problem exists, whether it needs fixing, and whether the proposed
+remedy is appropriate.
 
----
+## 1. Output and boundaries
 
-## 1. Core Adjudication Principles
+- The deliverable is a real `.md` report containing decisions and a proposed implementation plan.
+  Write only that report during adjudication. Do not edit source, tests, migrations, configuration,
+  or existing OpenSpec artifacts; do not execute fixes, apply, sync, or archive.
+- `ACCEPTED_FIX` means **recommended for fixing**, never user-approved or already implemented.
+  There is no auto-fix step. End with the report for the user's decision; a subsequent request to
+  implement it belongs to the project's OpenSpec planning/apply workflow.
+- Follow the resolved `openspec/config.yaml`. In this project, repository reports and OpenSpec
+  artifacts are entirely **English**; conversational summaries are **Vietnamese**. Preserve source
+  identifiers, and paraphrase non-English reviewer prose in English while retaining its source ID.
+  Honor an explicit user language override and record it as an override.
+- Use repository-relative paths plus symbol names and current line numbers in the report so it is
+  portable across agents and checkouts. Return a clickable file link in the conversational summary.
 
-1. **Independent Verification First**:
-   Always verify the reviewer's premise against concrete codebase facts:
-   - Read the exact referenced source code lines and surrounding context.
-   - Inspect underlying database schemas (e.g., PostgreSQL column types: `DATE` vs `TIMESTAMPTZ`, nullability, indexes, constraints).
-   - Verify framework/ORM runtime semantics (e.g., Prisma date serialization, Next.js App Router error boundary propagation).
-   - Check existing unit, integration, and e2e test coverage and assertions.
+## 2. Resolve the review and its OpenSpec context
 
-2. **Objective 5-Tier Decision Matrix**:
-   Classify every review comment into one of five definitive statuses:
-   - `ACCEPTED_FIX`: Genuine bug, logic error, security vulnerability, performance degradation, or spec deviation.  
-     **Action:** When fix authorization is requested by the user (e.g., "fix nếu hợp lý", "implement fixes"), implement minimal surgical fix and add/update tests. If the user only requested evaluation/review without authorization to edit files, document the accepted finding and proposed diff in the report without modifying source or test files.
-   - `REJECTED_FALSE_POSITIVE`: Reviewer's claim is technically incorrect, factually wrong, or based on false assumptions about data types/runtime behavior.  
-     **Action:** Do NOT change code; provide clear, factual technical proof explaining why the code is already correct.
-   - `REJECTED_OVER_ENGINEERING`: Reviewer suggests unnecessary abstraction (e.g., extracting a 3-line wrapper component for an already clean inline component), speculative architecture, or subjective bikeshedding violating KISS/YAGNI.  
-     **Action:** Do NOT change code; explain why the current implementation is cleaner, more readable, and less fragmented.
-   - `DEFERRED_OUT_OF_SCOPE`: Suggestion is a reasonable enhancement but falls outside the authorized boundary of the current PR/change.  
-     **Action:** Do NOT implement now to prevent scope creep; document it as a recommendation for future iterations.
-   - `INFORMATIONAL_NOTE`: Compliments, observations, documentation notes, or praise requiring no code changes.  
-     **Action:** Acknowledge only.
+1. Identify the input review, repository, reviewed revision or working-tree state, and base ref.
+   Read `git status --short` and record HEAD. Use the actual PR/user base when available; do not
+   invent one. Distinguish committed changes, staged/unstaged changes, and relevant untracked files.
+   If the review targets older code, re-check each finding against the current target and label
+   already-resolved findings with evidence. Missing history limits claims about defect origin.
+2. Read applicable `AGENTS.md` and project standards. Resolve the OpenSpec root using
+   `openspec context --json`; read its configuration. If a store is named, discover its ID with
+   `openspec store list --json` and keep `--store <id>` on supported context/change/spec commands.
+3. Select the change from explicit input or clear context. Otherwise use `openspec list --json`;
+   select the sole active change only if it matches the reviewed work. For ambiguous changes, ask
+   which one applies while continuing independent technical checks. Do not infer scope from an
+   unrelated change just because it is the only active one.
+4. For an active change, run:
 
-3. **Minimal Surgical Fixes**:
-   When implementing accepted fixes:
-   - Make targeted, minimal edits addressing precisely the defect.
-   - Avoid opportunistic refactoring of unrelated code.
-   - Always add or update automated tests to guard the fix against future regressions.
+   ```bash
+   openspec status --change "<change>" --json
+   openspec instructions apply --change "<change>" --json
+   ```
 
-4. **Zero-Regression Verification**:
-   After applying any fixes:
-   - Run typechecking (`pnpm typecheck` or equivalent).
-   - Run test suites (`pnpm test` or equivalent).
-   - Run linters (`pnpm lint` or equivalent).
-   Ensure all checks pass cleanly before concluding.
+   Use the returned schema, roots, artifact paths, `contextFiles`, and skipped/blocked states.
+   Read the available context artifacts. For this project's `spec-driven` schema, these include
+   proposal, delta specs, design when present, and tasks. Read relevant main specs as the baseline;
+   the active deltas amend that baseline. Get `openspec instructions <artifact-id> ... --json` when
+   needed to establish artifact rules. Do not fabricate missing or intentionally skipped artifacts.
+5. For archived work, read the actual archived artifacts as historical context and current main
+   specs as the current contract, noting later changes. Do not edit the archive or treat its name
+   as an active change. With no matching change, use current specs and the user's stated scope;
+   record missing proposal/design/task mappings rather than creating a change during adjudication.
+   If the CLI or inputs are unavailable, use readable local artifacts and mark the limitation.
+6. Before evaluating implementation, record the relevant scope: proposal's What Changes,
+   capabilities, non-goals, binding design decisions, and the exact requirements/scenarios/tasks
+   implicated by the review. Cover every input finding; do not expand into a full spec audit unless
+   requested. Label coverage as limited to the supplied review and directly related evidence.
 
----
+Scope comes from the authorized change and controlling requirements, not from reviewer preferences
+or current code. A necessary supporting fix can be in scope without naming its helper in a spec.
+A missing keyword or task alone does not prove scope creep. Conversely, a useful feature explicitly
+deferred by the proposal remains outside scope. Surface conflicts between specs, configuration,
+design, and user intent; do not silently rewrite the contract to justify the implementation.
 
-## 2. Step-by-Step Workflow
+## 3. Independently verify each finding
 
-```mermaid
-graph TD
-    A[Review Input Ingestion] --> B[Decompose Findings into Distinct Items]
-    B --> C[Independent Code, Schema & Test Verification]
-    C --> D{Adjudication Decision}
-    D -->|Real Defect / Spec Gap| E[ACCEPTED_FIX: Surgical Fix + Tests]
-    D -->|False Assumption / DB Type Mismatch| F[REJECTED_FALSE_POSITIVE: Technical Proof]
-    D -->|Needless Wrapper / Premature Abstraction| G[REJECTED_OVER_ENGINEERING: KISS/YAGNI Justification]
-    D -->|Outside PR Boundary| H[DEFERRED_OUT_OF_SCOPE: Log for Backlog]
-    D -->|Cosmetic Note / Praise| K[INFORMATIONAL_NOTE: Acknowledge]
-    E --> I[Run Automated Verification Suite]
-    F --> J[Compile Markdown Report in Vietnamese]
-    G --> J
-    H --> J
-    K --> J
-    I --> J
-```
+Assign stable IDs (`RA-001`, etc.) and preserve original review IDs and source references. Split
+compound findings into independently decidable items. Merge duplicates only with an explicit
+original-ID mapping so nothing disappears from the review.
 
-### Step 1: Ingest & Decompose Review Comments
-Extract every individual finding or recommendation from the input review:
-- Item ID (e.g., `Rec 2.1`, `Finding 1`)
-- Category (Bug, Performance, Architecture, Style, Scope, Documentation)
-- Claimed Severity (Must-Fix, Recommendation, Suggestion)
-- Target File(s) and Line Number(s)
-- Reviewer's core argument and suggested remedy
+For each finding:
 
-### Step 2: Independent Technical Verification
-For each finding, independently verify:
-1. Does the code actually behave the way the reviewer claims?
-2. What are the database column types in `schema.prisma` or SQL migrations? (e.g., Does `@db.Date` store time/timezone? No, only `YYYY-MM-DD`!)
-3. Would adopting the reviewer's proposal introduce an off-by-one error, timezone regression, or breaking change?
-4. Is an abstraction really warranted, or does inline usage reduce complexity?
+- Restate the claimed defect, severity, affected feature, trigger, and suggested remedy.
+- Inspect the relevant code path and callers, not only the cited diff hunk. Use CodeGraph for
+  structural questions when available, as required by `AGENTS.md`; otherwise disclose unavailability
+  and use targeted source inspection. Check types, schemas/migrations, constraints, runtime
+  configuration, and installed dependency semantics when they affect the claim.
+- Establish expected versus actual behavior and a concrete input/trace/reproduction. Verify that
+  the path is reachable. Read what tests assert; a test's name or a passing suite is not proof of
+  the claimed behavior. Cite current files and symbols, not stale reviewer line numbers alone.
+- Check the strongest counter-evidence: existing guards, caller invariants, test assertions,
+  intentional design trade-offs, and explicit non-goals. Do not assume a date/time representation,
+  framework behavior, or performance bottleneck from memory or from the review.
+- Assess user/system impact, likelihood under supported inputs, and the cost of leaving it alone.
+  Independently assign severity; missing reviewer evidence is not proof that the claim is false.
+- Separate defect validity from remedy quality. A real bug with an over-engineered proposed fix
+  remains accepted with a smaller justified plan; explicitly reject the excessive remedy. An
+  abstraction is not unnecessary merely because it is small, nor necessary merely because DRY
+  is cited. Explain the concrete benefit or cost in this codebase.
+- Distinguish introduced/regressed, pre-existing, already resolved, and unknown origin. Show why
+  the fix fits the current scope or needs a separate change. Escalate serious out-of-scope risks
+  in the report with their actual impact; deferral does not mean they are harmless.
 
-### Step 3: Surgical Fixes (For `ACCEPTED_FIX` Only)
-- Apply edit restrictions per finding rather than per file. Locations associated with `REJECTED_*` or `DEFERRED_*` findings remain unchanged, while accepted findings in the same file may be fixed.
-- Make targeted, minimal edits addressing precisely the defect.
-- Write or update unit/integration tests to verify the resolution.
+Run existing focused checks only when they resolve uncertainty and do not modify tracked files
+or live data. Inspect package scripts first: use non-fixing lint, no snapshot updates, no test
+generation or migrations. Record commands, results, and limits. Do not require a full suite for
+every adjudication or claim unrun checks passed. New regression tests belong in the proposed plan.
 
-### Step 4: Run Automated Verification
-Execute:
-```bash
-pnpm typecheck
-pnpm test
-pnpm lint
-```
-Confirm 100% passing tests and zero new type/lint errors.
+## 4. Decision matrix
 
-### Step 5: Generate Report in Vietnamese
-Format the final report in Markdown using Vietnamese as specified in Section 3.
+Assign exactly one decision to each normalized finding:
 
----
+| Decision | Required basis | Report action |
+| --- | --- | --- |
+| `ACCEPTED_FIX` | Verified defect or concrete required correction, necessary within scope | Explain why it needs fixing; propose minimal work and acceptance checks |
+| `REJECTED_FALSE_POSITIVE` | Claim disproved by code/contract evidence or already resolved | Explain why no fix is needed and cite the counter-evidence |
+| `REJECTED_OVER_ENGINEERING` | No demonstrated need for the proposed complexity/change | Explain why the benefit does not justify the cost under current requirements |
+| `DEFERRED_OUT_OF_SCOPE` | Valid concern but remedy exceeds the authorized change | Explain the impact and scope boundary; recommend a separate change when warranted |
+| `INFORMATIONAL_NOTE` | Observation with no necessary remediation | Record why no action is needed |
+| `NEEDS_EVIDENCE` | Missing reproduction, context, or unresolved contract conflict | Name the missing evidence/decision and the specific next check; do not guess |
 
-## 3. Output Report Format (Vietnamese)
+Record severity separately: `MUST FIX`, `RECOMMEND`, or `N/A`, with independent justification.
+Retain the reviewer's severity separately for comparison. `NEEDS_EVIDENCE` cannot enter the fix
+checklist; urgent but unverified impact can still be described as a concern to investigate.
 
-> **IMPORTANT**: The final output report MUST be presented to the user in **Vietnamese**, using the following Markdown structure:
+For the project's review vocabulary, consult section 4 of
+[openspec-review-change](../openspec-review-change/SKILL.md) when assigning `[OS-*]` codes.
+Use only a code whose meaning fits the verified issue, or `N/A` when none fits; these are project
+review conventions, not native OpenSpec schema fields. Do not inherit that skill's full-audit
+workflow or approval verdict. Cite the exact requirement/scenario, proposal bullet, design decision,
+or applicable standard; use `N/A` with a reason for non-spec issues rather than inventing a clause.
 
-```markdown
-# Báo cáo Thẩm định Code Review (Review Adjudication Report)
+## 5. Write the decision report and remediation plan
 
-**Mã nguồn / Branch:** `<branch-name>`  
-**Bản đối chiếu (Base):** `<base-branch>`  
-**Trạng thái thẩm định:** `HOÀN THÀNH` (X/Y đề xuất được chấp thuận và áp dụng)
+Use [the report template](references/report-template.md); read it before writing the report.
+Fill every applicable field with evidence or an explicit limitation. Keep rejected/deferred items
+visible with their reasons. An empty accepted list is valid; never invent work to fill a plan.
 
----
+**Location:** honor a user-provided output path. Otherwise write
+`<changeRoot>/review-adjudication-plan.md` for a matching active change. For archived work or no
+matching active change, write `docs/reviews/<change-or-review-slug>-adjudication-plan.md` in the
+implementation repository. Treat the name as a project convention for a **supplementary report**.
+Do not overwrite unrelated reports; use a distinct suffix for a different review/revision.
 
-## 1. Bảng tổng hợp thẩm định (Adjudication Summary)
+The current `spec-driven` schema defines proposal, specs, design, and tasks; this report is not a
+new schema artifact and is not automatically consumed by the apply workflow. Do not register
+`rules.verification`, replace `tasks.md`, or claim `openspec validate` validates this report.
 
-| ID | Vấn đề reviewer nêu | Phân loại | Đánh giá | Quyết định & Hành động |
-|---|---|---|---|---|
-| 1 | <Mô tả tóm tắt vấn đề> | Bug / Perf / Architecture | Hợp lý / Nhận định sai / Thừa | ACCEPTED_FIX / REJECTED_* / DEFERRED |
+Each accepted finding must be independently implementable from the report and repository:
 
-### Thống kê nhanh:
-- **Tổng số đề xuất thẩm định:** X
-- **Chấp thuận & Đã sửa (ACCEPTED_FIX):** A
-- **Bác bỏ - Nhận định sai kỹ thuật (REJECTED_FALSE_POSITIVE):** B
-- **Bác bỏ - Thừa thãi / Over-engineering (REJECTED_OVER_ENGINEERING):** C
-- **Hoãn lại - Ngoài phạm vi (DEFERRED_OUT_OF_SCOPE):** D
-- **Ghi nhận thông tin / Không tác động code (INFORMATIONAL_NOTE):** E
+- State affected feature/flow, exact trigger, expected/actual result, evidence, necessity, severity,
+  and the consequence of not fixing it.
+- Map it to the full capability path, requirement/scenario names, design decision, and existing
+  task ID as applicable. State whether it restores the existing contract or needs artifact changes.
+- Specify the smallest remediation, target files/symbols, dependencies and order, compatibility
+  constraints, and explicit non-goals. Explain why the reviewer's remedy is used or replaced.
+- Give observable acceptance criteria and relevant regression cases, target test files, and commands
+  verified against the repository scripts. Each task includes its own completion check; do not
+  leave discovery or design choices that could change scope hidden in a vague "fix the issue" task.
 
----
+Use numbered task groups with `## N. <group>` and unchecked `- [ ] N.M [RA-ID] <action and check>`
+entries, matching the installed OpenSpec tasks template. Keep report sections outside this checklist
+at other heading levels so task groups are unambiguous. Every fix task maps to accepted findings;
+rejected, deferred, informational, and unresolved findings have no implementation checkboxes.
+All work stays proposed and unchecked; report decisions are not implementation authorization.
 
-## 2. Chi tiết thẩm định từng mục (Deep Dive & Technical Justifications)
+## 6. Handoff through OpenSpec
 
-### [ID] <Tiêu đề đề xuất>
-- **Phân loại quyết định:** `ACCEPTED_FIX` | `REJECTED_FALSE_POSITIVE` | `REJECTED_OVER_ENGINEERING` | `DEFERRED_OUT_OF_SCOPE` | `INFORMATIONAL_NOTE`
-- **Ý kiến của Reviewer:** <Trích dẫn ngắn gọn lập luận và đề xuất của reviewer>
-- **Đối chiếu thực tế mã nguồn & Cơ sở dữ liệu:**
-  - File: `path/to/file.ext:line`
-  - Kiểu dữ liệu / Database schema / Behavior thực tế: <Dẫn chứng code, schema, types cụ thể>
-- **Lý do chấp thuận hoặc bác bỏ:**
-  - *Nếu bác bỏ:* Giải thích cặn kẽ vì sao nhận định của reviewer không chính xác, hoặc chứng minh nếu làm theo sẽ gây ra lỗi gì (ví dụ: lệch múi giờ, lấy sai bản ghi, over-engineering).
-  - *Nếu chấp thuận:* Nêu rõ lỗi kỹ thuật thực tế và phương án xử lý tối ưu.
-- **Hành động đã thực hiện:** <Đã sửa mã nguồn / Giữ nguyên mã nguồn / Ghi nhận backlog>
+Include these instructions in the report, so the next agent does not need the original conversation:
 
----
+1. Read the report, applicable `AGENTS.md`, resolved OpenSpec configuration, current artifacts, and
+   current code. Revalidate accepted findings if the recorded revision or working-tree state changed.
+2. Implement only findings the user selects. A request to "fix the issues in this report" selects
+   the `ACCEPTED_FIX` items, not rejected, deferred, or unresolved rows. Existing explicit approval
+   of those items is sufficient; do not ask again just because this report was originally pending.
+   Reading/sharing the report alone does not authorize changes.
+3. Before code edits, map approved work into the authoritative active change's tasks using schema
+   instructions. Reuse pending tasks where they cover the remediation; otherwise add clearly linked
+   unchecked remediation tasks without erasing completion history or renumbering unrelated tasks.
+   Record the report task IDs and resulting OpenSpec task IDs. The report never replaces the ledger.
+4. If the approved remedy changes the contract or design, use the project's
+   [openspec-update-change](../openspec-update-change/SKILL.md) workflow to reconcile existing
+   planning artifacts before implementation. For archived work, no matching change, or newly
+   authorized separate scope, use [openspec-propose](../openspec-propose/SKILL.md) to establish the
+   required active artifacts. Never rewrite archived history or alter specs to disguise a code bug.
+5. Follow the active schema's instructions: proposal records why/what/capabilities/impact; specs
+   describe observable behavior; design holds technical choices; tasks hold actions and verification.
+   Restore an existing contract without inventing a changed requirement. When actual deltas are
+   needed, use the prescribed operation headings, `### Requirement:`, SHALL/MUST, and
+   `#### Scenario:` with WHEN/THEN. Preserve full modified requirement blocks and existing scenarios.
+   Respect `skip_specs` and custom schemas; no synthetic deltas just to satisfy validation.
+6. After required planning and user decisions are satisfied, follow
+   [openspec-apply-change](../openspec-apply-change/SKILL.md) or the equivalent workflow available
+   to that agent. Keep edits minimal, run the planned checks, and update the authoritative task
+   ledger only when its completion criteria are met. These are future instructions, not actions
+   performed by adjudication.
 
-## 3. Các thay đổi mã nguồn đã thực hiện (Applied Fixes)
-*(Chỉ hiển thị khi có ít nhất 1 mục ACCEPTED_FIX)*
+## 7. Final verification and delivery
 
-- **File đã sửa:** `path/to/file.ext`
-  - **Tóm tắt giải pháp:** <Mô tả chi tiết cách sửa>
-- **Test bổ sung / cập nhật:** `path/to/test.spec.ts`
-
----
-
-## 4. Kết quả kiểm thử & xác minh (Verification Results)
-
-- **Kiểm tra kiểu dữ liệu (Typecheck):** <✅ Passed (<evidence>) | ❌ Failed (<failure reason>) | ⚠️ Not run>
-- **Kiểm thử tự động (Unit & Integration Tests):** <✅ Passed (<evidence>) | ❌ Failed (<failure reason>) | ⚠️ Not run>
-- **Kiểm tra chuẩn mã nguồn (Linter):** <✅ Passed (<evidence>) | ❌ Failed (<failure reason>) | ⚠️ Not run>
-
----
-
-## 5. Kết luận & Khuyến nghị tiếp theo (Final Verdict)
-
-- <Đánh giá tổng thể chất lượng PR/branch, đủ điều kiện merge hay chưa>
-- <Các khuyến nghị hoặc lưu ý tiếp theo nếu có>
-```
-
----
-
-## 4. Common Pitfalls to Guard Against
-
-1. **The "Reviewer Hallucination" Trap**:
-   Reviewers often assume a column is `TIMESTAMPTZ` with hours/minutes when it is actually a PostgreSQL `DATE` (`@db.Date`), leading to incorrect timezone offset suggestions. Always check `schema.prisma` or migration files!
-2. **The "Micro-Component" Trap**:
-   Reviewers often suggest extracting tiny 3-line inline blocks into separate files. If a component is specific to one screen, tightly coupled to local state/i18n, and tested, keep it inline (KISS).
-3. **The "Breaking Fix" Trap**:
-   Never apply a fix that breaks existing unit/integration tests without thoroughly verifying whether the test or the fix is correct.
+- Ensure all original findings map to decisions, counts reconcile, and every accepted item has
+  evidence, impact, scope reasoning, a bounded plan, acceptance criteria, and task traceability.
+- Separate checks actually run during adjudication from checks proposed for implementation. For an
+  active change use `openspec validate "<change>" --strict` when applicable. For current specs use
+  `openspec validate --specs --strict`; `--archived --strict` only checks archived task completion.
+  Record validation failures without fixing artifacts, and distinguish structural validation from
+  behavior proof and from manual report completeness checks.
+- Check that only the intended report changed, accounting for pre-existing user edits. Do not
+  overwrite those edits, fabricate approval, mark future tasks complete, or assert merge readiness
+  for code outside the adjudicated findings.
+- Deliver the report link with a concise Vietnamese summary: recommended fixes, rejected/deferred
+  items, unresolved evidence, and the user decisions needed. State that no fixes were applied.
