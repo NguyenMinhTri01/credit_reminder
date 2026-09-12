@@ -5,9 +5,11 @@ inapplicable fields. Keep sections for all decisions, including an explicit `Non
 Repeat finding records as needed. Use English under the project's artifact policy unless the user
 explicitly requests another language. Preserve portable repository paths and exact source IDs.
 
-Task groups use OpenSpec's numbered level-two headings and `- [ ] N.M` syntax. All other report
-sections use level-three headings. The final report is supplementary planning documentation;
-it is not a schema-defined artifact, does not approve fixes, and is not an apply task ledger.
+Task groups use OpenSpec's numbered level-two headings and `- [ ] N.M` syntax. Other report sections
+use level-three headings, except that finding records use level-four headings and the proposed
+implementation checklist uses a level-two heading so task groups are not nested under a deeper
+section. The final report is supplementary planning documentation; it is not a schema-defined
+artifact, does not approve fixes, and is not an apply task ledger.
 
 ```markdown
 # Review Adjudication and Remediation Plan
@@ -104,7 +106,7 @@ implementation review or a merge-approval verdict.>
 
 <Use NEEDS_EVIDENCE for these findings. Do not hide uncertainty in accepted tasks.>
 
-### Proposed implementation checklist
+## Proposed implementation checklist
 
 Only ACCEPTED_FIX findings are eligible. All entries remain unchecked until authorized work is
 implemented and verified through the authoritative OpenSpec task ledger. If none were accepted,

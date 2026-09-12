@@ -92,11 +92,35 @@ describe('shared/utils', () => {
   })
 
   describe('delay', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
     it('should delay execution', async () => {
-      const start = Date.now()
-      await delay(100)
-      const end = Date.now()
-      expect(end - start).toBeGreaterThanOrEqual(100)
+      const callback = jest.fn()
+      const promise = delay(100, callback)
+
+      jest.advanceTimersByTime(99)
+      expect(callback).not.toHaveBeenCalled()
+
+      jest.advanceTimersByTime(1)
+      await expect(promise).resolves.toBeUndefined()
+      expect(callback).toHaveBeenCalledTimes(1)
+    })
+
+    it('should reject when the callback throws', async () => {
+      const error = new Error('callback failed')
+      const promise = delay(100, () => {
+        throw error
+      })
+
+      jest.advanceTimersByTime(100)
+
+      await expect(promise).rejects.toBe(error)
     })
   })
 })
