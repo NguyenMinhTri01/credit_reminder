@@ -33,7 +33,7 @@ import {
   formatPercentage,
   formatVnd,
 } from '@/lib/dashboard-formatters'
-import type { ICreditCard } from '@/shared'
+import { delay, type ICreditCard } from '@/shared'
 
 interface CardTileProps {
   card: ICreditCard
@@ -129,7 +129,7 @@ export function CardTile({ card, onViewDetail }: CardTileProps) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => setDeleteOpen(true)}
+                    onClick={() => delay(100, () => setDeleteOpen(true))}
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 />
