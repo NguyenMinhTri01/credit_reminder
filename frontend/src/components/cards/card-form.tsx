@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { BankLogo } from '@/components/cards/bank-logo'
+import { CardTypeLogo } from '@/components/cards/card-type-logo'
 import { useBankCatalog } from '@/hooks/use-bank-catalog'
 import { useCardScheduleConfig } from '@/hooks/use-card-schedule-config'
 import {
@@ -28,14 +29,17 @@ import {
   PAYMENT_DUE_DAYS_MIN,
   CREDIT_LIMIT_MIN,
   APP_TIMEZONE,
+  CARD_TYPE_OPTIONS,
+  isCardType,
 } from '@/shared/constants'
-import type { IUpdateCreditCardPayload } from '@/shared'
+import type { CardType, IUpdateCreditCardPayload } from '@/shared'
 import { formatCalendarDate } from '@/lib/dashboard-formatters'
 import { formatMoneyInputDisplay, parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
 
 // ─── Zod schema ──────────────────────────────────────────────
 
 interface OriginalCardValues {
+  cardType?: CardType | null
   creditLimit?: string | null
   statementDay?: number | null
   paymentDueDaysAfterStatement?: number | null
@@ -55,6 +59,7 @@ function buildCardSchema(
   const hadCreditLimit = Boolean(original.creditLimit && original.creditLimit.trim() !== '')
   const hadStatementDay = original.statementDay != null
   const hadPaymentDueDays = original.paymentDueDaysAfterStatement != null
+  const hadCardType = original.cardType != null
 
   const creditLimitSchema = z.string().refine(
     (value) => {
@@ -93,8 +98,22 @@ function buildCardSchema(
       .pipe(max === undefined ? z.number() : z.number().max(max, message))
   }
 
+  const cardTypeSchema = z.string().superRefine((value, context) => {
+    if (value.trim() === '') {
+      if (!isEdit || hadCardType) {
+        context.addIssue({ code: 'custom', message: t('validationCardTypeRequired') })
+      }
+      return
+    }
+
+    if (!isCardType(value)) {
+      context.addIssue({ code: 'custom', message: t('validationCardTypeInvalid') })
+    }
+  })
+
   return z.object({
     bankCode: z.string().min(1, t('validationBankRequired')),
+    cardType: cardTypeSchema,
     cardName: z.string().optional(),
     lastFourDigits: z
       .string()
@@ -151,6 +170,7 @@ function buildCardSchema(
 
 type CardFormValues = {
   bankCode: string
+  cardType: string
   cardName?: string
   lastFourDigits: string
   creditLimit: string
@@ -267,6 +287,7 @@ export function CardForm({
     () =>
       buildCardSchema(t, isEdit, {
         creditLimit: defaultValues?.creditLimit,
+        cardType: defaultValues?.cardType,
         statementDay: defaultValues?.statementDay,
         paymentDueDaysAfterStatement: defaultValues?.paymentDueDaysAfterStatement,
       }),
@@ -285,6 +306,7 @@ export function CardForm({
     resolver: zodResolver(schema),
     defaultValues: {
       bankCode: defaultValues?.bankCode ?? '',
+      cardType: defaultValues?.cardType ?? '',
       cardName: defaultValues?.cardName ?? '',
       lastFourDigits: defaultValues?.lastFourDigits ?? '',
       creditLimit: defaultValues?.creditLimit
@@ -323,6 +345,10 @@ export function CardForm({
 
   const selectedBankCode = useWatch({ control, name: 'bankCode' })
   const selectedBank = banks.find((b) => b.bankCode === selectedBankCode)
+  const selectedCardTypeValue = useWatch({ control, name: 'cardType' })
+  const selectedCardType = CARD_TYPE_OPTIONS.find(
+    (option) => option.value === selectedCardTypeValue,
+  )
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-5">
@@ -376,6 +402,39 @@ export function CardForm({
       </div>
 
       {/* Card info */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="cardType">{t('formCardType')}</Label>
+        <Controller
+          name="cardType"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value ?? ''} onValueChange={field.onChange}>
+              <SelectTrigger id="cardType" className="w-full">
+                <SelectValue placeholder={t('formCardTypePlaceholder')}>
+                  {selectedCardType ? (
+                    <span className="flex min-w-0 items-center gap-2">
+                      <CardTypeLogo cardType={selectedCardType.value} size={20} />
+                      <span className="truncate">{t(selectedCardType.labelKey)}</span>
+                    </span>
+                  ) : null}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {CARD_TYPE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center gap-2">
+                      <CardTypeLogo cardType={option.value} size={20} />
+                      <span>{t(option.labelKey)}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.cardType && <p className="text-destructive text-xs">{errors.cardType.message}</p>}
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="lastFourDigits">{t('formLastFourDigits')}</Label>

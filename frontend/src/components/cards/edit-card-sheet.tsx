@@ -13,6 +13,7 @@ import { CardForm, parseExpiryRaw } from '@/components/cards/card-form'
 import type { CardFormValues } from '@/components/cards/card-form'
 import { useUpdateCard } from '@/hooks/use-credit-cards'
 import type { ICreditCard, IUpdateCreditCardPayload } from '@/shared'
+import { isCardType } from '@/shared/constants'
 import { parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
 
 interface EditCardSheetProps {
@@ -33,6 +34,9 @@ export function EditCardSheet({ card, open, onOpenChange }: EditCardSheetProps) 
       const expiry = parseExpiryRaw(data.expiryRaw ?? '')
 
       if (data.bankCode !== card.bankCode) payload.bankCode = data.bankCode
+      if (isCardType(data.cardType) && data.cardType !== card.cardType) {
+        payload.cardType = data.cardType
+      }
       if (data.cardName !== card.cardName) payload.cardName = data.cardName ?? ''
       if (data.lastFourDigits !== card.lastFourDigits) payload.lastFourDigits = data.lastFourDigits
       const creditLimit = parseMoneyInputToCanonicalDecimal(data.creditLimit)
@@ -79,6 +83,7 @@ export function EditCardSheet({ card, open, onOpenChange }: EditCardSheetProps) 
           <CardForm
             defaultValues={{
               bankCode: card.bankCode ?? '',
+              cardType: card.cardType ?? undefined,
               cardName: card.cardName,
               lastFourDigits: card.lastFourDigits ?? '',
               creditLimit: card.creditLimit ?? '',

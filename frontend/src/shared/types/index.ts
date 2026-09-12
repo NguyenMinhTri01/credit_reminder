@@ -109,6 +109,7 @@ export interface ISearchParams extends IPaginationParams {
 // ─── Credit Card Types ───────────────────────────────────────
 export type ExpiryStatus = 'valid' | 'expiring_soon' | 'expired'
 export type TransactionType = 'EXPENSE' | 'PAYMENT' | 'REFUND' | 'ADJUSTMENT'
+export type CardType = 'VISA' | 'MASTERCARD' | 'AMERICAN_EXPRESS' | 'JCB' | 'NAPAS'
 
 export interface IBankCatalogEntry {
   bankCode: string
@@ -126,6 +127,7 @@ export interface ICreditCard {
   id: string
   userId: string
   bankCode: string | null
+  cardType: CardType | null
   bankName: string
   bankShortName: string | null
   logoPath: string | null
@@ -169,6 +171,7 @@ export interface ITransaction {
 
 export interface ICreateCreditCardPayload {
   bankCode: string
+  cardType: CardType
   cardName?: string
   lastFourDigits: string
   creditLimit: string
@@ -181,6 +184,7 @@ export interface ICreateCreditCardPayload {
 
 export interface IUpdateCreditCardPayload {
   bankCode?: string
+  cardType?: CardType
   cardName?: string
   lastFourDigits?: string
   creditLimit?: string
@@ -217,6 +221,7 @@ export interface IDashboardCard {
   id: string
   bankName: string
   bankCode: string | null
+  cardType: CardType | null
   bankShortName: string | null
   logoPath: string | null
   cardName: string

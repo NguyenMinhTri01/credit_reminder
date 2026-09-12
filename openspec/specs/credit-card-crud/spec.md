@@ -18,10 +18,10 @@ The system SHALL maintain a bank catalog as an in-code constant containing a sta
 - **THEN** the system rejects the request with a validation error
 
 ### Requirement: User can create a credit card
-The system SHALL allow an authenticated user to create a credit card by providing bank code, last four digits, credit limit, available credit, statement day, payment due days after statement, and expiry date (MM/YY). Card name is optional.
+The system SHALL allow an authenticated user to create a credit card by providing bank code, card type, last four digits, credit limit, available credit, statement day, payment due days after statement, and expiry date (MM/YY). Card name is optional.
 
 #### Scenario: Successful card creation with all required fields
-- **WHEN** a user submits valid card data including `bankCode`, `lastFourDigits` (exactly 4 numeric characters), `creditLimit` (> 0), `availableCredit`, `statementDay` (1–31), `paymentDueDaysAfterStatement` (> 0), and `expiryMonth`/`expiryYear`
+- **WHEN** a user submits valid card data including `bankCode`, `cardType` (one of the five supported values), `lastFourDigits` (exactly 4 numeric characters), `creditLimit` (> 0), `availableCredit`, `statementDay` (1–31), `paymentDueDaysAfterStatement` (> 0), and `expiryMonth`/`expiryYear`
 - **THEN** the system creates the card, associates it with the authenticated user, and returns the card with server-generated fields (id, timestamps, resolved bank name and logo)
 
 #### Scenario: Card creation with optional card name
@@ -37,7 +37,7 @@ The system SHALL allow an authenticated user to create a credit card by providin
 - **THEN** values are serialized as decimal strings (e.g., `"60000000.00"`) to avoid floating-point precision loss
 
 #### Scenario: Validation rejects invalid input
-- **WHEN** a user submits a card with `lastFourDigits` that is not exactly 4 numeric characters, or `creditLimit` ≤ 0, or `statementDay` outside 1–31, or `paymentDueDaysAfterStatement` ≤ 0
+- **WHEN** a user submits a card with a missing or unsupported `cardType`, or with `lastFourDigits` that is not exactly 4 numeric characters, or `creditLimit` ≤ 0, or `statementDay` outside 1–31, or `paymentDueDaysAfterStatement` ≤ 0
 - **THEN** the system returns field-level validation errors without creating the card
 
 ### Requirement: User can view their cards
@@ -60,7 +60,7 @@ The system SHALL provide a list endpoint returning all cards belonging to the au
 - **THEN** the system returns a not-found response through the standard detail endpoint
 
 ### Requirement: User can update card metadata
-The system SHALL allow the card owner to update metadata fields (bank code, card name, last four digits, statement day, payment due days after statement, expiry date). Updating those metadata fields SHALL NOT alter the available credit or trigger a reconciliation. `creditLimit` is separately updateable and recomputes `availableCredit` while preserving the used amount.
+The system SHALL allow the card owner to update optional metadata fields (bank code, card type, card name, last four digits, statement day, payment due days after statement, expiry date). Updating those metadata fields SHALL NOT alter the available credit or trigger a reconciliation. `creditLimit` is separately updateable and recomputes `availableCredit` while preserving the used amount.
 
 #### Scenario: Update bank and card name
 - **WHEN** a user updates `bankCode` and `cardName` on their card
@@ -71,8 +71,8 @@ The system SHALL allow the card owner to update metadata fields (bank code, card
 - **THEN** `availableCredit` becomes 60,000,000 (new limit minus preserved used amount) and no reconciliation record is created
 
 #### Scenario: Partial update
-- **WHEN** a user sends an update with only `cardName`
-- **THEN** only `cardName` changes; all other fields remain as stored
+- **WHEN** a user sends an update with only one optional metadata field, such as `cardName` or a supported `cardType`
+- **THEN** only the supplied field changes; all other fields remain as stored
 
 ### Requirement: User can soft-delete and restore a card
 The system SHALL support soft deletion (setting `deletedAt` timestamp) and restoration (clearing `deletedAt`). Soft-deleted cards are excluded from listings and aggregate calculations but remain in the database with their transactions.
@@ -163,3 +163,48 @@ The system SHALL format monetary inputs across credit card management forms with
 #### Scenario: Populating form with existing decimal values
 - **WHEN** an existing card with limit `"50000000.00"` is opened in the edit form
 - **THEN** the input displays `50,000,000.00đ` without losing precision or mutating the stored balance
+
+### Requirement: Credit card type is controlled and persisted
+The system SHALL support exactly five card types: `VISA`, `MASTERCARD`, `AMERICAN_EXPRESS`, `JCB`, and `NAPAS`. A card creation request MUST include `cardType`, while an update request MAY include `cardType`; supplied values MUST be validated against this supported set before persistence.
+
+#### Scenario: Create a card with each supported type
+- **WHEN** an authenticated user creates a card with any one of the five supported `cardType` values
+- **THEN** the system stores that exact value and returns it in the created card response
+
+#### Scenario: Create a card without a card type
+- **WHEN** an authenticated user creates a card without `cardType`
+- **THEN** the API rejects the request with a field-level validation error and does not create the card
+
+#### Scenario: Create or update a card with an unsupported type
+- **WHEN** a client submits a `cardType` outside the supported set for creation or update
+- **THEN** the API rejects the request with a validation error and leaves the stored card unchanged
+
+#### Scenario: Update a card type
+- **WHEN** a card owner updates an existing card with one of the supported `cardType` values
+- **THEN** the system stores the new value and returns the updated card with that value
+
+### Requirement: Card type is exposed with legacy-safe card responses
+The system SHALL include `cardType` in credit-card detail, list, create, update, restore, and dashboard card payloads. For cards created before card types were introduced, the field SHALL be `null`; those cards MUST remain readable and usable by existing card operations.
+
+#### Scenario: Existing typed card is returned
+- **WHEN** an API client retrieves a card that has a stored card type
+- **THEN** the response contains the stored `cardType` value without changing its enum spelling
+
+#### Scenario: Legacy card without a type is returned
+- **WHEN** an API client retrieves a legacy card whose `cardType` is null
+- **THEN** the response contains the explicit property `cardType: null` and does not fail the request
+
+#### Scenario: Legacy card remains editable
+- **WHEN** the owner updates a non-card-type field on a legacy card
+- **THEN** the update succeeds and the card remains available for later assignment of a supported type
+
+### Requirement: Card type selection in card forms is accessible and consistent
+The card form SHALL provide a select control containing exactly the five supported card types, require a selection when creating a card, and display a matching compact logo in each option and the selected trigger while preserving the option order and accessible labels.
+
+#### Scenario: Card form exposes only supported types
+- **WHEN** a user creates or edits a card
+- **THEN** the form provides a select control containing exactly the five supported types, requires a selection for creation, and displays a clear validation message when creation is submitted without one
+
+#### Scenario: Card type selector displays matching logos
+- **WHEN** a user opens the card-type select or chooses a supported card type
+- **THEN** each option and the selected trigger display the matching compact card-type logo without changing the available options or their order

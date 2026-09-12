@@ -1,5 +1,8 @@
+import { CardType } from '@prisma/client';
 import { UserRole, ReminderStatus, SortOrder } from '../enums';
 import { IBankCatalogEntry } from '../constants/bank-catalog';
+
+export type { CardType } from '@prisma/client';
 
 // ─── Base Types ──────────────────────────────────────────────
 export interface BaseEntity {
@@ -136,6 +139,7 @@ export interface IDashboardCard {
   id: string;
   bankName: string;
   bankCode: string | null;
+  cardType: CardType | null;
   bankShortName: string | null;
   logoPath: string | null;
   cardName: string;
@@ -174,6 +178,7 @@ export interface ICreditCard {
   id: string;
   userId: string;
   bankCode: string | null;
+  cardType: CardType | null;
   bankName: string;
   cardName: string;
   lastFourDigits: string | null;
@@ -216,6 +221,7 @@ export interface ITransaction {
 
 export interface ICreateCreditCardDto {
   bankCode: string;
+  cardType: CardType;
   cardName?: string;
   lastFourDigits: string;
   creditLimit: string;
@@ -228,6 +234,7 @@ export interface ICreateCreditCardDto {
 
 export interface IUpdateCreditCardDto {
   bankCode?: string;
+  cardType?: CardType;
   cardName?: string;
   lastFourDigits?: string;
   creditLimit?: string;

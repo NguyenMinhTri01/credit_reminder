@@ -43,6 +43,7 @@ const mockCard: ICreditCard = {
   id: 'card-1',
   userId: 'user-1',
   bankCode: 'vietcombank',
+  cardType: 'VISA',
   bankName: 'Vietcombank',
   bankShortName: 'VCB',
   logoPath: '/images/banks/vietcombank.svg',

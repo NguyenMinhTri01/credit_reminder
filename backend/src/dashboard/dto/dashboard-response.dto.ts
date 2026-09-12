@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CardType } from '@prisma/client';
 import {
+  CARD_TYPE_VALUES,
   IDashboardCard,
   IDashboardReminder,
   IDashboardSnapshot,
@@ -35,6 +37,15 @@ export class DashboardCardDto implements IDashboardCard {
 
   @ApiProperty({ example: 'vietcombank', nullable: true, type: String })
   bankCode!: string | null;
+
+  @ApiProperty({
+    enum: CARD_TYPE_VALUES,
+    enumName: 'CardType',
+    example: CardType.VISA,
+    nullable: true,
+    type: String,
+  })
+  cardType!: CardType | null;
 
   @ApiProperty({ example: 'Vietcombank', nullable: true, type: String })
   bankShortName!: string | null;

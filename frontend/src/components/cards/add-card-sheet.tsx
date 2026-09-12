@@ -13,6 +13,7 @@ import {
 import { CardForm, parseExpiryRaw } from '@/components/cards/card-form'
 import type { CardFormValues } from '@/components/cards/card-form'
 import { useCreateCard } from '@/hooks/use-credit-cards'
+import { isCardType } from '@/shared/constants'
 
 interface AddCardSheetProps {
   open: boolean
@@ -27,7 +28,13 @@ export function AddCardSheet({ open, onOpenChange }: AddCardSheetProps) {
   const handleSubmit = async (data: CardFormValues) => {
     if (isSubmittingRef.current || createCard.isPending) return
     const { expiryRaw, ...rest } = data
-    if (rest.statementDay === undefined || rest.paymentDueDaysAfterStatement === undefined) return
+    if (
+      !isCardType(rest.cardType) ||
+      rest.statementDay === undefined ||
+      rest.paymentDueDaysAfterStatement === undefined
+    ) {
+      return
+    }
 
     isSubmittingRef.current = true
     const expiry = parseExpiryRaw(expiryRaw ?? '')
@@ -35,6 +42,7 @@ export function AddCardSheet({ open, onOpenChange }: AddCardSheetProps) {
     try {
       await createCard.mutateAsync({
         bankCode: rest.bankCode,
+        cardType: rest.cardType,
         cardName: rest.cardName || undefined,
         lastFourDigits: rest.lastFourDigits,
         creditLimit: rest.creditLimit,

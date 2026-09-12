@@ -42,6 +42,14 @@ enum TransactionType {
   ADJUSTMENT
 }
 
+enum CardType {
+  VISA
+  MASTERCARD
+  AMERICAN_EXPRESS
+  JCB
+  NAPAS
+}
+
 // Models
 model User {
   id               String    @id @default(uuid()) @db.Uuid
@@ -77,6 +85,7 @@ model CreditCard {
   createdAt                   DateTime  @default(now()) @map("created_at")
   // New fields from credit-card-management change
   bankCode                    String?   @map("bank_code")
+  cardType                    CardType? @map("card_type")
   lastFourDigits              String?   @map("last_four_digits") @db.Char(4)
   expiryMonth                 Int?      @map("expiry_month")
   expiryYear                  Int?      @map("expiry_year")
