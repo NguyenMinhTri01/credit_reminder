@@ -23,6 +23,7 @@ jest.mock('@/components/cards/card-form', () => ({
       onClick={() =>
         void onSubmit({
           bankCode: 'vietcombank',
+          cardType: 'MASTERCARD',
           cardName: '',
           lastFourDigits: '1234',
           creditLimit: '50,000,000.00đ',
@@ -43,6 +44,7 @@ const card: ICreditCard = {
   id: 'card-1',
   userId: 'user-1',
   bankCode: 'vietcombank',
+  cardType: 'VISA',
   bankName: 'Vietcombank',
   bankShortName: 'VCB',
   logoPath: null,
@@ -78,7 +80,7 @@ describe('EditCardSheet', () => {
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledWith({
         id: 'card-1',
-        payload: { cardName: '' },
+        payload: { cardType: 'MASTERCARD', cardName: '' },
       })
     })
   })

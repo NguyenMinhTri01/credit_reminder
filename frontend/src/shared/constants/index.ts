@@ -1,3 +1,5 @@
+import type { CardType } from '../types'
+
 // ─── Pagination ──────────────────────────────────────────────
 export const DEFAULT_PAGE = 1
 export const DEFAULT_LIMIT = 10
@@ -53,6 +55,49 @@ export const PAYMENT_DUE_DAYS_MIN = 1
 export const EXPIRY_MONTH_MIN = 1
 export const EXPIRY_MONTH_MAX = 12
 export const CREDIT_LIMIT_MIN = 1
+
+// ─── Card types ───────────────────────────────────────────────
+export const CARD_TYPE_OPTIONS = [
+  {
+    value: 'VISA',
+    labelKey: 'cardTypes.VISA',
+    logoPath: '/images/card-types/visa.svg',
+  },
+  {
+    value: 'MASTERCARD',
+    labelKey: 'cardTypes.MASTERCARD',
+    logoPath: '/images/card-types/mastercard.svg',
+  },
+  {
+    value: 'AMERICAN_EXPRESS',
+    labelKey: 'cardTypes.AMERICAN_EXPRESS',
+    logoPath: '/images/card-types/american_express.svg',
+  },
+  {
+    value: 'JCB',
+    labelKey: 'cardTypes.JCB',
+    logoPath: '/images/card-types/jcb.svg',
+  },
+  {
+    value: 'NAPAS',
+    labelKey: 'cardTypes.NAPAS',
+    logoPath: '/images/card-types/napas.svg',
+  },
+] as const satisfies ReadonlyArray<{
+  value: CardType
+  labelKey: string
+  logoPath: string
+}>
+
+export const CARD_TYPE_VALUES = CARD_TYPE_OPTIONS.map((option) => option.value)
+
+export function getCardTypeOption(cardType: string | null | undefined) {
+  return CARD_TYPE_OPTIONS.find((option) => option.value === cardType)
+}
+
+export function isCardType(value: string | null | undefined): value is CardType {
+  return getCardTypeOption(value) !== undefined
+}
 
 // ─── UI ──────────────────────────────────────────────────────
 export const SIDEBAR_COOKIE_NAME = 'sidebar_state'

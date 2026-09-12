@@ -50,6 +50,8 @@ export const CREDIT_CARD_MESSAGES = {
   // Errors
   NOT_FOUND: 'Credit card not found',
   INVALID_BANK_CODE: 'Bank code is not in the supported catalog',
+  CARD_TYPE_REQUIRED: 'Card type is required',
+  CARD_TYPE_INVALID: 'Card type must be VISA, MASTERCARD, AMERICAN_EXPRESS, JCB, or NAPAS',
   // Validation
   BANK_CODE_REQUIRED: 'Bank code is required',
   LAST_FOUR_DIGITS_REQUIRED: 'Last four digits are required',

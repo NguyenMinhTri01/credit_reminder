@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
   CreditCard,
+  CardType,
   Prisma,
   Transaction,
   TransactionSource,
@@ -18,6 +19,7 @@ function baseCard(): CreditCard {
     id: 'card-uuid-1',
     userId: 'user-uuid-1',
     bankCode: 'vietcombank',
+    cardType: CardType.VISA,
     bankName: 'Ngân hàng TMCP Ngoại thương Việt Nam',
     cardName: 'Vietcombank',
     lastFourDigits: '1234',

@@ -1,5 +1,14 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import type { ImgHTMLAttributes } from 'react'
 import { CardForm, computeNextDue, parseExpiryRaw } from './card-form'
+import { CARD_TYPE_OPTIONS } from '@/shared/constants'
+
+jest.mock('next/image', () => ({
+  __esModule: true,
+  // This test double renders native images so selector branding can be asserted.
+  // eslint-disable-next-line @next/next/no-img-element
+  default: (props: ImgHTMLAttributes<HTMLImageElement>) => <img alt="" {...props} />,
+}))
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string, values?: { count?: number }) =>
@@ -49,6 +58,7 @@ describe('CardForm', () => {
       <CardForm
         defaultValues={{
           bankCode: 'vietcombank',
+          cardType: 'VISA',
           cardName: 'Platinum',
           lastFourDigits: '1234',
           creditLimit: '50000000',
@@ -98,6 +108,7 @@ describe('CardForm', () => {
       <CardForm
         defaultValues={{
           bankCode: 'vietcombank',
+          cardType: 'VISA',
           cardName: 'Platinum',
           lastFourDigits: '1234',
           creditLimit: '50000000',
@@ -110,10 +121,60 @@ describe('CardForm', () => {
       />,
     )
 
-    const trigger = screen.getByRole('combobox')
+    const trigger = screen.getByRole('combobox', { name: 'formBankSelection' })
     const logosInTrigger = trigger.querySelectorAll('[data-testid="bank-logo"]')
     expect(logosInTrigger.length).toBe(1)
     expect(trigger).toHaveTextContent('Vietcombank')
+  })
+
+  it('offers exactly the five supported card types', () => {
+    render(<CardForm onSubmit={jest.fn()} isLoading={false} />)
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'formCardType' }))
+
+    const options = screen.getAllByRole('option')
+    expect(options).toHaveLength(5)
+    expect(options.map((option) => option.textContent)).toEqual([
+      'cardTypes.VISA',
+      'cardTypes.MASTERCARD',
+      'cardTypes.AMERICAN_EXPRESS',
+      'cardTypes.JCB',
+      'cardTypes.NAPAS',
+    ])
+  })
+
+  it('shows the selected card-type logo in the trigger and each option', () => {
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          cardType: 'VISA',
+          lastFourDigits: '1234',
+          creditLimit: '50000000.00',
+          availableCredit: '35000000.00',
+          statementDay: 15,
+          paymentDueDaysAfterStatement: 20,
+        }}
+        onSubmit={jest.fn()}
+        isLoading={false}
+      />,
+    )
+
+    const trigger = screen.getByRole('combobox', { name: 'formCardType' })
+    expect(within(trigger).getByRole('img', { name: 'cardTypes.VISA' })).toHaveAttribute(
+      'src',
+      '/images/card-types/visa.svg',
+    )
+
+    fireEvent.click(trigger)
+
+    const options = screen.getAllByRole('option')
+    CARD_TYPE_OPTIONS.forEach((option, index) => {
+      expect(within(options[index]).getByRole('img', { name: option.labelKey })).toHaveAttribute(
+        'src',
+        option.logoPath,
+      )
+    })
   })
 
   it('sanitizes lastFourDigits to allow only 4 ASCII digits and preserves leading zeros', () => {
@@ -141,6 +202,7 @@ describe('CardForm', () => {
       <CardForm
         defaultValues={{
           bankCode: 'vietcombank',
+          cardType: 'VISA',
           cardName: 'Platinum',
           lastFourDigits: '0012',
           statementDay: 20,
@@ -181,6 +243,7 @@ describe('CardForm', () => {
       <CardForm
         defaultValues={{
           bankCode: 'vietcombank',
+          cardType: 'VISA',
           cardName: 'Visa',
           lastFourDigits: '9999',
           creditLimit: '50000000.00',
@@ -195,6 +258,60 @@ describe('CardForm', () => {
 
     expect(screen.getByLabelText('formCreditLimit')).toHaveValue('50,000,000.00đ')
     expect(screen.getByLabelText('formAvailableCredit')).toHaveValue('35,000,000.00đ')
+  })
+
+  it('requires a card type when creating a card', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          lastFourDigits: '1234',
+          creditLimit: '50000000.00',
+          availableCredit: '35000000.00',
+          statementDay: 15,
+          paymentDueDaysAfterStatement: 20,
+        }}
+        onSubmit={onSubmit}
+        isLoading={false}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'addCard' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('validationCardTypeRequired')).toBeInTheDocument()
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('rejects an unsupported runtime card type', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          // Simulate stale API data reaching the form despite the typed payload contract.
+          cardType: 'DISCOVER' as never,
+          lastFourDigits: '1234',
+          creditLimit: '50000000.00',
+          availableCredit: '35000000.00',
+          statementDay: 15,
+          paymentDueDaysAfterStatement: 20,
+        }}
+        onSubmit={onSubmit}
+        isLoading={false}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'addCard' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('validationCardTypeInvalid')).toBeInTheDocument()
+    })
+    expect(onSubmit).not.toHaveBeenCalled()
   })
 
   it('submits edit mode when a legacy card has no available credit', async () => {
