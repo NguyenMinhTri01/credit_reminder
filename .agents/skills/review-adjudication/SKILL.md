@@ -86,8 +86,8 @@ For each finding:
 
 - Restate the claimed defect, severity, affected feature, trigger, and suggested remedy.
 - Inspect the relevant code path and callers, not only the cited diff hunk. Use CodeGraph for
-  structural questions when available, as required by `AGENTS.md`; otherwise disclose unavailability
-  and use targeted source inspection. Check types, schemas/migrations, constraints, runtime
+  structural questions when available; otherwise disclose unavailability and use targeted source
+  inspection. Check types, schemas/migrations, constraints, runtime
   configuration, and installed dependency semantics when they affect the claim.
 - Establish expected versus actual behavior and a concrete input/trace/reproduction. Verify that
   the path is reachable. Read what tests assert; a test's name or a passing suite is not proof of

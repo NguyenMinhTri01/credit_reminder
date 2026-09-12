@@ -73,10 +73,12 @@ export function cleanObject<T extends Record<string, unknown>>(obj: T): Partial<
  * Delay execution for a specified number of milliseconds.
  */
 export function delay(ms: number, func?: () => unknown): Promise<void> {
-  return new Promise((resolve) => setTimeout(() => {
-    if (func) {
-      func()
+  return new Promise((resolve, reject) => setTimeout(() => {
+    try {
+      func?.()
+      resolve()
+    } catch (error) {
+      reject(error)
     }
-    resolve()
   }, ms))
 }
