@@ -1,7 +1,7 @@
 # Review Adjudication and Remediation Plan
 
-- Report status: PROPOSED — no fixes applied
-- User implementation decision: PENDING / no `ACCEPTED_FIX` items selected
+- Report status: IMPLEMENTED — accepted remediations applied and verified
+- User implementation decision: APPROVED — RA-002 and RA-004–RA-008 applied
 - Adjudication coverage: COMPLETE — limited to the eight supplied review comments
 - Review source: User-provided Review 1 and Review 2, 2026-09-12
 - Repository / branch: `credit_reminder` / `feat/card-type-selection-and-logos`
@@ -9,9 +9,10 @@
 - Diff base and working-tree scope: No PR base was provided. Review targets current files. Existing
   unrelated modifications: `frontend/public/images/banks/hsbc.svg`,
   `frontend/public/images/banks/mbbank.svg`; untracked `review.md`.
-- OpenSpec root / store: local `/Users/Shared/workspace/credit_reminder`; no store
-- Change / lifecycle / schema: `2026-09-12-add-card-type`; archived; `spec-driven`; no active
-  changes were returned by `openspec list --json`
+- OpenSpec root / store: local repository root; no store
+- Original change / lifecycle / schema: `2026-09-12-add-card-type`; archived; `spec-driven`
+- Remediation change / lifecycle / schema: `2026-09-12-add-card-type-adjudication-remediation`; archived;
+  `spec-driven`
 - Artifacts and standards read: `AGENTS.md`, `openspec/config.yaml`, archived proposal/design/tasks
   and both archived delta specs, current `credit-card-crud` and `dashboard-overview` specs, affected
   source and tests, and `openspec-review-change` finding-code guidance
@@ -21,9 +22,10 @@
 
 ### Decision summary
 
-Six comments identify current behavior or current-contract problems worth correcting in a new active
-OpenSpec change. The archived requirement and archived task comments are not implementation defects:
-the former is historical wording, while the latter requests an unnecessary rewrite of a completed task.
+Six comments identified current behavior or current-contract problems and were corrected in the archived
+`2026-09-12-add-card-type-adjudication-remediation` OpenSpec change. The archived requirement and
+archived task comments were not implementation defects: the former is historical wording, while the
+latter requests an unnecessary rewrite of a completed task.
 
 | ID | Original IDs | Claim | Affected feature | Decision | Severity | Why / next action |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -48,21 +50,21 @@ the former is historical wording, while the latter requests an unnecessary rewri
 ### OpenSpec scope and traceability
 
 - In scope: the archived proposal's card-type persistence, create/update validation, legacy-safe
-  response, shared logo, and card-form changes. Current remediation restores or clarifies those
+  response, shared logo, and card-form changes. The completed remediation restored or clarified those
   intended behaviors without expanding card-type values or adding APIs.
 - Out of scope: rewriting archived artifacts, changing existing SVG assets, or adding dependencies.
 - Binding decisions and contract conflicts: archived design decisions 2–5 require create validation,
-  shared form branding, a stable response mapper, and null preservation. The current main CRUD spec
-  conflicts internally by requiring `cardType` while calling its legacy presence “absent-safe.”
+  shared form branding, a stable response mapper, and null preservation. The completed remediation
+  resolved the main CRUD spec's conflicting create/update and legacy-response wording.
 
 | Finding | Capability / spec path | Requirement → scenario | Proposal / design basis | Existing task | Contract effect |
 | --- | --- | --- | --- | --- | --- |
-| RA-002 | `credit-card-crud` | Card type is exposed with legacy-safe card responses → Legacy card without a type is returned | Proposal “Return `cardType`”; design decision 5 | Archived 1.4 only; no active task | Clarifies the implemented response shape. |
-| RA-004 | `credit-card-crud` | Card type branding is displayed consistently → Card type selector displays matching logos | Proposal card-form/logo bullets; design decisions 3–4 | Archived 2.2, 2.4 only; no active task | Restores compact selector sizing. |
-| RA-005 | `credit-card-crud` | User can create a credit card → Successful card creation with all required fields | Proposal requires `cardType` on create; design decision 2 | Archived 1.3, 2.3 only; no active task | Clarifies an existing requirement. |
-| RA-006 | `credit-card-crud` | User can update card metadata → Update a card type | Proposal optional updates; design decision 2 | Archived 1.3 only; no active task | Clarifies an existing requirement. |
-| RA-007 | `credit-card-crud`, `dashboard-overview` | Card type branding → two selector scenarios | Proposal maps form work to CRUD and dashboard card presentation to dashboard | Archived 2.3, 2.4 only; no active task | Moves existing scenarios without changing behavior. |
-| RA-008 | `credit-card-crud` | Credit card type is controlled and persisted → Create a card without a card type | Proposal requires API-boundary validation; design decision 2 | Archived 1.3 only; no active task | Preserves rejection while making its message singular and accurate. |
+| RA-002 | `credit-card-crud` | Card type is exposed with legacy-safe card responses → Legacy card without a type is returned | Proposal “Return `cardType`”; design decision 5 | Remediation 2.1 | Clarifies the implemented response shape. |
+| RA-004 | `credit-card-crud` | Card type branding is displayed consistently → Card type selector displays matching logos | Proposal card-form/logo bullets; design decisions 3–4 | Remediation 3.1 | Restores compact selector sizing. |
+| RA-005 | `credit-card-crud` | User can create a credit card → Successful card creation with all required fields | Proposal requires `cardType` on create; design decision 2 | Remediation 2.2 | Clarifies an existing requirement. |
+| RA-006 | `credit-card-crud` | User can update card metadata → Update a card type | Proposal optional updates; design decision 2 | Remediation 2.2 | Clarifies an existing requirement. |
+| RA-007 | `credit-card-crud`, `dashboard-overview` | Card type branding → two selector scenarios | Proposal maps form work to CRUD and dashboard card presentation to dashboard | Remediation 2.3 | Moves existing scenarios without changing behavior. |
+| RA-008 | `credit-card-crud` | Credit card type is controlled and persisted → Create a card without a card type | Proposal requires API-boundary validation; design decision 2 | Remediation 4.1 | Preserves rejection while making its message singular and accurate. |
 
 ### Accepted findings — recommended for fixing
 
@@ -101,9 +103,8 @@ the former is historical wording, while the latter requests an unnecessary rewri
   includes `cardType: null` and does not fail for legacy cards.
 - Compatibility and non-goals: retain `null` for legacy records; do not migrate data or alter API
   behavior.
-- Dependencies / order: establish an active OpenSpec change before editing current specs.
-- OpenSpec integration: no active task exists. Add a linked specification-correction task in a new
-  active change; no delta is needed for runtime code.
+- Dependencies / order: completed through an active OpenSpec change before the live spec edit.
+- OpenSpec integration: completed in the archived remediation change; no runtime code was needed.
 - Acceptance criteria:
   - WHEN a legacy card has no stored type, THEN each documented response includes `cardType: null`.
   - WHEN a typed card is returned, THEN its stored enum value remains unchanged.
@@ -145,7 +146,8 @@ the former is historical wording, while the latter requests an unnecessary rewri
 - Compatibility and non-goals: preserve default 32×20 behavior, labels, logo mapping, and fallback
   semantics; do not alter SVG assets or selector options.
 - Dependencies / order: independent of the contract wording corrections.
-- OpenSpec integration: new active change task, linked to the existing card-branding scenario.
+- OpenSpec integration: completed in the archived remediation change, linked to the existing
+  card-branding scenario.
 - Acceptance criteria:
   - WHEN `CardTypeLogo` receives `size={20}`, THEN known logos and fallbacks occupy 20×13 boxes.
   - WHEN no `size` is supplied, THEN the default layout remains 32×20.
@@ -180,8 +182,8 @@ the former is historical wording, while the latter requests an unnecessary rewri
 - Minimal remediation: update the creation sentence, required-field list, and invalid-input scenario
   to name missing/unsupported card types alongside existing validation examples.
 - Compatibility and non-goals: no change to mandatory fields, DTO behavior, or persistence.
-- Dependencies / order: update with RA-006 in one current-spec correction.
-- OpenSpec integration: new active change task; source changes are unnecessary.
+- Dependencies / order: completed with RA-006 in one current-spec correction.
+- OpenSpec integration: completed in the archived remediation change; source changes were unnecessary.
 - Acceptance criteria:
   - WHEN the creation scenario lists all required fields, THEN it includes `cardType`.
   - WHEN validation examples are read, THEN missing `cardType` is explicitly rejected.
@@ -216,8 +218,8 @@ the former is historical wording, while the latter requests an unnecessary rewri
 - Minimal remediation: amend the update requirement and partial-update scenario to show a supported
   card-type-only request as valid.
 - Compatibility and non-goals: do not make `cardType` required on update or permit null.
-- Dependencies / order: update with RA-005 in one current-spec correction.
-- OpenSpec integration: new active change task; source changes are unnecessary.
+- Dependencies / order: completed with RA-005 in one current-spec correction.
+- OpenSpec integration: completed in the archived remediation change; source changes were unnecessary.
 - Acceptance criteria:
   - WHEN updateable metadata is enumerated, THEN `cardType` appears as optional.
   - WHEN a card type is updated, THEN the existing validation and response behavior is unchanged.
@@ -255,8 +257,9 @@ the former is historical wording, while the latter requests an unnecessary rewri
   displays matching logos” from dashboard to CRUD, preserving the two current scenarios.
 - Compatibility and non-goals: retain all dashboard card-label/logo scenarios and all test locations;
   no implementation change is required.
-- Dependencies / order: make this transfer with RA-005/RA-006 in the new specs-only change.
-- OpenSpec integration: new active change needs modifications to both current main specs.
+- Dependencies / order: completed with RA-005/RA-006 in the specs-only remediation change.
+- OpenSpec integration: completed in the archived remediation change with modifications to both
+  current main specs.
 - Acceptance criteria:
   - WHEN the CRUD spec is read, THEN it contains both create/edit selector scenarios.
   - WHEN the dashboard spec is read, THEN it retains dashboard rendering/fallback scenarios only.
@@ -300,8 +303,8 @@ the former is historical wording, while the latter requests an unnecessary rewri
 - Compatibility and non-goals: preserve the HTTP 400 rejection, supported enum set, Swagger metadata,
   and invalid-value message; do not add global `stopAtFirstError` behavior.
 - Dependencies / order: independent of the specs-only corrections.
-- OpenSpec integration: add a linked implementation task to a new active change because it changes
-  observable validation-message quality.
+- OpenSpec integration: completed in the archived remediation change with a linked implementation
+  task because it changed observable validation-message quality.
 - Acceptance criteria:
   - WHEN `cardType` is omitted, null, or empty, THEN validation returns one required-field message.
   - WHEN `cardType` is unsupported, THEN validation returns one invalid-enum message.
@@ -323,13 +326,12 @@ the former is historical wording, while the latter requests an unnecessary rewri
 - Affected feature and actual behavior: the current service and dashboard mappers emit `cardType`; a
   legacy value is represented as null.
 - Evidence and contract basis: archived design decision 5 requires null preservation; current source
-  implements it. Current main spec is separately scheduled as RA-002.
+  implements it. The current main spec was corrected under RA-002.
 - Independent reasoning: editing an archived delta would rewrite an approved historical record.
-  Consumers should use current main specs, and the live wording will be corrected through a new
-  active change.
+  Consumers should use the current main specs, whose live wording was corrected under RA-002.
 - Consequence of leaving unchanged: only historical-reading ambiguity; no runtime behavior or current
-  source-of-truth contract remains unaddressed.
-- Disposition: no archive edit; fix the current main spec under RA-002.
+  source-of-truth contract remains unaddressed after RA-002 was applied.
+- Disposition: no archive edit; the current main spec was corrected under RA-002.
 - Reconsider only if: project policy explicitly authorizes archival corrections with a documented
   provenance mechanism.
 
@@ -357,64 +359,56 @@ the former is historical wording, while the latter requests an unnecessary rewri
 
 None. Every supplied finding has sufficient current-code and specification evidence for a decision.
 
-## 1. Establish an active remediation change
+## 1. Establish an active remediation change (complete)
 
-- [ ] 1.1 [RA-002, RA-005, RA-006, RA-007] Create a narrowly scoped active OpenSpec change for the
+- [x] 1.1 [RA-002, RA-005, RA-006, RA-007] Create a narrowly scoped active OpenSpec change for the
   current-spec contract corrections; verify proposal/design/tasks distinguish clarification and
   scenario relocation from runtime behavior changes.
-- [ ] 1.2 [RA-004] Add the compact-size logo fix and focused rendering assertions to the active
+- [x] 1.2 [RA-004] Add the compact-size logo fix and focused rendering assertions to the active
   change; verify known and fallback 20×13 rendering while default rendering remains 32×20.
-- [ ] 1.3 [RA-008] Add the single, accurate card-type validation-message change and DTO regression
+- [x] 1.3 [RA-008] Add the single, accurate card-type validation-message change and DTO regression
   cases to the active change; verify missing and unsupported values remain distinct.
 
-## 2. Correct current specification ownership and wording
+## 2. Correct current specification ownership and wording (complete)
 
-- [ ] 2.1 [RA-002] Amend the live legacy-card response scenario to require the explicit nullable
+- [x] 2.1 [RA-002] Amend the live legacy-card response scenario to require the explicit nullable
   field; verify current service and dashboard null assertions still match the contract.
-- [ ] 2.2 [RA-005, RA-006] Amend create/update required-field wording and scenarios; verify
+- [x] 2.2 [RA-005, RA-006] Amend create/update required-field wording and scenarios; verify
   `cardType` is required on create and optional on update without changing other field semantics.
-- [ ] 2.3 [RA-007] Move the two selector scenarios from dashboard-overview to credit-card-crud with
+- [x] 2.3 [RA-007] Move the two selector scenarios from dashboard-overview to credit-card-crud with
   unchanged WHEN/THEN behavior; verify no scenario is duplicated or removed.
 
-## 3. Restore parameterized logo sizing
+## 3. Restore parameterized logo sizing (complete)
 
-- [ ] 3.1 [RA-004] Remove fixed outer size utilities, apply computed dimensions to known and fallback
+- [x] 3.1 [RA-004] Remove fixed outer size utilities, apply computed dimensions to known and fallback
   paths, and keep the fallback icon within its box; verify the focused logo and card-form tests.
 
-## 4. Make create-card validation singular and accurate
+## 4. Make create-card validation singular and accurate (complete)
 
-- [ ] 4.1 [RA-008] Replace duplicate validators with one enum validator that selects required versus
+- [x] 4.1 [RA-008] Replace duplicate validators with one enum validator that selects required versus
   invalid messages by submitted value; verify focused DTO tests, backend lint, and backend typecheck.
 
-### Verification evidence and future checks
+### Verification evidence and completed checks
 
 | Check | Phase | Command / inspection | Result | Evidence / limitation |
 | --- | --- | --- | --- | --- |
-| Logo tests | Adjudication | `pnpm --filter frontend test -- src/components/cards/card-type-logo.test.tsx --runInBand` | PASS | 1 suite, 7 tests; does not assert non-default dimensions. |
-| DTO tests | Adjudication | `pnpm --filter backend test -- src/credit-cards/dto/credit-cards-dto.spec.ts --runInBand` | PASS | 1 suite, 23 tests; omission case does not assert constraints/messages. |
+| Logo/card-form tests | Remediation | `pnpm --filter frontend test -- src/components/cards/card-type-logo.test.tsx src/components/cards/card-form.test.tsx --runInBand` | PASS | 2 suites, 26 tests; covers compact known/fallback and default dimensions. |
+| DTO tests | Remediation | `pnpm --filter backend test -- src/credit-cards/dto/credit-cards-dto.spec.ts --runInBand` | PASS | 1 suite, 25 tests; asserts one exact required/invalid constraint. |
 | Current spec structure | Adjudication | `openspec validate --specs --strict` | PASS | 6 specs passed; one existing long-requirement informational notice. |
-| Current spec structure | Future implementation | `openspec validate <new-change> --strict` | NOT RUN | Validates planned artifact structure, not runtime behavior. |
-| Frontend regression | Future implementation | Focused logo/card-form Jest suites, frontend lint, and typecheck | NOT RUN | Verify compact known/fallback rendering and unchanged selector options. |
-| Backend regression | Future implementation | Focused DTO suite, backend lint, and typecheck | NOT RUN | Verify one accurate validation message for each invalid input class. |
+| Remediation change structure | Remediation | `openspec validate 2026-09-12-add-card-type-adjudication-remediation --strict` | PASS | Active change validated before archive. |
+| Frontend regression | Remediation | Focused logo/card-form Jest suites, frontend lint, and typecheck | PASS | Compact known/fallback rendering and unchanged selector options verified. |
+| Backend regression | Remediation | Focused DTO suite, backend lint, and typecheck | PASS | One accurate validation message verified for each invalid input class. |
 
-### Handoff instructions for the implementing agent
+### Completed implementation record
 
-1. Read this report, `AGENTS.md`, `openspec/config.yaml`, the archived change for history, current
-   main specs, and current code. Revalidate every accepted finding if HEAD or the working tree changed.
-2. Implement only accepted findings the user selects. “Fix the issues in this report” selects
-   RA-002 and RA-004 through RA-008; it does not authorize changes for RA-001 or RA-003.
-3. Because `openspec list --json` shows no active change, use `openspec-propose` to create a narrow
-   active change before editing current specs or production code. Do not edit
-   `openspec/changes/archive/2026-09-12-add-card-type/`.
-4. Map the approved tasks above into the new change's authoritative `tasks.md`, preserving this
-   report's RA IDs. Use spec deltas only where the live contract changes; scenario relocation must
-   preserve observable behavior.
-5. Apply the minimal implementation and test changes described above. Do not modify bank SVG assets,
-   add dependencies, or change the card-type enum/value set.
-6. Run the listed checks, record actual results, and complete authoritative tasks only after their
-   acceptance criteria pass.
-
-### Decisions requested from the user
-
-- Select any subset of RA-002 and RA-004 through RA-008 for implementation, or approve all six.
-- No code or existing OpenSpec artifact changes were made during this adjudication.
+1. RA-002 and RA-004 through RA-008 were implemented in the active
+   `2026-09-12-add-card-type-adjudication-remediation` change and verified against the code, tests,
+   and live specifications.
+2. The remediation change was archived at
+   `openspec/changes/archive/2026-09-12-add-card-type-adjudication-remediation/` after all eight
+   authoritative tasks were completed.
+3. The live specs now contain the explicit legacy `cardType: null` contract, complete create/update
+   card-type wording, CRUD-owned selector scenarios, and dashboard-only branding scenarios.
+4. No archive artifacts were rewritten, bank SVG assets were changed, dependencies were added, or
+   card-type enum values were expanded.
+5. No further user selection is required for the decisions recorded in this plan.

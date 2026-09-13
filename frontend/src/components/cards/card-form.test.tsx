@@ -177,6 +177,32 @@ describe('CardForm', () => {
     })
   })
 
+  it('renders an unavailable fallback for a legacy card without a card type', () => {
+    render(
+      <CardForm
+        defaultValues={{
+          bankCode: 'vietcombank',
+          cardType: null,
+          lastFourDigits: '1234',
+          creditLimit: '50000000.00',
+          availableCredit: '35000000.00',
+          statementDay: 15,
+          paymentDueDaysAfterStatement: 20,
+        }}
+        onSubmit={jest.fn()}
+        isLoading={false}
+        isEdit
+      />,
+    )
+
+    const trigger = screen.getByRole('combobox', { name: 'formCardType' })
+    expect(within(trigger).getByRole('img', { name: 'cardTypeUnavailable' })).toHaveAttribute(
+      'data-fallback',
+      'true',
+    )
+    expect(trigger).toHaveTextContent('cardTypeUnavailable')
+  })
+
   it('sanitizes lastFourDigits to allow only 4 ASCII digits and preserves leading zeros', () => {
     render(<CardForm onSubmit={jest.fn()} isLoading={false} />)
 

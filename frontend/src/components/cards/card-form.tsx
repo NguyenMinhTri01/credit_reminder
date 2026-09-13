@@ -184,8 +184,13 @@ const EXPIRY_REGEX = /^(0[1-9]|1[0-2])\/\d{2}$/
 
 // ─── Props ───────────────────────────────────────────────────
 
+interface CardFormDefaults extends Omit<IUpdateCreditCardPayload, 'cardType'> {
+  cardType?: CardType | null
+  availableCredit?: string
+}
+
 interface CardFormProps {
-  defaultValues?: IUpdateCreditCardPayload & { availableCredit?: string }
+  defaultValues?: CardFormDefaults
   onSubmit: (data: CardFormValues) => Promise<void>
   isLoading: boolean
   isEdit?: boolean
@@ -349,6 +354,7 @@ export function CardForm({
   const selectedCardType = CARD_TYPE_OPTIONS.find(
     (option) => option.value === selectedCardTypeValue,
   )
+  const showCardTypeFallback = isEdit && selectedCardType === undefined
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-5">
@@ -410,14 +416,21 @@ export function CardForm({
           render={({ field }) => (
             <Select value={field.value ?? ''} onValueChange={field.onChange}>
               <SelectTrigger id="cardType" className="w-full">
-                <SelectValue placeholder={t('formCardTypePlaceholder')}>
-                  {selectedCardType ? (
-                    <span className="flex min-w-0 items-center gap-2">
-                      <CardTypeLogo cardType={selectedCardType.value} size={20} />
-                      <span className="truncate">{t(selectedCardType.labelKey)}</span>
-                    </span>
-                  ) : null}
-                </SelectValue>
+                {showCardTypeFallback ? (
+                  <span className="flex min-w-0 items-center gap-2">
+                    <CardTypeLogo cardType={selectedCardTypeValue || null} size={20} />
+                    <span className="truncate">{t('cardTypeUnavailable')}</span>
+                  </span>
+                ) : (
+                  <SelectValue placeholder={t('formCardTypePlaceholder')}>
+                    {selectedCardType ? (
+                      <span className="flex min-w-0 items-center gap-2">
+                        <CardTypeLogo cardType={selectedCardType.value} size={20} />
+                        <span className="truncate">{t(selectedCardType.labelKey)}</span>
+                      </span>
+                    ) : null}
+                  </SelectValue>
+                )}
               </SelectTrigger>
               <SelectContent>
                 {CARD_TYPE_OPTIONS.map((option) => (
