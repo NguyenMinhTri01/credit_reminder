@@ -25,6 +25,7 @@ const snapshot: IDashboardSnapshot = {
       id: 'card-1',
       bankName: 'VCB',
       bankCode: 'vietcombank',
+      cardType: 'VISA',
       bankShortName: 'Vietcombank',
       logoPath: '/images/banks/vietcombank.svg',
       cardName: 'Platinum',

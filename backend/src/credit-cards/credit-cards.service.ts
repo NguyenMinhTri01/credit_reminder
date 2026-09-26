@@ -75,6 +75,7 @@ export class CreditCardsService {
       id: card.id,
       userId: card.userId,
       bankCode: card.bankCode,
+      cardType: card.cardType,
       bankName: bankInfo?.name ?? card.bankName,
       bankShortName: bankInfo?.shortName ?? null,
       logoPath: bankInfo?.logoPath ?? null,
@@ -148,6 +149,7 @@ export class CreditCardsService {
       data: {
         userId,
         bankCode: dto.bankCode,
+        cardType: dto.cardType,
         bankName: bankEntry.name,
         cardName: dto.cardName ?? bankEntry.shortName,
         lastFourDigits: dto.lastFourDigits,
@@ -240,6 +242,7 @@ export class CreditCardsService {
             bankCode: dto.bankCode,
             bankName: bankEntry?.name ?? existing.bankName,
           }),
+          ...(dto.cardType !== undefined && { cardType: dto.cardType }),
           ...(dto.cardName !== undefined && { cardName: dto.cardName }),
           ...(dto.lastFourDigits !== undefined && { lastFourDigits: dto.lastFourDigits }),
           ...(dto.creditLimit !== undefined && {

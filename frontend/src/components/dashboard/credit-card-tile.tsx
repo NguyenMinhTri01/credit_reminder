@@ -14,12 +14,14 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { BankLogo } from '@/components/cards/bank-logo'
+import { CardTypeLogo } from '@/components/cards/card-type-logo'
 import {
   clampProgress,
   formatMaskedCard,
   formatPercentage,
   formatVnd,
 } from '@/lib/dashboard-formatters'
+import { getCardTypeOption } from '@/shared/constants'
 
 const accentVariants = cva('h-1 w-full', {
   variants: {
@@ -41,6 +43,10 @@ export function CreditCardTile({ card, tone }: CreditCardTileProps) {
   const locale = useLocale()
   const dashboard = useTranslations('dashboard')
   const cardsT = useTranslations('cards')
+  const cardTypeOption = getCardTypeOption(card.cardType)
+  const cardTypeLabel = cardTypeOption
+    ? cardsT(cardTypeOption.labelKey)
+    : cardsT('cardTypeUnavailable')
   const isOverLimit = card.utilizationPercent !== null && card.utilizationPercent > 100
   const dueLabel =
     card.daysUntilDue === null
@@ -57,10 +63,16 @@ export function CreditCardTile({ card, tone }: CreditCardTileProps) {
       <div className={accentVariants({ tone })} aria-hidden="true" />
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <BankLogo bankCode={card.bankCode} bankName={card.bankName} size={32} />
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <BankLogo bankCode={card.bankCode} bankName={card.bankName} size={32} />
+            <CardTypeLogo cardType={card.cardType} />
+          </div>
           <div className="flex min-w-0 flex-col gap-0.5">
             <CardDescription className="truncate">{card.bankName}</CardDescription>
             <CardTitle className="truncate">{card.cardName}</CardTitle>
+            <span className="text-muted-foreground truncate text-xs">
+              {cardsT('cardTypeLabel')}: {cardTypeLabel}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">

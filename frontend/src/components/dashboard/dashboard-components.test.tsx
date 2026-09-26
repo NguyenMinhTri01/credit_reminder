@@ -16,6 +16,7 @@ const fullCard: IDashboardCard = {
   id: 'card-1',
   bankName: 'Vietcombank',
   bankCode: 'vietcombank',
+  cardType: 'VISA',
   bankShortName: 'Vietcombank',
   logoPath: '/images/banks/vietcombank.svg',
   cardName: 'Platinum',
@@ -84,6 +85,7 @@ describe('dashboard presentation', () => {
     }
     const { rerender } = render(<CreditCardTile card={fullCard} />)
     expect(screen.getByText('•••• 1234')).toBeInTheDocument()
+    expect(screen.getByText(/cardTypes\.VISA/)).toBeInTheDocument()
     expect(screen.getByText('dueInDays:11')).toBeInTheDocument()
     rerender(<CreditCardTile card={overLimit} />)
     expect(screen.getByText('overLimit')).toBeInTheDocument()
@@ -95,6 +97,10 @@ describe('dashboard presentation', () => {
 
     rerender(<CreditCardTile card={{ ...fullCard, utilizationPercent: null }} />)
     expect(screen.queryByRole('progressbar', { name: 'utilization' })).not.toBeInTheDocument()
+
+    rerender(<CreditCardTile card={{ ...fullCard, cardType: null }} />)
+    expect(screen.getByText(/cardTypeUnavailable/)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'cardTypeUnavailable' })).toBeInTheDocument()
   })
 
   it('uses the shadcn empty state and provides active link to /cards', () => {

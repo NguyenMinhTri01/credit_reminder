@@ -1,6 +1,8 @@
 export * from './messages';
 export * from './bank-catalog';
 
+import { CardType } from '@prisma/client';
+
 // ─── Pagination ──────────────────────────────────────────────
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 10;
@@ -10,6 +12,9 @@ export const MAX_PAGE = 1_000_000;
 // ─── Credit-card validation ──────────────────────────────────
 export const MAX_PAYMENT_DUE_DAYS_AFTER_STATEMENT = 366;
 export const MAX_EXPIRY_YEAR = 9999;
+
+// ─── Credit-card types ────────────────────────────────────────
+export const CARD_TYPE_VALUES = Object.values(CardType) as CardType[];
 
 // ─── Auth ────────────────────────────────────────────────────
 export const ACCESS_TOKEN_EXPIRY = '15m';

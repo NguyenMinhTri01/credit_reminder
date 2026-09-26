@@ -68,17 +68,15 @@ export function cleanObject<T extends Record<string, unknown>>(obj: T): Partial<
   ) as Partial<T>
 }
 
-
 /**
  * Delay execution for a specified number of milliseconds.
  */
 export function delay(ms: number, func?: () => unknown): Promise<void> {
-  return new Promise((resolve, reject) => setTimeout(() => {
-    try {
-      func?.()
-      resolve()
-    } catch (error) {
-      reject(error)
-    }
-  }, ms))
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // Wrap in a promise so a synchronous throw and a rejected async callback
+      // both settle the returned promise instead of escaping as an unhandled rejection.
+      void (async () => func?.())().then(() => resolve(), reject)
+    }, ms)
+  })
 }

@@ -31,6 +31,7 @@ export class DashboardService {
         select: {
           id: true,
           bankCode: true,
+          cardType: true,
           bankName: true,
           cardName: true,
           lastFourDigits: true,
@@ -82,6 +83,7 @@ export class DashboardService {
           id: card.id,
           bankName: card.bankName,
           bankCode: card.bankCode ?? null,
+          cardType: card.cardType ?? null,
           bankShortName: bank?.shortName ?? null,
           logoPath: bank?.logoPath ?? null,
           cardName: card.cardName,

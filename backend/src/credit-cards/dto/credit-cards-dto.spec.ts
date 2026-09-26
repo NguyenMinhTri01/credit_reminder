@@ -1,5 +1,6 @@
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
+import { CardType } from '@prisma/client';
 import { CreateCreditCardDto } from './create-credit-card.dto';
 import { UpdateCreditCardDto } from './update-credit-card.dto';
 import { ReconcileCreditCardDto } from './reconcile-credit-card.dto';
@@ -10,6 +11,7 @@ describe('CreditCard DTOs', () => {
     it('validates a valid DTO', async () => {
       const dto = plainToInstance(CreateCreditCardDto, {
         bankCode: 'vietcombank',
+        cardType: CardType.VISA,
         lastFourDigits: '1234',
         creditLimit: '50000000.00',
         availableCredit: '50000000.00',
@@ -21,6 +23,44 @@ describe('CreditCard DTOs', () => {
       });
       const errors = await validate(dto);
       expect(errors).toHaveLength(0);
+    });
+
+    it.each(Object.values(CardType))('accepts supported card type %s', async (cardType) => {
+      const dto = plainToInstance(CreateCreditCardDto, {
+        bankCode: 'vietcombank',
+        cardType,
+        lastFourDigits: '1234',
+        creditLimit: '50000000.00',
+        availableCredit: '50000000.00',
+        statementDay: 25,
+        paymentDueDaysAfterStatement: 20,
+      });
+
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+    });
+
+    it.each([
+      ['missing', undefined, CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED],
+      ['empty', '', CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED],
+      ['null', null, CREDIT_CARD_MESSAGES.CARD_TYPE_REQUIRED],
+      ['unsupported', 'DISCOVER', CREDIT_CARD_MESSAGES.CARD_TYPE_INVALID],
+    ])('returns one accurate card type error for %s input', async (_label, cardType, message) => {
+      const input: Record<string, unknown> = {
+        bankCode: 'vietcombank',
+        lastFourDigits: '1234',
+        creditLimit: '50000000.00',
+        availableCredit: '50000000.00',
+        statementDay: 25,
+        paymentDueDaysAfterStatement: 20,
+      };
+      if (cardType !== undefined) input.cardType = cardType;
+
+      const errors = await validate(plainToInstance(CreateCreditCardDto, input));
+      const cardTypeErrors = errors.filter((error) => error.property === 'cardType');
+
+      expect(cardTypeErrors).toHaveLength(1);
+      expect(cardTypeErrors[0].constraints).toEqual({ isEnum: message });
     });
 
     it('rejects invalid fields and non-positive credit limit', async () => {
@@ -69,6 +109,7 @@ describe('CreditCard DTOs', () => {
     it('rejects money values outside DECIMAL(15,2) precision', async () => {
       const dto = plainToInstance(CreateCreditCardDto, {
         bankCode: 'vietcombank',
+        cardType: CardType.VISA,
         lastFourDigits: '1234',
         creditLimit: '10000000000000.00',
         availableCredit: '0.001',
@@ -88,6 +129,7 @@ describe('CreditCard DTOs', () => {
 
       const dto = plainToInstance(CreateCreditCardDto, {
         bankCode: 'vietcombank',
+        cardType: CardType.VISA,
         lastFourDigits: '1234',
         creditLimit: '500',
         availableCredit: '500',
@@ -157,6 +199,16 @@ describe('CreditCard DTOs', () => {
       });
       const errors = await validate(dto);
       expect(errors).toHaveLength(0);
+    });
+
+    it('accepts and rejects card type updates at the API boundary', async () => {
+      const validDto = plainToInstance(UpdateCreditCardDto, { cardType: CardType.JCB });
+      const invalidDto = plainToInstance(UpdateCreditCardDto, { cardType: 'DISCOVER' });
+
+      expect(await validate(validDto)).toHaveLength(0);
+      expect(
+        (await validate(invalidDto)).find((error) => error.property === 'cardType'),
+      ).toBeDefined();
     });
 
     it('rejects negative or non-string creditLimit in update', async () => {

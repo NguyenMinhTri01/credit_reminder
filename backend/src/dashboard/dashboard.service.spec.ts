@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
+import { CardType, Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { DashboardService } from './dashboard.service';
 
@@ -24,6 +24,7 @@ describe('DashboardService', () => {
       {
         id: 'card-1',
         bankCode: 'vietcombank',
+        cardType: CardType.VISA,
         bankName: 'Vietcombank',
         cardName: 'Platinum',
         lastFourDigits: '1234',
@@ -54,6 +55,11 @@ describe('DashboardService', () => {
     expect(prisma.creditCard.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: 'user-1', deletedAt: null } }),
     );
+    expect(prisma.creditCard.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ cardType: true }),
+      }),
+    );
     expect(prisma.reminder.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -79,6 +85,7 @@ describe('DashboardService', () => {
           id: 'card-1',
           bankName: 'Vietcombank',
           bankCode: 'vietcombank',
+          cardType: CardType.VISA,
           bankShortName: 'Vietcombank',
           logoPath: '/images/banks/vietcombank.svg',
           cardName: 'Platinum',
@@ -212,6 +219,34 @@ describe('DashboardService', () => {
       }),
     );
     expect(result.upcomingReminders[0].amount).toBeNull();
+  });
+
+  it('returns a null card type for a legacy card', async () => {
+    prisma.creditCard.findMany.mockResolvedValue([
+      {
+        id: 'legacy-card',
+        bankCode: null,
+        cardType: null,
+        bankName: 'Legacy bank',
+        cardName: 'Legacy card',
+        lastFourDigits: null,
+        cardNumberMasked: null,
+        creditLimit: null,
+        currentBalance: money('0'),
+        availableCredit: null,
+        dueDay: null,
+        statementDay: null,
+        paymentDueDaysAfterStatement: null,
+        expiryMonth: null,
+        expiryYear: null,
+        deletedAt: null,
+      },
+    ]);
+    prisma.reminder.findMany.mockResolvedValue([]);
+
+    const result = await service.getSnapshot('user-legacy', now);
+
+    expect(result.cards[0].cardType).toBeNull();
   });
 
   it('excludes soft-deleted cards from the query', async () => {

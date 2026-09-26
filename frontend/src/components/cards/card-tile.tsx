@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BankLogo } from '@/components/cards/bank-logo'
+import { CardTypeLogo } from '@/components/cards/card-type-logo'
 import { EditCardSheet } from '@/components/cards/edit-card-sheet'
 import { DeleteCardDialog } from '@/components/cards/delete-card-dialog'
 import { useRestoreCard } from '@/hooks/use-credit-cards'
@@ -33,6 +34,7 @@ import {
   formatPercentage,
   formatVnd,
 } from '@/lib/dashboard-formatters'
+import { getCardTypeOption } from '@/shared/constants'
 import { delay, type ICreditCard } from '@/shared'
 
 interface CardTileProps {
@@ -57,6 +59,8 @@ export function CardTile({ card, onViewDetail }: CardTileProps) {
   const restoreCard = useRestoreCard()
 
   const isDeleted = !!card.deletedAt
+  const cardTypeOption = getCardTypeOption(card.cardType)
+  const cardTypeLabel = cardTypeOption ? t(cardTypeOption.labelKey) : t('cardTypeUnavailable')
   const daysUntilDue = card.scheduleInfo.daysUntilDue
   const urgency = getDueUrgency(daysUntilDue)
 
@@ -98,10 +102,16 @@ export function CardTile({ card, onViewDetail }: CardTileProps) {
         <div className="bg-primary h-1 w-full" aria-hidden="true" />
         <CardHeader className="flex-row items-start justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <BankLogo bankCode={card.bankCode} bankName={card.bankName} size={32} />
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <BankLogo bankCode={card.bankCode} bankName={card.bankName} size={32} />
+              <CardTypeLogo cardType={card.cardType} />
+            </div>
             <div className="flex min-w-0 flex-col gap-0.5">
               <CardDescription className="truncate">{card.bankName}</CardDescription>
               <CardTitle className="truncate text-base">{card.cardName}</CardTitle>
+              <span className="text-muted-foreground truncate text-xs">
+                {t('cardTypeLabel')}: {cardTypeLabel}
+              </span>
             </div>
           </div>
           <DropdownMenu>

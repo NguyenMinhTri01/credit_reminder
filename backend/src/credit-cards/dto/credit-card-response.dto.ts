@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CardType } from '@prisma/client';
 import { ICreditCard, IScheduleInfo } from '@/shared';
+import { CARD_TYPE_VALUES } from '@/shared';
 
 // ─── Nested DTOs ─────────────────────────────────────────────
 
@@ -25,6 +27,15 @@ export class CreditCardResponseDto implements ICreditCard {
 
   @ApiProperty({ example: 'vietcombank', nullable: true, type: String })
   bankCode!: string | null;
+
+  @ApiProperty({
+    enum: CARD_TYPE_VALUES,
+    enumName: 'CardType',
+    example: CardType.VISA,
+    nullable: true,
+    type: String,
+  })
+  cardType!: CardType | null;
 
   @ApiProperty({ example: 'Ngân hàng TMCP Ngoại thương Việt Nam' })
   bankName!: string;

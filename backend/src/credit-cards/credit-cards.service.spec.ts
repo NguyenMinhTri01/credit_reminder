@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CreditCard, Prisma, TransactionType } from '@prisma/client';
+import { CardType, CreditCard, Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CREDIT_CARD_MESSAGES } from '@/shared';
 import { CreditCardsService } from './credit-cards.service';
@@ -23,6 +23,7 @@ function baseCard(): CreditCard {
     id: 'card-uuid-1',
     userId: 'user-uuid-1',
     bankCode: 'vietcombank',
+    cardType: CardType.VISA,
     bankName: 'Ngân hàng TMCP Ngoại thương Việt Nam',
     cardName: 'Vietcombank',
     lastFourDigits: '1234',
@@ -117,6 +118,7 @@ describe('CreditCardsService', () => {
   describe('create', () => {
     const dto: CreateCreditCardDto = {
       bankCode: 'vietcombank',
+      cardType: CardType.VISA,
       lastFourDigits: '1234',
       creditLimit: '50000000',
       availableCredit: '37500000',
@@ -136,6 +138,7 @@ describe('CreditCardsService', () => {
           data: expect.objectContaining({
             userId: 'user-uuid-1',
             bankCode: 'vietcombank',
+            cardType: CardType.VISA,
             statementDay: 25,
             paymentDueDaysAfterStatement: 21,
             currentBalance: expect.any(Prisma.Decimal),
@@ -144,6 +147,7 @@ describe('CreditCardsService', () => {
       );
       expect(result.id).toBe('card-uuid-1');
       expect(result.bankCode).toBe('vietcombank');
+      expect(result.cardType).toBe(CardType.VISA);
       expect(result.bankShortName).toBe('Vietcombank');
       expect(result.creditLimit).toBe('50000000.00');
       expect(result.availableCredit).toBe('37500000.00');
@@ -394,6 +398,29 @@ describe('CreditCardsService', () => {
           }),
         }),
       );
+    });
+
+    it('allows updating to a valid card type', async () => {
+      prisma.creditCard.findFirst.mockResolvedValue(makeCard());
+      prisma.creditCard.update.mockResolvedValue(makeCard({ cardType: CardType.MASTERCARD }));
+
+      await service.update('card-uuid-1', 'user-uuid-1', {
+        cardType: CardType.MASTERCARD,
+      } as UpdateCreditCardDto);
+
+      expect(prisma.creditCard.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ cardType: CardType.MASTERCARD }),
+        }),
+      );
+    });
+
+    it('returns legacy cards with a null card type', async () => {
+      prisma.creditCard.findFirst.mockResolvedValue(makeCard({ cardType: null }));
+
+      const result = await service.findOne('card-uuid-1', 'user-uuid-1');
+
+      expect(result.cardType).toBeNull();
     });
 
     it('throws NotFoundException when card does not exist', async () => {

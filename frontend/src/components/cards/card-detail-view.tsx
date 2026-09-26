@@ -16,6 +16,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { BankLogo } from '@/components/cards/bank-logo'
+import { CardTypeLogo } from '@/components/cards/card-type-logo'
 import { EditCardSheet } from '@/components/cards/edit-card-sheet'
 import { TransactionList } from '@/components/cards/transaction-list'
 import { TransactionForm } from '@/components/cards/transaction-form'
@@ -28,6 +29,7 @@ import {
   formatPercentage,
   formatVnd,
 } from '@/lib/dashboard-formatters'
+import { getCardTypeOption } from '@/shared/constants'
 import type {
   ICreditCard,
   ICreateTransactionPayload,
@@ -55,6 +57,10 @@ export function CardDetailView({ card, open, onOpenChange }: CardDetailViewProps
   const createTxMutation = useCreateTransaction(card.id)
   const updateTxMutation = useUpdateTransaction(card.id)
   const reconcileMutation = useReconcileCard()
+  const cardTypeOption = getCardTypeOption(card.cardType)
+  const cardTypeLabel = cardTypeOption
+    ? tCards(cardTypeOption.labelKey)
+    : tCards('cardTypeUnavailable')
 
   const daysUntilDue = card.scheduleInfo.daysUntilDue
   const isOverLimit = card.utilizationPercent !== null && card.utilizationPercent > 100
@@ -112,6 +118,12 @@ export function CardDetailView({ card, open, onOpenChange }: CardDetailViewProps
                   <SheetDescription className="text-xs truncate">
                     {card.bankName} {card.lastFourDigits && `(•••• ${card.lastFourDigits})`}
                   </SheetDescription>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                    <CardTypeLogo cardType={card.cardType} />
+                    <span className="truncate">
+                      {tCards('cardTypeLabel')}: {cardTypeLabel}
+                    </span>
+                  </div>
                 </div>
               </div>
               <Button

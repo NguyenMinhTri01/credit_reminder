@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsString, Matches, Max, Min, ValidateIf } from 'class-validator';
+import { CardType } from '@prisma/client';
+import { IsEnum, IsInt, IsString, Matches, Max, Min, ValidateIf } from 'class-validator';
 import {
+  CARD_TYPE_VALUES,
   CREDIT_CARD_MESSAGES,
   IsCurrentOrFutureYear,
   IsDecimal15_2String,
@@ -19,6 +21,16 @@ export class UpdateCreditCardDto {
   @ValidateIf((_object, value: unknown) => value !== undefined)
   @IsString({ message: CREDIT_CARD_MESSAGES.BANK_CODE_REQUIRED })
   readonly bankCode?: string;
+
+  @ApiPropertyOptional({
+    enum: CARD_TYPE_VALUES,
+    enumName: 'CardType',
+    example: CardType.MASTERCARD,
+    description: 'Supported card network/type',
+  })
+  @ValidateIf((_object, value: unknown) => value !== undefined)
+  @IsEnum(CardType, { message: CREDIT_CARD_MESSAGES.CARD_TYPE_INVALID })
+  readonly cardType?: CardType;
 
   @ApiPropertyOptional({
     example: '1234',
