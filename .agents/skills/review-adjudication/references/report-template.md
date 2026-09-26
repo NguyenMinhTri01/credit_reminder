@@ -106,21 +106,6 @@ implementation review or a merge-approval verdict.>
 
 <Use NEEDS_EVIDENCE for these findings. Do not hide uncertainty in accepted tasks.>
 
-### Proposed implementation checklist
-
-Only ACCEPTED_FIX findings are eligible. All entries remain unchecked until authorized work is
-implemented and verified through the authoritative OpenSpec task ledger. If none were accepted,
-write "No implementation tasks proposed" and omit the numbered groups.
-
-## 1. <Accepted remediation group>
-
-- [ ] 1.1 [RA-001] <Specific change at path/symbol>; verify <observable criterion or test command>.
-- [ ] 1.2 [RA-001] <Relevant regression coverage at test path>; verify <assertions and command>.
-
-## 2. <Dependent remediation or cross-cutting verification, only if needed>
-
-- [ ] 2.1 [RA-001, RA-002] <Action after tasks N.M>; verify <concrete completion criterion>.
-
 ### Verification evidence and future checks
 
 | Check | Phase | Command / inspection | Result | Evidence / limitation |
@@ -152,4 +137,19 @@ write "No implementation tasks proposed" and omit the numbered groups.
 - <Accept all recommended fixes or select particular RA IDs; distinguish MUST FIX/RECOMMEND>
 - <Only material scope/contract questions or evidence needed; None if absent>
 - No code or existing OpenSpec artifact changes were made during this adjudication.
+
+## Proposed implementation checklist
+
+Only ACCEPTED_FIX findings are eligible. All entries remain unchecked until authorized work is
+implemented and verified through the authoritative OpenSpec task ledger. If none were accepted,
+write "No implementation tasks proposed" and omit the numbered groups.
+
+## 1. <Accepted remediation group>
+
+- [ ] 1.1 [RA-001] <Specific change at path/symbol>; verify <observable criterion or test command>.
+- [ ] 1.2 [RA-001] <Relevant regression coverage at test path>; verify <assertions and command>.
+
+## 2. <Dependent remediation or cross-cutting verification, only if needed>
+
+- [ ] 2.1 [RA-001, RA-002] <Action after tasks N.M>; verify <concrete completion criterion>.
 ```

@@ -122,5 +122,36 @@ describe('shared/utils', () => {
 
       await expect(promise).rejects.toBe(error)
     })
+
+    it('should not resolve until an async callback settles', async () => {
+      let release: (() => void) | undefined
+      const pending = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      let resolved = false
+      const promise = delay(100, () => pending).then(() => {
+        resolved = true
+      })
+
+      jest.advanceTimersByTime(100)
+      await Promise.resolve()
+      expect(resolved).toBe(false)
+
+      release?.()
+      await promise
+
+      expect(resolved).toBe(true)
+    })
+
+    it('should reject when an async callback rejects', async () => {
+      const error = new Error('async callback failed')
+      const promise = delay(100, async () => {
+        throw error
+      })
+
+      jest.advanceTimersByTime(100)
+
+      await expect(promise).rejects.toBe(error)
+    })
   })
 })

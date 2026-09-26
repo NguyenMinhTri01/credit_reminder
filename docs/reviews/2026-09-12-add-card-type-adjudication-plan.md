@@ -81,9 +81,9 @@ latter requests an unnecessary rewrite of a completed task.
   need a stable, nullable `cardType` key.
 - Origin: introduced with the archived card-type change; the archived wording was synced into the
   current spec.
-- Trigger / reproduction: read the current requirement at `openspec/specs/credit-card-crud/spec.md:187`
-  and its legacy scenario at `:193–195`; the latter permits “null or absent-safe” even though the
-  former says all payloads include the field.
+- Trigger / reproduction: at review time (`3958ed6`), read the requirement at
+  `openspec/specs/credit-card-crud/spec.md:187` and its legacy scenario at `:193–195`; the latter
+  permitted “null or absent-safe” even though the former said all payloads include the field.
 - Expected behavior: every card payload has a `cardType` property; legacy cards use `null`.
 - Actual behavior: `CreditCardsService.mapCardToResponse` explicitly assigns `cardType: card.cardType`
   at `backend/src/credit-cards/credit-cards.service.ts:74–79`, and the dashboard mapper normalizes it
@@ -131,7 +131,8 @@ latter requests an unnecessary rewrite of a completed task.
   image at `:36–43` always use `h-5 w-8`. CSS utility dimensions override image attributes; the
   image's `object-contain` only constrains content inside that larger box.
 - Evidence: compact callers are at `frontend/src/components/cards/card-form.tsx:416` and `:426`.
-  Current logo tests at `card-type-logo.test.tsx:17–52` cover mapping and errors but not dimensions.
+  At review time (`3958ed6`), logo tests at `card-type-logo.test.tsx:17–52` covered mapping and
+  errors but not dimensions.
 - Counter-evidence considered: default callers intend the 32×20 design size, and will retain it
   because the default `size` is 32.
 - Why fixing is necessary: form controls have inconsistent visual density and the public `size` prop
@@ -206,8 +207,8 @@ latter requests an unnecessary rewrite of a completed task.
 - Expected behavior: the general update requirement names `cardType` as an optional metadata field.
 - Actual behavior: the list appears exhaustive while a later requirement permits the missing field.
 - Evidence: `CreditCardsService.update` conditionally persists `dto.cardType` at
-  `backend/src/credit-cards/credit-cards.service.ts:240–262`; update DTO tests cover accepted and
-  rejected type values at `credit-cards-dto.spec.ts:210–218`.
+  `backend/src/credit-cards/credit-cards.service.ts:240–262`; at review time (`3958ed6`), update DTO
+  tests covered accepted and rejected type values at `credit-cards-dto.spec.ts:210–218`.
 - Counter-evidence considered: a reader could infer the later specialized requirement supplements
   the list, but the current phrasing makes that inference unnecessarily uncertain.
 - Why fixing is necessary: a single update contract prevents accidental omission in generated clients
@@ -285,9 +286,9 @@ latter requests an unnecessary rewrite of a completed task.
   `backend/src/credit-cards/dto/create-credit-card.dto.ts:40–41` both fail under installed
   `class-validator` 0.14.4. The default `ValidationPipe` at `backend/src/main.ts:12–18` reports both
   constraints.
-- Evidence: current DTO test at `credit-cards-dto.spec.ts:43–55` only asserts an error exists.
-  Direct validation returns `isEnum` and `isNotEmpty` constraints for `cardType`; the focused DTO
-  suite passes without detecting the duplicate.
+- Evidence: at review time (`3958ed6`), the DTO test at `credit-cards-dto.spec.ts:43–55` only
+  asserted that an error exists. Direct validation returned `isEnum` and `isNotEmpty` constraints for
+  `cardType`; the focused DTO suite passed without detecting the duplicate.
 - Counter-evidence considered: removing `@IsNotEmpty` alone leaves one error, but it incorrectly tells
   clients that an omitted field has an unsupported enum value. The reviewer's proposed deletion of
   `CARD_TYPE_REQUIRED` is therefore not sufficient.

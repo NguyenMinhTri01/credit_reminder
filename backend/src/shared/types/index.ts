@@ -1,4 +1,5 @@
 import { CardType } from '@prisma/client';
+
 import { UserRole, ReminderStatus, SortOrder } from '../enums';
 import { IBankCatalogEntry } from '../constants/bank-catalog';
 
