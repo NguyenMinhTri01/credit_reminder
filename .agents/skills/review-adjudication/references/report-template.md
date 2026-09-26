@@ -106,7 +106,7 @@ implementation review or a merge-approval verdict.>
 
 <Use NEEDS_EVIDENCE for these findings. Do not hide uncertainty in accepted tasks.>
 
-## Proposed implementation checklist
+### Proposed implementation checklist
 
 Only ACCEPTED_FIX findings are eligible. All entries remain unchecked until authorized work is
 implemented and verified through the authoritative OpenSpec task ledger. If none were accepted,
