@@ -2,10 +2,17 @@
  * Money Input Utilities for Credit Reminder
  *
  * Implements precision-safe string formatting and parsing for monetary form inputs.
- * Formatting follows the project standard: comma thousand group separator, dot decimal separator,
- * exactly two decimal places, and a single 'đ' suffix (e.g. '400,000.00đ').
+ * Money inputs are whole-đồng fields: they display a comma thousand group separator and no
+ * fractional part (e.g. '400,000'), and the 'đ' symbol is rendered beside the input instead of
+ * inside its editable value.
  * Canonical API serialization produces unformatted decimal strings (e.g. '400000.00').
  */
+
+/** Integer digits a `DECIMAL(15, 2)` money column can store. */
+export const MONEY_INPUT_MAX_INTEGER_DIGITS = 13
+
+/** A decimal fraction of one or two digits at the very end of a value, i.e. đồng cents. */
+const CENTS_FRACTION_PATTERN = /\.(\d{1,2})$/
 
 /**
  * Strips presentation characters and returns the sign, raw integer digits, and fraction digits.
@@ -91,7 +98,33 @@ function expandExponentialNumber(value: number): string {
 
 function isStoragePrecisionSupported(integerDigits: string, fractionDigits: string): boolean {
   const integer = integerDigits.replace(/^0+/, '') || '0'
-  return integer.length <= 13 && fractionDigits.length <= 2
+  return integer.length <= MONEY_INPUT_MAX_INTEGER_DIGITS && fractionDigits.length <= 2
+}
+
+/**
+ * Adds one to a digit string without going through `Number`, so amounts beyond the safe-integer
+ * range still round correctly.
+ */
+function incrementDigits(digits: string): string {
+  const chars = digits.split('')
+  for (let index = chars.length - 1; index >= 0; index -= 1) {
+    if (chars[index] !== '9') {
+      chars[index] = String(Number(chars[index]) + 1)
+      return chars.join('')
+    }
+    chars[index] = '0'
+  }
+  return `1${chars.join('')}`
+}
+
+/**
+ * Rounds đồng cents away into whole đồng, with halves rounded away from zero to match the
+ * `halfExpand` rounding `Intl.NumberFormat` applies everywhere else these amounts are rendered.
+ */
+function roundCentsToWholeDong(integerDigits: string, fractionDigits: string): string {
+  const digits = integerDigits || '0'
+  const cents = Number(fractionDigits.padEnd(2, '0').slice(0, 2))
+  return cents >= 50 ? incrementDigits(digits) : digits
 }
 
 /**
@@ -103,13 +136,11 @@ function addThousandSeparators(intStr: string): string {
 }
 
 /**
- * Formats a monetary string or number for input display (e.g. '400,000.00đ').
- * Always renders two decimal places and a single 'đ' suffix when valid digits exist.
+ * Formats a canonical or raw monetary value for a money input (e.g. '400,000').
+ * Cents are rounded into whole đồng and the 'đ' symbol is left to the input itself.
  * Returns an empty string for empty or non-numeric inputs.
  */
-export function formatMoneyInputDisplay(
-  raw: string | number | null | undefined,
-): string {
+export function formatMoneyForInput(raw: string | number | null | undefined): string {
   if (raw === null || raw === undefined) return ''
   const str = (typeof raw === 'number' ? expandExponentialNumber(raw) : raw).trim()
   if (!str || !isValidMoneySyntax(str)) return ''
@@ -118,12 +149,66 @@ export function formatMoneyInputDisplay(
   if (!hasAnyDigit) return ''
   if (fractionDigits.length > 2) return ''
 
-  const intPart = integerDigits || '0'
-  const formattedInt = addThousandSeparators(intPart)
-  const fracPart = fractionDigits.padEnd(2, '0')
-  const sign = isNegative ? '-' : ''
+  const digits = roundCentsToWholeDong(integerDigits, fractionDigits)
+  return groupMoneyDigits(isNegative && /[1-9]/.test(digits) ? `-${digits}` : digits)
+}
 
-  return `${sign}${formattedInt}.${fracPart}đ`
+/**
+ * Reduces arbitrary typed or pasted text to the digit string of a whole-đồng amount, keeping a
+ * single leading '-'.
+ *
+ * A trailing one- or two-digit decimal fraction is read as đồng cents and rounded away; every other
+ * separator is discarded as digit grouping, so both '400,000.00đ' and '1.234.567' survive as the
+ * amount the user meant. The result is deliberately uncapped: the caller decides whether an amount
+ * wider than `MONEY_INPUT_MAX_INTEGER_DIGITS` is rejected or truncated.
+ */
+export function sanitizeMoneyInputDigits(raw: string | null | undefined): string {
+  if (raw === null || raw === undefined) return ''
+  const trimmed = String(raw).trim()
+  if (!trimmed) return ''
+
+  const isNegative = trimmed.startsWith('-')
+  let body = (isNegative ? trimmed.slice(1) : trimmed).replace(/đ/g, '').replace(/\s/g, '')
+
+  const centsMatch = body.match(CENTS_FRACTION_PATTERN)
+  const fractionDigits = centsMatch ? centsMatch[1] : ''
+  if (centsMatch) body = body.slice(0, -centsMatch[0].length)
+
+  const integerDigits = body.replace(/\D/g, '')
+  if (!integerDigits && !fractionDigits) return ''
+
+  const digits = roundCentsToWholeDong(integerDigits, fractionDigits).replace(/^0+/, '') || '0'
+  return isNegative && digits !== '0' ? `-${digits}` : digits
+}
+
+/**
+ * Groups a digit string (optionally signed) into the money input's display form (e.g. '400,000').
+ */
+export function groupMoneyDigits(digits: string): string {
+  const isNegative = digits.startsWith('-')
+  const unsigned = isNegative ? digits.slice(1) : digits
+  if (!unsigned) return ''
+  return `${isNegative ? '-' : ''}${addThousandSeparators(unsigned)}`
+}
+
+/**
+ * Returns the caret offset that sits immediately after the `digitIndex`-th digit of a grouped
+ * value, which is how a caret survives group separators being inserted or removed around it.
+ * A `digitIndex` of 0 resolves to the offset just before the first digit.
+ */
+export function caretOffsetForDigitIndex(formatted: string, digitIndex: number): number {
+  if (digitIndex <= 0) {
+    const firstDigit = formatted.search(/\d/)
+    return firstDigit === -1 ? formatted.length : firstDigit
+  }
+
+  let seen = 0
+  for (let index = 0; index < formatted.length; index += 1) {
+    if (!/\d/.test(formatted[index])) continue
+    seen += 1
+    if (seen === digitIndex) return index + 1
+  }
+  return formatted.length
 }
 
 /**

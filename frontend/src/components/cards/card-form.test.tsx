@@ -244,10 +244,10 @@ describe('CardForm', () => {
 
     // User types 400000
     fireEvent.change(creditLimitInput, { target: { value: '400000' } })
-    expect(creditLimitInput).toHaveValue('400,000.00đ')
+    expect(creditLimitInput).toHaveValue('400,000')
 
     fireEvent.change(availableCreditInput, { target: { value: '400000' } })
-    expect(availableCreditInput).toHaveValue('400,000.00đ')
+    expect(availableCreditInput).toHaveValue('400,000')
 
     // Submit form
     fireEvent.click(screen.getByRole('button', { name: 'addCard' }))
@@ -282,8 +282,8 @@ describe('CardForm', () => {
       />,
     )
 
-    expect(screen.getByLabelText('formCreditLimit')).toHaveValue('50,000,000.00đ')
-    expect(screen.getByLabelText('formAvailableCredit')).toHaveValue('35,000,000.00đ')
+    expect(screen.getByLabelText('formCreditLimit')).toHaveValue('50,000,000')
+    expect(screen.getByLabelText('formAvailableCredit')).toHaveValue('35,000,000')
   })
 
   it('requires a card type when creating a card', async () => {

@@ -6,14 +6,11 @@ import { z } from 'zod'
 import { useLocale, useTranslations } from 'next-intl'
 import { Loader2, Scale } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MoneyInput } from '@/components/ui/money-input'
 import { formatVnd } from '@/lib/dashboard-formatters'
 import type { ICreditCard, IReconcilePayload } from '@/shared'
-import {
-  formatMoneyInputDisplay,
-  parseMoneyInputToCanonicalDecimal,
-} from '@/lib/money-input.utils'
+import { formatMoneyForInput, parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
 
 function buildReconcileSchema(t: ReturnType<typeof useTranslations<'cards'>>) {
   return z.object({
@@ -53,7 +50,7 @@ export function ReconcileForm({
   } = useForm<IReconcilePayload>({
     resolver: zodResolver(schema),
     defaultValues: {
-      availableCredit: card.availableCredit ? formatMoneyInputDisplay(card.availableCredit) : '',
+      availableCredit: card.availableCredit ? formatMoneyForInput(card.availableCredit) : '',
     },
   })
 
@@ -87,17 +84,12 @@ export function ReconcileForm({
           name="availableCredit"
           control={control}
           render={({ field }) => (
-            <Input
+            <MoneyInput
               id="reconcile-available-credit"
-              type="text"
-              inputMode="decimal"
-              placeholder="0.00đ"
               autoFocus
               value={field.value}
-              onChange={(e) => {
-                const formatted = formatMoneyInputDisplay(e.target.value)
-                field.onChange(formatted)
-              }}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
             />
           )}
         />

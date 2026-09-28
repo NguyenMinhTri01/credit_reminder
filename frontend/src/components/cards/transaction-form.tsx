@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MoneyInput } from '@/components/ui/money-input'
 import {
   Select,
   SelectContent,
@@ -16,10 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { ITransaction, ICreateTransactionPayload } from '@/shared'
-import {
-  formatMoneyInputDisplay,
-  parseMoneyInputToCanonicalDecimal,
-} from '@/lib/money-input.utils'
+import { formatMoneyForInput, parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
 
 function buildTransactionSchema(t: ReturnType<typeof useTranslations<'transactions'>>) {
   return z.object({
@@ -88,7 +86,7 @@ export function TransactionForm({
     resolver: zodResolver(schema),
     defaultValues: {
       type: (initialData?.type === 'ADJUSTMENT' ? 'EXPENSE' : initialData?.type) ?? 'EXPENSE',
-      amount: initialData?.amount ? formatMoneyInputDisplay(initialData.amount) : '',
+      amount: initialData?.amount ? formatMoneyForInput(initialData.amount) : '',
       transactionDate: initialData?.transactionDate ?? todayIso,
       description: initialData?.description ?? '',
       merchant: initialData?.merchant ?? '',
@@ -142,18 +140,11 @@ export function TransactionForm({
           name="amount"
           control={control}
           render={({ field }) => (
-            <Input
+            <MoneyInput
               id="tx-amount"
-              type="text"
-              inputMode="decimal"
-              placeholder="0.00đ"
               value={field.value}
-              onFocus={() => field.onChange(parseMoneyInputToCanonicalDecimal(field.value))}
-              onChange={(e) => field.onChange(e.target.value)}
-              onBlur={() => {
-                field.onBlur()
-                field.onChange(formatMoneyInputDisplay(field.value))
-              }}
+              onValueChange={field.onChange}
+              onBlur={field.onBlur}
             />
           )}
         />
