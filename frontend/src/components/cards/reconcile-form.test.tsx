@@ -31,6 +31,24 @@ describe('ReconcileForm', () => {
     })
   })
 
+  it('reconciles an unchanged hydrated negative balance', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <ReconcileForm
+        card={{ ...card, availableCredit: '-2500000.00' }}
+        onSubmit={onSubmit}
+        onCancel={jest.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'reconcile' }))
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ availableCredit: '-2500000.00' })
+    })
+  })
+
   it('never sends a negative amount to the API, because a sign cannot be entered', async () => {
     const onSubmit = jest.fn().mockResolvedValue(undefined)
 

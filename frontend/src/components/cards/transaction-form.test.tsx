@@ -37,14 +37,18 @@ describe('TransactionForm amount input', () => {
 
   it('leaves an existing amount unchanged when the field is focused and blurred', async () => {
     const user = userEvent.setup()
-    const initialData = {
+    const initialData: ITransaction = {
       id: 'tx-1',
+      cardId: 'card-1',
       type: 'EXPENSE',
       amount: '200000.00',
       transactionDate: '2026-09-09',
       description: null,
       merchant: null,
-    } as unknown as ITransaction
+      idempotencyKey: null,
+      reconciledAt: null,
+      createdAt: '2026-09-09T00:00:00.000Z',
+    }
 
     render(
       <TransactionForm initialData={initialData} onSubmit={jest.fn()} onCancel={jest.fn()} />,

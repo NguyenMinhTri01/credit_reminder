@@ -149,7 +149,12 @@ export function formatMoneyForInput(raw: string | number | null | undefined): st
   if (!hasAnyDigit) return ''
   if (fractionDigits.length > 2) return ''
 
-  const digits = roundCentsToWholeDong(integerDigits, fractionDigits)
+  const roundedDigits = roundCentsToWholeDong(integerDigits, fractionDigits)
+  const isStoredPrecisionValid = isStoragePrecisionSupported(integerDigits, fractionDigits)
+  const digits =
+    isStoredPrecisionValid && roundedDigits.length > MONEY_INPUT_MAX_INTEGER_DIGITS
+      ? '9'.repeat(MONEY_INPUT_MAX_INTEGER_DIGITS)
+      : roundedDigits
   return groupMoneyDigits(isNegative && /[1-9]/.test(digits) ? `-${digits}` : digits)
 }
 

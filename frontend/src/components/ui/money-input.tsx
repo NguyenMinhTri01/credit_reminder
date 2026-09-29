@@ -21,6 +21,11 @@ interface MoneyInputProps
   onValueChange: (value: string) => void
 }
 
+interface InputSelection {
+  start: number
+  end: number
+}
+
 function countDigits(text: string): number {
   return (text.match(/\d/g) ?? []).length
 }
@@ -38,9 +43,9 @@ function isDigit(character: string | undefined): boolean {
  * what the user typed. The `đ` symbol is rendered beside the field, keeping it out of the value
  * that gets parsed.
  *
- * A minus sign cannot be typed: every form that uses this field rejects negative amounts. A
- * negative amount already stored on a card (an overspent available credit) still hydrates with its
- * sign intact and keeps it until the user edits the field.
+ * A minus sign cannot be typed. A negative amount already stored on a card (an overspent available
+ * credit) hydrates with its sign intact; forms can submit it unchanged, while an amount-digit edit
+ * removes the sign.
  */
 export function MoneyInput({
   value,
@@ -48,11 +53,25 @@ export function MoneyInput({
   className,
   disabled,
   onKeyDown,
+  onBeforeInput,
+  onPaste,
   placeholder = '0',
   ...props
 }: MoneyInputProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const pendingCaretRef = React.useRef<number | null>(null)
+  const pendingSelectionRef = React.useRef<InputSelection | null>(null)
+
+  const readSelection = (element: HTMLInputElement): InputSelection => ({
+    start: element.selectionStart ?? element.value.length,
+    end: element.selectionEnd ?? element.value.length,
+  })
+
+  const rememberSelection = (element: HTMLInputElement): InputSelection => {
+    const selection = readSelection(element)
+    pendingSelectionRef.current = selection
+    return selection
+  }
 
   // Runs before paint so the caret never visibly jumps to the end of the re-grouped value.
   React.useLayoutEffect(() => {
@@ -62,10 +81,24 @@ export function MoneyInput({
     inputRef.current?.setSelectionRange(caret, caret)
   })
 
-  const commit = (nextRaw: string, digitsBeforeCaret: number): void => {
-    const digits = sanitizeMoneyInputDigits(nextRaw).replace(/^-/, '')
+  const commit = (
+    nextRaw: string,
+    digitsBeforeCaret: number,
+    inputType: string,
+    selectionBeforeEdit: InputSelection | null = null,
+  ): void => {
+    pendingSelectionRef.current = null
+    const sanitized = sanitizeMoneyInputDigits(nextRaw)
+    const isDigitlessReplacement = nextRaw.length > 0 && !/\d/.test(sanitized)
+    const candidateDigits = sanitized.replace(/^-/, '')
+    const currentDigits = sanitizeMoneyInputDigits(value).replace(/^-/, '')
+    const explicitSignDeletion =
+      value.startsWith('-') && !nextRaw.includes('-') && inputType.startsWith('delete')
+    const preserveNegativeSign =
+      value.startsWith('-') && candidateDigits === currentDigits && !explicitSignDeletion
+    const digits = preserveNegativeSign ? `-${candidateDigits}` : candidateDigits
     const isOverWide = countDigits(digits) > MONEY_INPUT_MAX_INTEGER_DIGITS
-    const nextValue = isOverWide ? value : groupMoneyDigits(digits)
+    const nextValue = isOverWide || isDigitlessReplacement ? value : groupMoneyDigits(digits)
     const digitIndex = isOverWide
       ? Math.max(0, digitsBeforeCaret - 1)
       : Math.min(digitsBeforeCaret, countDigits(nextValue))
@@ -77,7 +110,8 @@ export function MoneyInput({
       const element = inputRef.current
       if (element) {
         element.value = nextValue
-        element.setSelectionRange(caret, caret)
+        const selection = selectionBeforeEdit
+        element.setSelectionRange(selection?.start ?? caret, selection?.end ?? caret)
       }
       return
     }
@@ -89,18 +123,34 @@ export function MoneyInput({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const raw = event.target.value
     const caret = event.target.selectionStart ?? raw.length
-    commit(raw, countDigits(raw.slice(0, caret)))
+    const inputType = (event.nativeEvent as InputEvent).inputType ?? ''
+    const selectionBeforeEdit = pendingSelectionRef.current
+    pendingSelectionRef.current = null
+    commit(raw, countDigits(raw.slice(0, caret)), inputType, selectionBeforeEdit)
+  }
+
+  const handleBeforeInput: NonNullable<React.ComponentProps<'input'>['onBeforeInput']> = (
+    event,
+  ): void => {
+    rememberSelection(event.currentTarget)
+    onBeforeInput?.(event)
+  }
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>): void => {
+    rememberSelection(event.currentTarget)
+    onPaste?.(event)
   }
 
   /**
-   * Deleting a group separator would be undone by re-grouping, so a Backspace or Delete aimed at
-   * one is redirected to the digit behind it.
+   * Deleting a group separator would be undone by re-grouping, so Backspace and Delete aimed at a
+   * comma are redirected to the adjacent digit.
    */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
     onKeyDown?.(event)
     if (event.defaultPrevented) return
 
     const element = event.currentTarget
+    const selectionBeforeEdit = rememberSelection(element)
     const caret = element.selectionStart
     if (caret === null || caret !== element.selectionEnd) return
 
@@ -111,18 +161,27 @@ export function MoneyInput({
 
       const raw = `${element.value.slice(0, cut - 1)}${element.value.slice(caret)}`
       event.preventDefault()
-      commit(raw, countDigits(element.value.slice(0, cut - 1)))
+      commit(
+        raw,
+        countDigits(element.value.slice(0, cut - 1)),
+        'deleteContentBackward',
+        selectionBeforeEdit,
+      )
       return
     }
 
-    if (event.key === 'Delete' && !isDigit(element.value[caret])) {
-      let cut = caret
-      while (cut < element.value.length && !isDigit(element.value[cut])) cut += 1
-      if (cut >= element.value.length) return
+    if (event.key === 'Delete' && element.value[caret] === ',') {
+      const cut = caret + 1
+      if (!isDigit(element.value[cut])) return
 
       const raw = `${element.value.slice(0, cut)}${element.value.slice(cut + 1)}`
       event.preventDefault()
-      commit(raw, countDigits(element.value.slice(0, caret)))
+      commit(
+        raw,
+        countDigits(element.value.slice(0, caret)),
+        'deleteContentForward',
+        selectionBeforeEdit,
+      )
     }
   }
 
@@ -139,6 +198,8 @@ export function MoneyInput({
         className={cn('pr-7', className)}
         value={value}
         onChange={handleChange}
+        onBeforeInput={handleBeforeInput}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
       />
       <span

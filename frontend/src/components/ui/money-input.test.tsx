@@ -80,6 +80,14 @@ describe('MoneyInput', () => {
     expect(input.selectionStart).toBe(4)
   })
 
+  it('deletes a leading minus without deleting the first amount digit', async () => {
+    const { user, input } = renderMoneyInput('-2,500')
+
+    await user.type(input, '{Delete}', { initialSelectionStart: 0, initialSelectionEnd: 0 })
+
+    expect(input).toHaveValue('2,500')
+  })
+
   it('deletes a digit normally when Backspace is not aimed at a separator', async () => {
     const { user, input } = renderMoneyInput('400,000')
 
@@ -94,6 +102,14 @@ describe('MoneyInput', () => {
     await user.type(input, 'a')
     await user.type(input, '.')
     await user.type(input, 'đ')
+
+    expect(input).toHaveValue('400,000')
+  })
+
+  it('keeps an amount when a selected value is replaced with invalid text', async () => {
+    const { user, input } = renderMoneyInput('400,000')
+
+    await user.type(input, 'x', { initialSelectionStart: 0, initialSelectionEnd: 7 })
 
     expect(input).toHaveValue('400,000')
   })
@@ -114,6 +130,16 @@ describe('MoneyInput', () => {
     await user.type(input, '0')
 
     expect(input).toHaveValue('25,000,000')
+  })
+
+  it('preserves a negative stored sign when ignored edits do not change amount digits', async () => {
+    const { user, input } = renderMoneyInput('-2,500')
+
+    await user.type(input, 'a')
+    await user.type(input, '.')
+    await user.type(input, 'đ')
+
+    expect(input).toHaveValue('-2,500')
   })
 
   it('rounds a pasted amount that carries cents into whole đồng', async () => {
@@ -156,6 +182,17 @@ describe('MoneyInput', () => {
     await user.type(input, '9', { initialSelectionStart: 1, initialSelectionEnd: 1 })
 
     expect(input).toHaveValue('1,234,567,890,123')
+  })
+
+  it('restores the caret after rejecting a multi-digit over-wide paste', async () => {
+    const { user, input } = renderMoneyInput('1,234,567,890,123')
+    await user.click(input)
+    input.setSelectionRange(1, 1)
+
+    await user.paste('99')
+
+    expect(input).toHaveValue('1,234,567,890,123')
+    expect(input.selectionStart).toBe(1)
   })
 
   it('dims the currency symbol together with a disabled field', () => {

@@ -47,6 +47,11 @@ describe('money-input.utils', () => {
       expect(formatMoneyForInput('999999999999999.99')).toBe('1,000,000,000,000,000')
     })
 
+    it('caps a rounded maximum stored amount at the largest whole storable value', () => {
+      expect(formatMoneyForInput('9999999999999.99')).toBe('9,999,999,999,999')
+      expect(formatMoneyForInput('-9999999999999.99')).toBe('-9,999,999,999,999')
+    })
+
     it('expands a numeric exponential value instead of treating its exponent as digits', () => {
       expect(formatMoneyForInput(1e21)).toBe('1,000,000,000,000,000,000,000')
     })
@@ -170,6 +175,16 @@ describe('money-input.utils', () => {
       const display = formatMoneyForInput('-2500000.00')
       expect(display).toBe('-2,500,000')
       expect(parseMoneyInputToCanonicalDecimal(display)).toBe('-2500000.00')
+    })
+
+    it('round-trips a maximum stored amount after normalizing cents to the whole-đồng limit', () => {
+      const positiveDisplay = formatMoneyForInput('9999999999999.99')
+      const negativeDisplay = formatMoneyForInput('-9999999999999.99')
+
+      expect(positiveDisplay).toBe('9,999,999,999,999')
+      expect(parseMoneyInputToCanonicalDecimal(positiveDisplay)).toBe('9999999999999.00')
+      expect(negativeDisplay).toBe('-9,999,999,999,999')
+      expect(parseMoneyInputToCanonicalDecimal(negativeDisplay)).toBe('-9999999999999.00')
     })
   })
 
