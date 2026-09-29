@@ -14,7 +14,10 @@ import type { CardFormValues } from '@/components/cards/card-form'
 import { useUpdateCard } from '@/hooks/use-credit-cards'
 import type { ICreditCard, IUpdateCreditCardPayload } from '@/shared'
 import { isCardType } from '@/shared/constants'
-import { parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
+import {
+  formatMoneyForInput,
+  parseMoneyInputToCanonicalDecimal,
+} from '@/lib/money-input.utils'
 
 interface EditCardSheetProps {
   card: ICreditCard
@@ -40,9 +43,12 @@ export function EditCardSheet({ card, open, onOpenChange }: EditCardSheetProps) 
       if (data.cardName !== card.cardName) payload.cardName = data.cardName ?? ''
       if (data.lastFourDigits !== card.lastFourDigits) payload.lastFourDigits = data.lastFourDigits
       const creditLimit = parseMoneyInputToCanonicalDecimal(data.creditLimit)
-      // Schema guarantees creditLimit is non-empty when the original had a value,
-      // so checking `creditLimit !== card.creditLimit` is safe here.
-      if (creditLimit !== card.creditLimit) payload.creditLimit = creditLimit
+      // Compare with the value shown in the form. Fractional stored cents are rounded for display,
+      // so an untouched metadata-only save must not send that normalized value back to the API.
+      const displayedCreditLimit = parseMoneyInputToCanonicalDecimal(
+        formatMoneyForInput(card.creditLimit),
+      )
+      if (creditLimit !== displayedCreditLimit) payload.creditLimit = creditLimit
       if (data.statementDay !== undefined && data.statementDay !== card.statementDay) {
         payload.statementDay = data.statementDay
       }

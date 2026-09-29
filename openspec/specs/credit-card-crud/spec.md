@@ -66,6 +66,10 @@ The system SHALL allow the card owner to update optional metadata fields (bank c
 - **WHEN** a user updates `bankCode` and `cardName` on their card
 - **THEN** the stored values change and `availableCredit` remains unchanged
 
+#### Scenario: Metadata-only update preserves stored credit-limit cents
+- **WHEN** a user updates card metadata while the existing `creditLimit` is `"50000000.50"` and the edit form displays the rounded whole-đồng value
+- **THEN** the update omits the unchanged `creditLimit`, preserves its stored cents, and leaves `availableCredit` unchanged
+
 #### Scenario: Update credit limit adjusts available credit
 - **WHEN** a user updates `creditLimit` from 50,000,000 to 80,000,000 on a card where `availableCredit` is 30,000,000 (used amount = 20,000,000)
 - **THEN** `availableCredit` becomes 60,000,000 (new limit minus preserved used amount) and no reconciliation record is created
@@ -150,19 +154,148 @@ The system SHALL ensure the card's last-four-digits input accepts only ASCII num
 - **THEN** non-numeric characters are blocked or stripped at input, and submitting fewer than 4 digits produces a field-level validation error
 
 ### Requirement: Form money inputs format values for display and serialize canonical decimal strings
-The system SHALL format monetary inputs across credit card management forms with thousand grouping commas, decimal point, and currency suffix in presentation, while sending canonical decimal strings without presentation formatting to backend mutation endpoints.
+The system SHALL render monetary inputs across credit card management forms as whole-đồng amounts
+using comma thousand-group separators and no fractional part, with the `đ` currency symbol presented
+as a non-editable suffix that is never part of the editable value, while sending canonical decimal
+strings with two fractional digits and no presentation formatting to backend mutation endpoints.
 
 #### Scenario: User enters monetary amount
 - **WHEN** a user enters `400000` into a money input (`creditLimit`, `availableCredit`)
-- **THEN** the input displays the formatted value `400,000.00đ`
+- **THEN** the input's editable value is `400,000` and the `đ` symbol is displayed beside it without
+  becoming part of the value the user can edit or delete
 
 #### Scenario: Form submission serializes canonical decimal string
-- **WHEN** a form with formatted monetary input `400,000.00đ` is submitted
-- **THEN** the submitted payload contains the canonical decimal string `"400000.00"` without commas, currency symbols, or whitespace
+- **WHEN** a form whose money input shows `400,000` is submitted
+- **THEN** the submitted payload contains the canonical decimal string `"400000.00"` without commas,
+  currency symbols, or whitespace
 
 #### Scenario: Populating form with existing decimal values
 - **WHEN** an existing card with limit `"50000000.00"` is opened in the edit form
-- **THEN** the input displays `50,000,000.00đ` without losing precision or mutating the stored balance
+- **THEN** the input displays `50,000,000` without losing precision or mutating the stored balance
+
+#### Scenario: Populating form with a stored fractional amount
+- **WHEN** an existing card whose stored limit is `"50000000.50"` is opened in the edit form
+- **THEN** the input displays `50,000,001`, rounded to the nearest whole đồng with halves rounded
+  away from zero, so the form shows the same amount the rest of the application renders for that card
+
+#### Scenario: Normalizing a submitted amount at the maximum whole-đồng boundary
+- **WHEN** a form submits a money-input value populated with the largest valid `DECIMAL(15, 2)` magnitude,
+  `"9999999999999.99"` or `"-9999999999999.99"`
+- **THEN** the input displays the signed maximum whole amount, `9,999,999,999,999` or
+  `-9,999,999,999,999`, and the submitted field is serialized to the corresponding canonical value
+  with `.00`, accepting normalization of the stored cents
+
+#### Scenario: Negative stored amount keeps its sign until it is edited
+- **WHEN** a form is populated from a stored amount of `"-2500000.00"` (an overspent available credit)
+- **THEN** the input displays `-2,500,000`; ignored input that changes no amount digits preserves the
+  sign, an actual amount-digit edit removes the sign, and explicitly deleting the sign keeps all
+  amount digits and submits the positive canonical value
+
+### Requirement: Money inputs accept keystrokes without discarding input
+The system SHALL re-apply group formatting to a money input on every keystroke while preserving every
+digit the user has entered and keeping the text cursor at the position being edited. A money input
+MUST NOT clear itself, reset itself to zero, or move the cursor to the end of the value as a result of
+formatting.
+
+#### Scenario: Typing digits one at a time
+- **WHEN** a user types `4`, `0`, `0`, `0`, `0`, `0` into an empty money input, one keystroke at a time
+- **THEN** the value progresses `4` → `40` → `400` → `4,000` → `40,000` → `400,000` and is never
+  emptied or replaced by a zero amount at any point in the sequence
+
+#### Scenario: Typing in the middle of an existing value
+- **WHEN** the value is `400,000`, the cursor sits between the `4` and the first `0`, and the user
+  types `5`
+- **THEN** the value becomes `4,500,000` and the cursor sits immediately after the digit just typed,
+  between the `5` and the following `0`
+
+#### Scenario: Backspace immediately after a group separator
+- **WHEN** the value is `400,000`, the cursor sits immediately after the comma, and the user presses
+  Backspace
+- **THEN** the digit preceding the comma is deleted, the value becomes `40,000`, and the cursor sits
+  immediately after the last digit the user kept — pressing Backspace never leaves the value unchanged
+
+#### Scenario: Forward delete immediately before a group separator
+- **WHEN** the value is `400,000`, the cursor sits immediately before the comma, and the user presses
+  Delete
+- **THEN** the digit following the comma is deleted, the value becomes `40,000`, and the cursor
+  remains between the digits the user kept
+
+#### Scenario: Clearing the whole value
+- **WHEN** a user selects the entire value and deletes it
+- **THEN** the input becomes empty rather than showing a zero amount, and the field's own required
+  validation decides whether an empty value is an error
+
+### Requirement: Money inputs sanitize out-of-grammar text and bound stored precision
+The system SHALL reduce any text entered into or pasted into a money input to a non-negative
+whole-đồng amount, silently discarding characters that are not part of that amount, and MUST NOT
+accept more integer digits than the persisted `DECIMAL(15, 2)` amount columns can store.
+
+#### Scenario: Non-numeric characters are ignored
+- **WHEN** a user types a letter, a space, a period, or the `đ` symbol into a money input
+- **THEN** the character is not inserted and the value already in the field is left unchanged
+
+#### Scenario: A minus sign cannot be entered
+- **WHEN** a user types `-` into a money input, alone or ahead of digits such as `-5000`
+- **THEN** the sign is discarded and the field holds the non-negative amount (`5,000`), so no form
+  that forbids negative amounts can be submitted with one and negative zero can never be produced
+
+#### Scenario: Pasting an amount that carries a two-decimal fraction
+- **WHEN** a user pastes `400,000.00đ` or `400000.75` into a money input
+- **THEN** the trailing fractional part is rounded away to the nearest whole đồng and the value
+  becomes `400,000` and `400,001` respectively
+
+#### Scenario: Pasting a dot-grouped amount
+- **WHEN** a user pastes `1.234.567` or `400.000` into a money input
+- **THEN** the separators are discarded as grouping rather than read as a fraction, and the value
+  becomes `1,234,567` and `400,000` respectively
+
+#### Scenario: Leading zeros are normalized
+- **WHEN** a user enters `000400`
+- **THEN** the value becomes `400`, and entering `0` alone still yields `0`
+
+#### Scenario: Integer digits are capped at the storable precision
+- **WHEN** a user attempts to enter a 14th integer digit into a money input
+- **THEN** the keystroke is rejected, the value stays at its 13-digit amount, and the form does not
+  reach submit with an amount the API would reject for exceeding `DECIMAL(15, 2)`
+
+### Requirement: Money input edits preserve valid values and cursor context
+The system SHALL ignore invalid-only edits without discarding an existing amount, preserve an
+intentional clear, and keep the cursor at the user's edit point when rejecting an over-wide edit.
+Delete handling MUST distinguish grouping commas from a leading minus sign.
+
+#### Scenario: Ignored characters do not change an existing amount
+- **WHEN** a user types a letter, period, whitespace, or currency symbol into an amount without
+  changing any amount digits
+- **THEN** the displayed amount remains unchanged
+
+#### Scenario: Ignored characters preserve a stored negative sign
+- **WHEN** a money input displays `-2,500` and a user enters only ignored characters without
+  changing any amount digits
+- **THEN** the input remains `-2,500`
+
+#### Scenario: Invalid text replaces a selected amount
+- **WHEN** a user selects the entire `400,000` value and replaces it with a letter
+- **THEN** the invalid replacement is ignored and `400,000` remains in the input
+
+#### Scenario: User explicitly clears the amount
+- **WHEN** a user selects the entire amount and deletes it
+- **THEN** the input becomes empty
+
+#### Scenario: Rejected over-wide paste restores the edit point
+- **WHEN** a user pastes multiple digits at a middle caret position and the result would exceed
+  13 integer digits
+- **THEN** the amount remains unchanged and the cursor returns to the position it had before the
+  paste
+
+#### Scenario: Delete immediately before a leading minus sign
+- **WHEN** the input displays `-2,500`, the cursor is immediately before the minus sign, and the user
+  presses Delete
+- **THEN** the sign is removed, all amount digits remain, and the input displays `2,500`
+
+#### Scenario: Delete immediately before a group separator
+- **WHEN** the input displays `400,000`, the cursor is immediately before the comma, and the user
+  presses Delete
+- **THEN** the digit following the comma is removed and the input displays `40,000`
 
 ### Requirement: Credit card type is controlled and persisted
 The system SHALL support exactly five card types: `VISA`, `MASTERCARD`, `AMERICAN_EXPRESS`, `JCB`, and `NAPAS`. A card creation request MUST include `cardType`, while an update request MAY include `cardType`; supplied values MUST be validated against this supported set before persistence.

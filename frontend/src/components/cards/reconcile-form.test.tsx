@@ -13,19 +13,58 @@ const card = {
 } as ICreditCard
 
 describe('ReconcileForm', () => {
-  it('rejects negative zero before sending it to the API', async () => {
+  it('hydrates the stored balance as a whole-đồng amount', () => {
+    render(<ReconcileForm card={card} onSubmit={jest.fn()} onCancel={jest.fn()} />)
+
+    expect(screen.getByLabelText('newAvailableCredit (VND)')).toHaveValue('50,000,000')
+  })
+
+  it('reconciles an untouched balance without changing it', async () => {
     const onSubmit = jest.fn().mockResolvedValue(undefined)
 
     render(<ReconcileForm card={card} onSubmit={onSubmit} onCancel={jest.fn()} />)
 
-    fireEvent.change(screen.getByLabelText('newAvailableCredit (VND)'), {
-      target: { value: '-0' },
-    })
     fireEvent.click(screen.getByRole('button', { name: 'reconcile' }))
 
     await waitFor(() => {
-      expect(onSubmit).not.toHaveBeenCalled()
-      expect(screen.getByText('validationAvailableCreditNonNegative')).toBeInTheDocument()
+      expect(onSubmit).toHaveBeenCalledWith({ availableCredit: '50000000.00' })
+    })
+  })
+
+  it('reconciles an unchanged hydrated negative balance', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(
+      <ReconcileForm
+        card={{ ...card, availableCredit: '-2500000.00' }}
+        onSubmit={onSubmit}
+        onCancel={jest.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'reconcile' }))
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ availableCredit: '-2500000.00' })
+    })
+  })
+
+  it('never sends a negative amount to the API, because a sign cannot be entered', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined)
+
+    render(<ReconcileForm card={card} onSubmit={onSubmit} onCancel={jest.fn()} />)
+
+    const input = screen.getByLabelText('newAvailableCredit (VND)')
+    fireEvent.change(input, { target: { value: '-0' } })
+    expect(input).toHaveValue('0')
+
+    fireEvent.change(input, { target: { value: '-5000' } })
+    expect(input).toHaveValue('5,000')
+
+    fireEvent.click(screen.getByRole('button', { name: 'reconcile' }))
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({ availableCredit: '5000.00' })
     })
   })
 })

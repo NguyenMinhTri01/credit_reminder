@@ -17,26 +17,40 @@ jest.mock('@/hooks/use-credit-cards', () => ({
 }))
 
 jest.mock('@/components/cards/card-form', () => ({
-  CardForm: ({ onSubmit }: { onSubmit: (values: Record<string, unknown>) => Promise<void> }) => (
-    <button
-      type="button"
-      onClick={() =>
-        void onSubmit({
-          bankCode: 'vietcombank',
-          cardType: 'MASTERCARD',
-          cardName: '',
-          lastFourDigits: '1234',
-          creditLimit: '50,000,000.00đ',
-          availableCredit: '30,000,000.00đ',
-          statementDay: 5,
-          paymentDueDaysAfterStatement: 20,
-          expiryRaw: '',
-        })
-      }
-    >
-      save
-    </button>
-  ),
+  CardForm: ({
+    onSubmit,
+    defaultValues,
+  }: {
+    onSubmit: (values: Record<string, unknown>) => Promise<void>
+    defaultValues?: { creditLimit?: string | null }
+  }) => {
+    const { formatMoneyForInput, parseMoneyInputToCanonicalDecimal } =
+      jest.requireActual<typeof import('@/lib/money-input.utils')>('@/lib/money-input.utils')
+    const creditLimit = parseMoneyInputToCanonicalDecimal(
+      formatMoneyForInput(defaultValues?.creditLimit),
+    )
+
+    return (
+      <button
+        type="button"
+        onClick={() =>
+          void onSubmit({
+            bankCode: 'vietcombank',
+            cardType: 'MASTERCARD',
+            cardName: '',
+            lastFourDigits: '1234',
+            creditLimit,
+            availableCredit: '30000000.00',
+            statementDay: 5,
+            paymentDueDaysAfterStatement: 20,
+            expiryRaw: '',
+          })
+        }
+      >
+        save
+      </button>
+    )
+  },
   parseExpiryRaw: () => ({}),
 }))
 
@@ -74,6 +88,25 @@ describe('EditCardSheet', () => {
 
   it('sends an explicit empty card name without sending an unchanged formatted limit', async () => {
     render(<EditCardSheet card={card} open onOpenChange={jest.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'save' }))
+
+    await waitFor(() => {
+      expect(mutateAsync).toHaveBeenCalledWith({
+        id: 'card-1',
+        payload: { cardType: 'MASTERCARD', cardName: '' },
+      })
+    })
+  })
+
+  it('preserves stored fractional cents during a metadata-only update', async () => {
+    render(
+      <EditCardSheet
+        card={{ ...card, creditLimit: '50000000.50' }}
+        open
+        onOpenChange={jest.fn()}
+      />,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'save' }))
 

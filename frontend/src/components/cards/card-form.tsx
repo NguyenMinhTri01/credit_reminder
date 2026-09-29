@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MoneyInput } from '@/components/ui/money-input'
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ import {
 } from '@/shared/constants'
 import type { CardType, IUpdateCreditCardPayload } from '@/shared'
 import { formatCalendarDate } from '@/lib/dashboard-formatters'
-import { formatMoneyInputDisplay, parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
+import { formatMoneyForInput, parseMoneyInputToCanonicalDecimal } from '@/lib/money-input.utils'
 
 // ─── Zod schema ──────────────────────────────────────────────
 
@@ -314,11 +315,9 @@ export function CardForm({
       cardType: defaultValues?.cardType ?? '',
       cardName: defaultValues?.cardName ?? '',
       lastFourDigits: defaultValues?.lastFourDigits ?? '',
-      creditLimit: defaultValues?.creditLimit
-        ? formatMoneyInputDisplay(defaultValues.creditLimit)
-        : '',
+      creditLimit: defaultValues?.creditLimit ? formatMoneyForInput(defaultValues.creditLimit) : '',
       availableCredit: defaultValues?.availableCredit
-        ? formatMoneyInputDisplay(defaultValues.availableCredit)
+        ? formatMoneyForInput(defaultValues.availableCredit)
         : '',
       statementDay: defaultValues?.statementDay,
       paymentDueDaysAfterStatement: defaultValues?.paymentDueDaysAfterStatement,
@@ -492,16 +491,11 @@ export function CardForm({
             name="creditLimit"
             control={control}
             render={({ field }) => (
-              <Input
+              <MoneyInput
                 id="creditLimit"
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00đ"
                 value={field.value}
-                onChange={(e) => {
-                  const formatted = formatMoneyInputDisplay(e.target.value)
-                  field.onChange(formatted)
-                }}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
               />
             )}
           />
@@ -516,17 +510,12 @@ export function CardForm({
             name="availableCredit"
             control={control}
             render={({ field }) => (
-              <Input
+              <MoneyInput
                 id="availableCredit"
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00đ"
                 disabled={isEdit}
                 value={field.value}
-                onChange={(e) => {
-                  const formatted = formatMoneyInputDisplay(e.target.value)
-                  field.onChange(formatted)
-                }}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
               />
             )}
           />
