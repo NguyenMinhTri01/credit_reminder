@@ -89,13 +89,23 @@ export function MoneyInput({
   ): void => {
     pendingSelectionRef.current = null
     const sanitized = sanitizeMoneyInputDigits(nextRaw)
-    const isDigitlessReplacement = nextRaw.length > 0 && !/\d/.test(sanitized)
+    const isSignOnlyDelete = inputType.startsWith('delete') && /^-$/.test(nextRaw)
+    const isDigitlessReplacement = nextRaw.length > 0 && !/\d/.test(sanitized) && !isSignOnlyDelete
     const candidateDigits = sanitized.replace(/^-/, '')
     const currentDigits = sanitizeMoneyInputDigits(value).replace(/^-/, '')
     const explicitSignDeletion =
       value.startsWith('-') && !nextRaw.includes('-') && inputType.startsWith('delete')
+    const fullValuePasteWithoutSign =
+      inputType === 'insertFromPaste' &&
+      value.startsWith('-') &&
+      !nextRaw.includes('-') &&
+      selectionBeforeEdit?.start === 0 &&
+      selectionBeforeEdit?.end === value.length
     const preserveNegativeSign =
-      value.startsWith('-') && candidateDigits === currentDigits && !explicitSignDeletion
+      value.startsWith('-') &&
+      candidateDigits === currentDigits &&
+      !explicitSignDeletion &&
+      !fullValuePasteWithoutSign
     const digits = preserveNegativeSign ? `-${candidateDigits}` : candidateDigits
     const isOverWide = countDigits(digits) > MONEY_INPUT_MAX_INTEGER_DIGITS
     const nextValue = isOverWide || isDigitlessReplacement ? value : groupMoneyDigits(digits)
@@ -111,7 +121,14 @@ export function MoneyInput({
       if (element) {
         element.value = nextValue
         const selection = selectionBeforeEdit
-        element.setSelectionRange(selection?.start ?? caret, selection?.end ?? caret)
+        if (selection && inputType.startsWith('delete')) {
+          // Deleting a selection that contains only a group separator leaves the comma selected,
+          // making Delete/Backspace appear ineffective. Collapse the selection for rejected delete
+          // edits while retaining the pre-edit range for rejected invalid insertions and pastes.
+          element.setSelectionRange(selection.start, selection.start)
+        } else {
+          element.setSelectionRange(selection?.start ?? caret, selection?.end ?? caret)
+        }
       }
       return
     }

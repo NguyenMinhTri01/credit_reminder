@@ -80,6 +80,26 @@ describe('MoneyInput', () => {
     expect(input.selectionStart).toBe(4)
   })
 
+  it('collapses the caret when Backspace removes only a selected group separator', async () => {
+    const { user, input } = renderMoneyInput('400,000')
+
+    await user.type(input, '{Backspace}', { initialSelectionStart: 3, initialSelectionEnd: 4 })
+
+    expect(input).toHaveValue('400,000')
+    expect(input.selectionStart).toBe(3)
+    expect(input.selectionEnd).toBe(3)
+  })
+
+  it('collapses the caret when Delete removes only a selected group separator', async () => {
+    const { user, input } = renderMoneyInput('400,000')
+
+    await user.type(input, '{Delete}', { initialSelectionStart: 3, initialSelectionEnd: 4 })
+
+    expect(input).toHaveValue('400,000')
+    expect(input.selectionStart).toBe(3)
+    expect(input.selectionEnd).toBe(3)
+  })
+
   it('deletes a leading minus without deleting the first amount digit', async () => {
     const { user, input } = renderMoneyInput('-2,500')
 
@@ -142,6 +162,14 @@ describe('MoneyInput', () => {
     expect(input).toHaveValue('-2,500')
   })
 
+  it('clears the field when the last digit of a negative amount is deleted', async () => {
+    const { user, input } = renderMoneyInput('-2')
+
+    await user.type(input, '{Backspace}')
+
+    expect(input).toHaveValue('')
+  })
+
   it('rounds a pasted amount that carries cents into whole đồng', async () => {
     const { user, input } = renderMoneyInput()
 
@@ -149,6 +177,16 @@ describe('MoneyInput', () => {
     await user.paste('400,000.00đ')
 
     expect(input).toHaveValue('400,000')
+  })
+
+  it('drops the negative sign when the same digits are pasted over a negative amount', async () => {
+    const { user, input } = renderMoneyInput('-2,500')
+
+    await user.click(input)
+    input.setSelectionRange(0, input.value.length)
+    await user.paste('2500')
+
+    expect(input).toHaveValue('2,500')
   })
 
   it('reads a pasted dot-grouped amount as grouping rather than a fraction', async () => {
